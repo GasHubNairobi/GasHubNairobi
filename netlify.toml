@@ -10,6 +10,10 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Netlify's secrets scan matches text, not meaning: harmless words such as "postgres" or "http://localhost:3000" in the
+  # example/docs files look like values set in the dashboard. No real secrets are in the repo.
+  SECRETS_SCAN_OMIT_PATHS = ".env.example,NETLIFY-SUPABASE-DEPLOY.md,README.md,ADMIN-SECURITY-FIX.txt,backend/package-lock.json"
+  SECRETS_SCAN_OMIT_KEYS = "APP_BASE_URL,PUBLIC_URL,DB_HOST,DB_NAME,DB_PORT,PORT,NODE_ENV"
 
 [functions]
   directory = "netlify/functions"

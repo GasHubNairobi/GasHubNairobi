@@ -3,7 +3,7 @@
    Administrator Management) behind one extra password, separate from each admin's login password.
 
    - The password is stored HASHED (bcrypt) in gashub_settings under "super_admin_lock".
-   - Until it is changed for the first time it is DEFAULT_LOCK_PASSWORD. CHANGE IT after first login
+   - Until an admin sets one, it opens only with the SUPER_ADMIN_LOCK_PASSWORD environment variable (no built-in default). Change it in Settings after first login, then remove the variable
      (Settings -> unlock -> "Super Admin Password").
    - Unlocking gives the browser a short-lived token (kept in memory only, so a page reload locks again).
      The token is tied to the admin's login session and expires after IDLE_MS of no use. */
@@ -11,7 +11,8 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { getSetting, putSetting } = require("./gashub-settings");
 
-const DEFAULT_LOCK_PASSWORD = "Victor5962";
+/* There is NO built-in password. Until an admin saves their own lock password, the lock opens only with the value of the
+   environment variable SUPER_ADMIN_LOCK_PASSWORD (set it in Netlify, unlock once, change the password in Settings, then remove the variable). */
 const IDLE_MS = 15 * 60 * 1000;
 const MAX_FAILS = 5;
 const BLOCK_MS = 15 * 60 * 1000;
@@ -25,13 +26,22 @@ let defaultHash = null;
 async function currentHash() {
     const s = await getSetting("super_admin_lock", {});
     if (s && typeof s.hash === "string" && s.hash) return s.hash;
-    if (!defaultHash) defaultHash = bcrypt.hashSync(DEFAULT_LOCK_PASSWORD, 12);
-    return defaultHash;
+    const initial = process.env.SUPER_ADMIN_LOCK_PASSWORD;
+    if (typeof initial === "string" && initial.length >= 10) {
+        if (!defaultHash) defaultHash = bcrypt.hashSync(initial, 12);
+        return defaultHash;
+    }
+    return null;   /* nothing configured: the lock stays closed */
 }
 
 async function verifyLockPassword(password) {
     if (typeof password !== "string" || !password) return false;
-    return bcrypt.compare(password, await currentHash());
+    const hash = await currentHash();
+    if (!hash) {
+        console.warn("[super-lock] No lock password is set. Set SUPER_ADMIN_LOCK_PASSWORD (10+ characters) to unlock for the first time.");
+        return false;
+    }
+    return bcrypt.compare(password, hash);
 }
 
 async function setLockPassword(password) {

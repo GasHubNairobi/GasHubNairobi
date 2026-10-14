@@ -40,7 +40,7 @@ GasHub's logic, pages and features are unchanged. Only the hosting layer changed
 
 - Social sign-in: set the redirect URIs in the Google / Facebook / X developer consoles to `https://<your-site>/api/auth/<google|facebook|x>/callback`.
 - M-Pesa: your callback address is now on your Netlify domain; if you registered C2B URLs with `backend/scripts/register-mpesa-c2b.js`, run it again from your computer after setting the new `MPESA_CALLBACK_BASE_URL`.
-- Sign in to admin and change the super-admin lock password (Settings -> unlock -> Super Admin Password). The built-in default is in the source code, so it must not stay in use.
+- There is no built-in super-admin lock password. Before first use, add the Netlify variable `SUPER_ADMIN_LOCK_PASSWORD` (10+ characters, tick "Contains secret values"), redeploy, sign in to admin and unlock with it, set your own password (Settings -> unlock -> Super Admin Password), then delete that variable.
 
 ## Things that behave slightly differently (necessarily)
 

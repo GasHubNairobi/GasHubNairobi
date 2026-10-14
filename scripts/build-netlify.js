@@ -46,7 +46,6 @@ const total =
     copyDir(path.join(root, "dealer"), path.join(dist, "dealer"), all) +
     copyDir(path.join(root, "admin"), path.join(dist, "admin"), (name) => {
         const lower = name.toLowerCase();
-        if (lower === "admin-login.js") return false;             /* legacy file, was answered with 404 */
         if (/\.html?$/.test(lower)) return lower === "admin-login.html";
         return true;
     });

@@ -265,13 +265,6 @@ app.use(
             return res.status(400).send("Invalid path");
         }
 
-        // Legacy bootstrap file is not a login mechanism.
-        if (
-            pathname.toLowerCase() === "/admin-login.js"
-        ) {
-            return res.status(404).send("Not found");
-        }
-
         // Public admin login page.
         if (
             pathname.toLowerCase() === "/admin-login.html"
