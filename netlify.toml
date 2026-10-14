@@ -1,0 +1,82 @@
+# GasHub on Netlify (website + API) with Supabase (PostgreSQL database).
+#   - Netlify CDN serves the pages (built by scripts/build-netlify.js into "dist").
+#   - One Netlify Function ("api") runs the whole Express backend: every /api/* call and the private /admin/*.html pages.
+#   - Scheduled + background functions replace the timers the old always-on server used.
+#   - Supabase hosts the database; connect to it with the environment variables listed in .env.example.
+
+[build]
+  command = "node scripts/build-netlify.js"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # Files the backend reads at run time (the admin pages are private, so they ship with the function instead of the CDN)
+  included_files = [
+    "admin/*.html",
+    "frontend/customer-home.html",
+    "backend/assets/email/*",
+    "backend/allow-customer-and-dealer-same-email.sql"
+  ]
+
+# ---- scheduled jobs (replace setInterval timers) ----
+[functions."cron-minute"]
+  schedule = "* * * * *"        # withdrawals: scheduled M-Pesa payout + "withdrawals are open" notices
+
+[functions."cron-reminders"]
+  schedule = "*/5 * * * *"      # automated customer reminders
+
+[functions."cron-hourly"]
+  schedule = "0 * * * *"        # delete customer accounts after their 7-day wait
+
+# ---- routing ----
+# 1) The API
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+  force = true
+
+# 2) Private admin pages: the CDN serves admin CSS / JS / images / login page; the .html pages are not on the CDN,
+#    so they fall through to the function, which checks the admin login first.
+[[redirects]]
+  from = "/admin/*"
+  to = "/.netlify/functions/api/admin/:splat"
+  status = 200
+
+# 3) Anything else that is not a real file: same behaviour as server.js
+#    (a missing file with an extension = 404, any other unknown address = the customer home page).
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# ---- headers (same as backend/server.js) ----
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(self), camera=(self), microphone=()"
+
+# images are kept by the phone for a week; pages, scripts and styles are re-checked each visit
+[[headers]]
+  for = "/Images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+[[headers]]
+  for = "/dealer/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+[[headers]]
+  for = "/admin/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
