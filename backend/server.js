@@ -106,6 +106,26 @@ app.use((req, res, next) => {
     next();
 });
 
+/* TEMPORARY diagnostic (remove once logins work): shows what shape of request body reaches the server. It never returns the values. */
+app.all("/api/_diag/echo", (req, res) => {
+    const ev = req.apiGateway && req.apiGateway.event;
+    const b = req.body;
+    res.json({
+        ok: true,
+        serverless: !!process.env.GASHUB_SERVERLESS,
+        method: req.method,
+        contentType: req.headers["content-type"] || null,
+        contentLengthHeader: req.headers["content-length"] || null,
+        parsedBodyType: b === undefined ? "undefined" : Array.isArray(b) ? "array" : typeof b,
+        parsedBodyKeys: b && typeof b === "object" ? Object.keys(b) : [],
+        eventBodyType: ev ? (ev.body === null || ev.body === undefined ? "none" : typeof ev.body) : "no-event",
+        eventBodyLength: ev && typeof ev.body === "string" ? ev.body.length : null,
+        eventIsBase64: ev ? !!ev.isBase64Encoded : null,
+        publicUrlSet: !!process.env.PUBLIC_URL,
+        dbConfigured: !!(process.env.DATABASE_URL || (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD))
+    });
+});
+
 // ============================================================
 // FRONTEND PATHS
 // ============================================================

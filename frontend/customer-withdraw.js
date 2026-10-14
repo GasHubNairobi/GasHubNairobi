@@ -147,8 +147,11 @@
     }
 
     function validate() {
-        var ok = true, phone = $("wdPhone").value.replace(/[\s\-()]/g, "");
-        if (phone.indexOf("+254") === 0) phone = "0" + phone.slice(4); else if (phone.indexOf("254") === 0) phone = "0" + phone.slice(3);
+        var ok = true, phone = String($("wdPhone").value || "").replace(/[^\d+]/g, "");
+        if (phone.charAt(0) === "+") phone = phone.slice(1);
+        if (phone.indexOf("00254") === 0) phone = phone.slice(2);
+        if (phone.indexOf("254") === 0) { phone = phone.slice(3); if (phone.charAt(0) === "0") phone = phone.slice(1); phone = "0" + phone; }
+        else if (/^[17]\d{8}$/.test(phone)) phone = "0" + phone;
         if (!/^(07|01)\d{8}$/.test(phone)) { setErr("phone", "Enter a valid M-Pesa number, like 0712345678."); ok = false; } else setErr("phone", "");
         var a = Number($("wdAmount").value);
         if (!(a > 0) || Math.floor(a) !== a) { setErr("amount", "Enter the amount in whole shillings."); ok = false; }

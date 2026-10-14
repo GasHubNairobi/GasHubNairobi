@@ -244,8 +244,11 @@
     on("#cancelEditBtn", "click", () => setEditing(false));
 
     function normalizePhone(v) {
-        let n = String(v || "").trim().replace(/\s+/g, "");
-        if (n.startsWith("+254")) n = "0" + n.slice(4); else if (n.startsWith("254")) n = "0" + n.slice(3);
+        let n = String(v || "").replace(/[^\d+]/g, "");      /* drop spaces, dashes, brackets and hidden characters */
+        if (n.startsWith("+")) n = n.slice(1);
+        if (n.startsWith("00254")) n = n.slice(2);
+        if (n.startsWith("254")) { n = n.slice(3); if (n.startsWith("0")) n = n.slice(1); n = "0" + n; }   /* +254712.. / 254712.. / +2540712.. */
+        else if (/^[17]\d{8}$/.test(n)) n = "0" + n;                                                  /* 712345678 */
         return n;
     }
     function formMsg(el, text, type) { el.textContent = text; el.className = text ? `form-message show ${type}` : "form-message"; }
