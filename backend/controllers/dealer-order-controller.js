@@ -352,9 +352,10 @@ async function updateOrder(req, res) {
             messengerEmail = await autoEmailMessenger(upd.id, baseUrl(req));
         }
         /* The dealer just confirmed a pending order: tell the customer by SMS and email that they can now pay.
-           Sent after everything above is saved, and never holds up the dealer's response. */
+           Sent after everything above is saved. A Netlify function stops as soon as it answers, so the message is
+           finished first (errors are still ignored). */
         if (confirmedNow && String(o.status) === "pending") {
-            require("../utils/payment-flow").notifyOrderConfirmed(upd.id).catch(() => {});
+            await require("../utils/payment-flow").notifyOrderConfirmed(upd.id).catch(() => {});
         }
         res.json({ success: true, order: upd, messengerEmail });
     } catch (error) {

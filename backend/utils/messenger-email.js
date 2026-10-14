@@ -6,7 +6,7 @@
 const path = require("path");
 /* brand pictures are sent inside the email (inline attachments), so they show even when the server is only on localhost.
    Small copies of the logo, the flame (favicon) and a faded watermark live in backend/assets/email. */
-const ASSET_DIR = path.join(__dirname, "..", "assets", "email");
+const ASSET_DIR = require("./paths").projectPath("backend/assets/email");
 const ATTACHMENTS = [
     { filename: "gashub-logo.png", path: path.join(ASSET_DIR, "gashub-logo.png"), cid: "gashub-logo@gashub" },
     { filename: "gashub-flame.png", path: path.join(ASSET_DIR, "gashub-flame.png"), cid: "gashub-flame@gashub" },

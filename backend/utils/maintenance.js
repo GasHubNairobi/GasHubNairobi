@@ -21,10 +21,10 @@ function renderPage(p) {
 <body><main><img src="/Images/logo.png" alt="GasHub"><h1>${esc(p.maintenance_title)}</h1><p>${esc(p.maintenance_message)}</p></main></body></html>`;
 }
 
-function isAdmin(req) {
+async function isAdmin(req) {
     const h = req.headers.authorization || "";
     const t = h.startsWith("Bearer ") ? h.substring(7).trim() : "";
-    return Boolean(t && adminSessions.has(t));
+    return Boolean(t && await adminSessions.has(t));
 }
 
 async function platformGate(req, res, next) {
@@ -33,18 +33,19 @@ async function platformGate(req, res, next) {
         const isPage = req.method === "GET" && (path === "/" || /\.html?$/i.test(path)) && !path.startsWith("/admin");
         const isApi = path.startsWith("/api/");
         if (!isPage && !isApi) return next();
-        if (isApi && isAdmin(req)) return next();
+        /* Signed-in administrators are never blocked. The (database) check is only made when something would be blocked. */
+        const adminBypass = async () => isApi && await isAdmin(req);
 
         const p = await getPlatform();
 
         /* maintenance mode: customers AND dealers are locked out together; admins are not */
-        if (p.maintenance_mode && (isPage || CUSTOMER_API.test(path))) {
+        if (p.maintenance_mode && (isPage || CUSTOMER_API.test(path)) && !(await adminBypass())) {
             if (isApi) return res.status(503).json({ success: false, maintenance: true, message: "GasHub is under maintenance. Please try again shortly." });
             return res.status(503).set("Retry-After", "600").type("html").send(renderPage(p));
         }
 
         /* dealer availability */
-        if (!p.dealer_availability && isApi) {
+        if (!p.dealer_availability && isApi && !(await adminBypass())) {
             const off = "Dealers are not available right now. Please check back later.";
             if (req.method === "GET" && PUBLIC_PRODUCTS.test(path)) {
                 return /\/products\/?$/.test(path)

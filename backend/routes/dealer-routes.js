@@ -14,10 +14,10 @@ const { requireUser } = require("../middleware/user-authentication");
 // Canonical endpoint used by dealer pages that call /api/dealers/login.
 router.post("/login", require("../utils/rate-limit").rateLimit({ windowMs: 15 * 60 * 1000, max: 30 }), authenticationController.loginDealer);
 // Ends the dealer session on the server (always succeeds, even if the token is already gone).
-router.post("/logout", (req, res) => {
+router.post("/logout", async (req, res) => {
     try {
         const token = require("../utils/assistant").getBearerToken(req);
-        if (token) require("../middleware/dealer-authentication").dealerSessions.delete(token);
+        if (token) await require("../middleware/dealer-authentication").dealerSessions.delete(token);
     } catch (e) { /* ignore: logging out must never fail */ }
     res.json({ success: true });
 });

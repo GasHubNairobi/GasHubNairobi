@@ -12,6 +12,7 @@ const { normalizePhone, isPhone } = require("../utils/customer-accounts");
 const { getPointsConfig } = require("../utils/order-fulfilment");
 const { getSetting, putSetting } = require("../utils/gashub-settings");
 const mpesa = require("../utils/mpesa-service");
+const { isServerless } = require("../utils/runtime");
 
 const DEFAULT_MIN_KSH = 100;          /* the admin changes this on the Withdrawals page */
 const STATUSES = ["pending", "approved", "paid", "rejected"];
@@ -276,7 +277,8 @@ async function notifyWaiting() {
     } finally { notifying = false; }
 }
 /* checks once a minute, so customers are told when the scheduled time arrives as well as when the admin switches withdrawals on */
-setInterval(notifyWaiting, 60 * 1000).unref();
+/* (on Netlify there are no timers: netlify/functions/cron-minute.js and jobs-background.js call notifyWaiting / runScheduledPayout instead) */
+if (!isServerless) setInterval(notifyWaiting, 60 * 1000).unref();
 
 
 /* ---------- scheduled payout + "Send now" (automatic M-Pesa payout, B2C) ----------
@@ -428,7 +430,18 @@ async function runScheduledPayout() {
         console.error("Scheduled payout error:", e && e.message);
     } finally { schedRunning = false; }
 }
-setInterval(runScheduledPayout, 30 * 1000).unref();
+if (!isServerless) setInterval(runScheduledPayout, 30 * 1000).unref();
+
+/* Cheap check used by the Netlify cron: is there anything for the minute job to do? (a scheduled payout that is due, or customers waiting to be told withdrawals are open) */
+async function hasMinuteWork() {
+    try {
+        await ensureSchema();
+        const sch = await getSchedule();
+        if (sch.at && new Date(sch.at).getTime() <= Date.now()) return true;
+        const waiting = await pool.query("SELECT 1 FROM withdrawal_notify WHERE notified_at IS NULL LIMIT 1");
+        return waiting.rows.length > 0;
+    } catch (e) { return false; }
+}
 
 /* ================= CUSTOMER ================= */
 
@@ -765,4 +778,4 @@ async function saveSettings(req, res) {
     }
 }
 
-module.exports = { getInfo, createWithdrawal, subscribeNotify, quote, listAdmin, updateAdmin, sendNow, saveSettings, b2cResult, b2cTimeout };
+module.exports = { notifyWaiting, runScheduledPayout, hasMinuteWork, getInfo, createWithdrawal, subscribeNotify, quote, listAdmin, updateAdmin, sendNow, saveSettings, b2cResult, b2cTimeout };

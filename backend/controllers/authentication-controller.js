@@ -213,7 +213,7 @@ const loginDealer = async (req, res) => {
         );
 
         const token = generateToken();
-        dealerSessions.set(token, {
+        await dealerSessions.set(token, {
             userId: dealer.user_id,
             dealerId: dealer.dealer_id,
             createdAt: Date.now()

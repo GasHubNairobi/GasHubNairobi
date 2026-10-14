@@ -18,6 +18,8 @@ async function ensureAudienceColumn() {
 }
 const audienceOf = (v) => (v === "dealers" ? "dealers" : "customers");
 
+const { isServerless } = require("../utils/runtime");
+const { triggerJob, siteOrigin } = require("../utils/jobs");
 const who = (req) => (req.admin && (req.admin.full_name || req.admin.email)) || "Admin";
 
 function fail(res, error, what) {
@@ -94,40 +96,61 @@ async function sendBroadcast(req, res) {
              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
             [channel, channel === "email" ? subject : null, message, recipients.length, who(req), audienceKind]);
         const id = created.rows[0].id;
+        const job = { id, channel, subject, message, audienceKind };
+
+        if (isServerless) {
+            /* Netlify: hand the sending to the background function (it keeps running after this response). */
+            try {
+                await triggerJob("broadcast", job, siteOrigin(req));
+            } catch (error) {
+                console.error("Could not start the broadcast job:", error);
+                await pool.query("UPDATE broadcast_messages SET status = 'failed', last_error = $2, finished_at = NOW() WHERE id = $1",
+                    [id, String(error.message || error).slice(0, 300)]).catch(() => {});
+                return res.status(502).json({ success: false, message: "The message could not be started. Please try again." });
+            }
+            return res.status(202).json({ success: true, id, total: recipients.length, message: `Sending to ${recipients.length} ${dealersAud ? "dealers" : "customers"}...` });
+        }
 
         res.status(202).json({ success: true, id, total: recipients.length, message: `Sending to ${recipients.length} ${dealersAud ? "dealers" : "customers"}...` });
 
         /* ---- send in the background; the page follows progress with GET /broadcasts/:id ---- */
-        let sent = 0, failed = 0, lastError = null;
-        const save = (done) => pool.query(
-            `UPDATE broadcast_messages SET sent_count = $2, failed_count = $3, last_error = $4,
-                    status = $5, finished_at = CASE WHEN $5 = 'sending' THEN NULL ELSE NOW() END WHERE id = $1`,
-            [id, sent, failed, lastError, done ? "completed" : "sending"]).catch(() => {});
-
-        (async () => {
-            try {
-                await M.runPool(recipients, 5, async (r, i) => {
-                    const vars = { name: M.firstName(r.name) };
-                    try {
-                        await M.deliver(channel, channel === "email" ? r.email : r.phone, M.render(subject, vars), M.render(message, vars));
-                        sent++;
-                    } catch (error) {
-                        failed++;
-                        lastError = String(error.message || error).slice(0, 300);
-                    }
-                    if ((sent + failed) % 10 === 0) await save(false);
-                    await M.sleep(channel === "email" ? 150 : 50);
-                });
-                await save(true);
-            } catch (error) {
-                console.error("Broadcast crashed:", error);
-                lastError = String(error.message || error).slice(0, 300);
-                await pool.query("UPDATE broadcast_messages SET status = 'failed', sent_count = $2, failed_count = $3, last_error = $4, finished_at = NOW() WHERE id = $1",
-                    [id, sent, failed, lastError]).catch(() => {});
-            }
-        })();
+        runBroadcast(job).catch((error) => console.error("Broadcast crashed:", error));
     } catch (e) {
         if (!res.headersSent) fail(res, e, "send the message");
+    }
+}
+
+/* Sends one broadcast to everybody in its audience and keeps the broadcast_messages row up to date.
+   Runs in the background: in-process on a normal server, inside the "jobs-background" function on Netlify. */
+async function runBroadcast({ id, channel, subject, message, audienceKind }) {
+    const dealersAud = audienceKind === "dealers";
+    const audience = dealersAud ? await M.getDealerAudience() : await M.getAudience();
+    const recipients = channel === "email" ? audience.emails : audience.phones;
+    let sent = 0, failed = 0, lastError = null;
+    const save = (done) => pool.query(
+        `UPDATE broadcast_messages SET sent_count = $2, failed_count = $3, last_error = $4,
+                status = $5, finished_at = CASE WHEN $5 = 'sending' THEN NULL ELSE NOW() END WHERE id = $1`,
+        [id, sent, failed, lastError, done ? "completed" : "sending"]).catch(() => {});
+
+    try {
+        await M.runPool(recipients, 5, async (r, i) => {
+            const vars = { name: M.firstName(r.name) };
+            try {
+                await M.deliver(channel, channel === "email" ? r.email : r.phone, M.render(subject, vars), M.render(message, vars));
+                sent++;
+            } catch (error) {
+                failed++;
+                lastError = String(error.message || error).slice(0, 300);
+            }
+            if ((sent + failed) % 10 === 0) await save(false);
+            await M.sleep(channel === "email" ? 150 : 50);
+        });
+        await save(true);
+    } catch (error) {
+        console.error("Broadcast crashed:", error);
+        lastError = String(error.message || error).slice(0, 300);
+        await pool.query("UPDATE broadcast_messages SET status = 'failed', sent_count = $2, failed_count = $3, last_error = $4, finished_at = NOW() WHERE id = $1",
+            [id, sent, failed, lastError]).catch(() => {});
     }
 }
 
@@ -251,6 +274,6 @@ async function runNow(req, res) {
 }
 
 module.exports = {
-    getOverview, sendBroadcast, listBroadcasts, getBroadcast,
+    getOverview, sendBroadcast, runBroadcast, listBroadcasts, getBroadcast,
     getAutomation, putAutomation, testAutomation, runNow
 };

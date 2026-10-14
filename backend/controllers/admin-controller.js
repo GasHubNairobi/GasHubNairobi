@@ -81,7 +81,7 @@ async function adminLogin(req, res) {
 
         const token = generateToken();
 
-        adminSessions.set(token, {
+        await adminSessions.set(token, {
             adminId: admin.id,
             createdAt: Date.now()
         });
@@ -120,8 +120,8 @@ async function adminLogin(req, res) {
 async function adminLogout(req, res) {
     try {
         const bearer = getBearerToken(req);
-        if (bearer) adminSessions.delete(bearer);
-        if (req.adminToken) adminSessions.delete(req.adminToken);
+        if (bearer) await adminSessions.delete(bearer);
+        if (req.adminToken) await adminSessions.delete(req.adminToken);
         res.clearCookie("gashub_admin_session", {
             httpOnly: true,
             sameSite: "strict",
@@ -1512,25 +1512,7 @@ async function deleteAdmin(req, res) {
                 });
             }
 
-            for (
-                const [
-                    token,
-                    session
-                ] of adminSessions.entries()
-            ) {
-                if (
-                    String(
-                        session.adminId
-                    ) ===
-                    String(
-                        req.params.id
-                    )
-                ) {
-                    adminSessions.delete(
-                        token
-                    );
-                }
-            }
+            await adminSessions.deleteWhere("adminId", req.params.id);
 
             res.json({
                 success: true,

@@ -43,6 +43,8 @@ const dealerApplicationController = require("./controllers/dealer-application-co
 const { adminSessions } = require("./middleware/admin-authentication");
 const { pool } = require("./config/database-config");
 const { rateLimit } = require("./utils/rate-limit");
+const { isServerless } = require("./utils/runtime");
+const { projectPath } = require("./utils/paths");
 
 // ============================================================
 // APP CONFIGURATION
@@ -51,7 +53,7 @@ const { rateLimit } = require("./utils/rate-limit");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-if (process.env.TRUST_PROXY) {
+if (process.env.TRUST_PROXY || isServerless) {
     app.set(
         "trust proxy",
         Number(process.env.TRUST_PROXY) || 1
@@ -70,7 +72,8 @@ app.use((req, res, next) => {
 });
 
 // Smaller responses (gzip / brotli) so pages and scripts load faster on mobile data
-app.use(require("./utils/compress").compress());
+// (on Netlify the CDN compresses responses itself)
+if (!isServerless) app.use(require("./utils/compress").compress());
 
 // Maintenance mode (switched on by the super admin in Admin Settings)
 app.use(require("./utils/maintenance").maintenanceGate);
@@ -85,10 +88,11 @@ app.use(express.urlencoded({
 // FRONTEND PATHS
 // ============================================================
 
-const frontendPath = path.join(__dirname, "..", "frontend");
-const imagesPath = path.join(__dirname, "..", "Images");
-const adminPath = path.join(__dirname, "..", "admin");
-const dealerPath = path.join(__dirname, "..", "dealer");
+// (on Netlify the public files are served by the CDN; only the admin pages and the home-page fallback are shipped with the function)
+const frontendPath = projectPath("frontend");
+const imagesPath = projectPath("Images");
+const adminPath = projectPath("admin");
+const dealerPath = projectPath("dealer");
 
 // ============================================================
 // STATIC FILES
@@ -164,7 +168,7 @@ async function requireAdminPage(req, res, next) {
         );
 
         const session = token
-            ? adminSessions.get(token)
+            ? await adminSessions.get(token)
             : null;
 
         const sessionExpired =
@@ -175,7 +179,7 @@ async function requireAdminPage(req, res, next) {
 
         if (sessionExpired) {
             if (token) {
-                adminSessions.delete(token);
+                await adminSessions.delete(token);
             }
 
             res.clearCookie(
@@ -206,7 +210,7 @@ async function requireAdminPage(req, res, next) {
         );
 
         if (!result.rows.length) {
-            adminSessions.delete(token);
+            await adminSessions.delete(token);
 
             res.clearCookie(
                 ADMIN_SESSION_COOKIE,
@@ -464,6 +468,22 @@ app.use(
 // START SERVER
 // ============================================================
 
+// Work the server used to do once at start-up. On Netlify it runs on the first request of each new function instance
+// (everything here is idempotent and skips quickly when the database is already prepared).
+let warmedUp = null;
+function warmup() {
+    if (!warmedUp) {
+        const withTimeout = (promise, ms) => Promise.race([Promise.resolve(promise).catch((e) => console.error("Start-up task:", e && e.message)), new Promise((r) => setTimeout(r, ms).unref())]);
+        warmedUp = Promise.all([
+            withTimeout(require("./utils/payment-flow").ensurePaymentFlowColumns(), 6000),
+            withTimeout(require("./utils/order-times").ensureOrderTimeColumns(), 6000),
+            withTimeout(require("./utils/account-indexes").ensureRoleScopedAccountIndexes(), 6000)
+        ]);
+    }
+    return warmedUp;
+}
+app.warmup = warmup;
+
 async function startServer() {
     try {
         console.log(
@@ -584,6 +604,9 @@ process.on("uncaughtException", (error) => {
 });
 process.on("unhandledRejection", (reason) => console.error("Unhandled rejection:", reason));
 
-startServer();
+// "npm start" runs this file directly. Netlify (netlify/functions/api.js) only imports the app.
+if (require.main === module) {
+    startServer();
+}
 
 module.exports = app;

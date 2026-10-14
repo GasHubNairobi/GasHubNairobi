@@ -151,25 +151,29 @@ async function putPaymentAccountSetting(req, res) {
 
 /* ---------- super-admin lock (Platform Settings + Administrator Management) ---------- */
 async function lockStatus(req, res) {
-    res.json({ success: true, unlocked: lock.tokenValid(req) });
+    try {
+        res.json({ success: true, unlocked: await lock.tokenValid(req) });
+    } catch (e) { fail(res, e, "check the lock"); }
 }
 
 async function lockUnlock(req, res) {
     try {
-        const wait = lock.blockedFor(req.admin.id);
+        const wait = await lock.blockedFor(req.admin.id);
         if (wait) return res.status(429).json({ success: false, message: `Too many wrong attempts. Try again in ${wait} minute(s).` });
         if (!(await lock.verifyLockPassword((req.body || {}).password))) {
-            lock.recordFail(req.admin.id);
+            await lock.recordFail(req.admin.id);
             return res.status(401).json({ success: false, message: "Incorrect super admin password." });
         }
-        lock.clearFails(req.admin.id);
-        res.json({ success: true, token: lock.issueToken(req), message: "Unlocked." });
+        await lock.clearFails(req.admin.id);
+        res.json({ success: true, token: await lock.issueToken(req), message: "Unlocked." });
     } catch (e) { fail(res, e, "unlock this section"); }
 }
 
 async function lockRelock(req, res) {
-    lock.revoke(req);
-    res.json({ success: true, message: "Locked." });
+    try {
+        await lock.revoke(req);
+        res.json({ success: true, message: "Locked." });
+    } catch (e) { fail(res, e, "lock this section"); }
 }
 
 async function lockChangePassword(req, res) {

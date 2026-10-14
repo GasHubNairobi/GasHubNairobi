@@ -165,10 +165,18 @@ async function markInterruptedBroadcasts() {
     } catch (e) { /* migration not run yet */ }
 }
 
+/* Netlify: a broadcast that has been "sending" for far longer than the 15-minute background limit has died. Frees the sender again. */
+async function markStuckBroadcasts() {
+    try {
+        await pool.query(`UPDATE broadcast_messages SET status = 'interrupted', finished_at = NOW()
+                           WHERE status = 'sending' AND created_at < NOW() - INTERVAL '20 minutes'`);
+    } catch (e) { /* migration not run yet */ }
+}
+
 function start() {
     markInterruptedBroadcasts();
     setTimeout(runAll, 60 * 1000).unref();
     setInterval(runAll, CHECK_EVERY_MS).unref();
 }
 
-module.exports = { start, runAll, findItemReminderCandidates, findRestockCandidates };
+module.exports = { start, runAll, markStuckBroadcasts, findItemReminderCandidates, findRestockCandidates };

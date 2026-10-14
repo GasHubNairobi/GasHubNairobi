@@ -1,13 +1,14 @@
 const { pool } = require("../config/database-config");
 const { getBearerToken } = require("../utils/assistant");
 
-const dealerSessions = new Map();
+/* Stored in the database (not in memory) so sessions work across Netlify function instances. */
+const dealerSessions = require("../utils/session-store").createStore("dealer", 30 * 24 * 60 * 60 * 1000);
 
 async function requireDealer(req, res, next) {
     try {
         const token = getBearerToken(req);
         if (!token) return res.status(401).json({ success: false, message: "Dealer authentication required." });
-        const session = dealerSessions.get(token);
+        const session = await dealerSessions.get(token);
         if (!session) return res.status(401).json({ success: false, message: "Invalid or expired dealer session." });
         const result = await pool.query(
             `SELECT u.id AS user_id, u.full_name, u.email, u.phone, u.status AS user_status,
@@ -20,7 +21,7 @@ async function requireDealer(req, res, next) {
         const account = result.rows[0];
         const pendingFirstLogin = Boolean(account && account.must_change_password && !account.onboarding_completed);
         if (!account || account.user_status !== "active" || (account.dealer_status !== "active" && !pendingFirstLogin)) {
-            dealerSessions.delete(token);
+            await dealerSessions.delete(token);
             return res.status(401).json({ success: false, message: "Dealer account is no longer active." });
         }
         req.dealer = result.rows[0];

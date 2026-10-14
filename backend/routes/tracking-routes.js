@@ -7,7 +7,7 @@ const { rateLimit } = require("../utils/rate-limit");
 const router = express.Router();
 router.use((req, res, next) => { res.set("Cache-Control", "no-store"); next(); });
 /* a phone sends a position every 5-10 seconds, so allow plenty, but not unlimited */
-router.use(rateLimit({ windowMs: 60 * 1000, max: 150 }));
+router.use(rateLimit({ windowMs: 60 * 1000, max: 150, local: true }));
 
 router.get("/rider/:token", c.riderInfo);
 router.post("/rider/:token/start", c.riderStart);
