@@ -37,7 +37,8 @@
         heart: '<path d="M12 21s-7-4.5-9.3-9A5.2 5.2 0 0 1 12 6.6 5.2 5.2 0 0 1 21.3 12C19 16.5 12 21 12 21z"/>',
         privacy: '<path d="M12 3l8 3v6c0 4.5-3.2 8.2-8 9-4.8-.8-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
         help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17v.01"/>',
-        logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>'
+        logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
+        login: '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/>'
     };
     function svg(k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + I[k] + "</svg>"; }
     function cls(k) { return k === active ? ' class="active" aria-current="page"' : ""; }
@@ -98,6 +99,7 @@
             if (t.closest("#logoutLink")) {
                 e.preventDefault(); e.stopPropagation();
                 closeMenu();
+                if (t.closest("#logoutLink").getAttribute("data-guest") === "1") { location.href = "customer-login.html"; return; }
                 if (window.gasHubAskLogout) window.gasHubAskLogout();
                 else if (confirm("Are you sure you want to log out?")) { if (window.gasHubLogout) window.gasHubLogout(); else location.href = "customer-login.html?logged_out=1"; }
                 return;
@@ -116,6 +118,33 @@
             /* the profile photo is drawn by customer-photo.js */
         }
         who();
+
+        /* Visitors who are not signed in see "Login" instead of "Logout". The saved sign-in flag decides at once;
+           then the server is asked, and its answer wins (401 = not signed in). If the server cannot be reached the saved flag stays. */
+        function setGuest(guest) {
+            var a = $("logoutLink"); if (!a) return;
+            var small = document.querySelector("#mobileMenu .gh-d-user small");
+            if (guest) {
+                a.setAttribute("data-guest", "1"); a.setAttribute("href", "customer-login.html");
+                a.innerHTML = svg("login") + "Login";
+                if ($("menuCustomerName")) $("menuCustomerName").textContent = "Welcome";
+                if ($("avatar")) $("avatar").textContent = "G";
+                if (small) small.textContent = "Log in to order";
+            } else {
+                a.removeAttribute("data-guest");
+                a.innerHTML = svg("logout") + "Logout";
+                if (small) small.textContent = "GasHub Customer";
+            }
+        }
+        var savedIn = false;
+        try { savedIn = localStorage.getItem("gasHubLoggedIn") === "true"; } catch (x) { savedIn = true; }
+        setGuest(!savedIn);
+        try {
+            fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" }).then(function (r) {
+                if (r.status === 401 || r.status === 403) setGuest(true);
+                else if (r.ok) { setGuest(false); who(); }
+            }).catch(function () { });
+        } catch (x) { }
     }
 
     /* Back/forward cache: after logging out, pressing Back can bring up an old copy of the page that still shows the

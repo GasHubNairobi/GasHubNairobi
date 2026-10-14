@@ -16,7 +16,19 @@ const { sign, verify, readCookie, cookieBase, startSession, safeNext } = require
 const { recordReferral } = require("../utils/referrals");
 const { clean, isEmail, normalizePhone, isPhone, publicCustomer, findConflict, insertCustomer, conflictFromError } = require("../utils/customer-accounts");
 
-const PUBLIC_URL = () => (process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/+$/, "");
+/* The website address used for the sign-in redirect (Google must send people back to the live site, never to localhost).
+   On Netlify, if PUBLIC_URL is missing or still says localhost, the address of the request itself is used instead. */
+const isLocalUrl = (u) => /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|\/|$)/i.test(u);
+const PUBLIC_URL = (req) => {
+    const env = String(process.env.PUBLIC_URL || "").trim().replace(/\/+$/, "");
+    if (process.env.GASHUB_SERVERLESS && (!env || isLocalUrl(env))) {
+        const host = req && req.headers && String(req.headers["x-forwarded-host"] || req.headers.host || "").split(",")[0].trim();
+        if (host && !isLocalUrl("https://" + host)) return "https://" + host;
+        const site = String(process.env.URL || "").trim().replace(/\/+$/, "");
+        if (/^https:\/\//i.test(site)) return site;
+    }
+    return env || `http://localhost:${process.env.PORT || 3000}`;
+};
 const OAUTH_COOKIE = "gashub_oauth";
 const SOCIAL_COOKIE = "gashub_social";
 
@@ -45,7 +57,7 @@ const PROVIDERS = {
     }
 };
 const enabled = (p) => !!(PROVIDERS[p] && PROVIDERS[p].id() && PROVIDERS[p].secret());
-const redirectUri = (p) => `${PUBLIC_URL()}/api/auth/${p}/callback`;
+const redirectUri = (p, req) => `${PUBLIC_URL(req)}/api/auth/${p}/callback`;
 const pageFor = (mode) => (mode === "register" ? "customer-register.html" : "customer-login.html");
 
 function goBack(res, mode, query) {
@@ -81,7 +93,7 @@ function start(req, res, next) {
     res.cookie(OAUTH_COOKIE, sign({ state, verifier, p, mode, next: nextPage, exp: Date.now() + 10 * 60 * 1000 }), { ...cookieBase, maxAge: 10 * 60 * 1000 });
 
     const params = new URLSearchParams({
-        client_id: cfg.id(), redirect_uri: redirectUri(p), response_type: "code",
+        client_id: cfg.id(), redirect_uri: redirectUri(p, req), response_type: "code",
         scope: typeof cfg.scope === "function" ? cfg.scope() : cfg.scope, state, ...cfg.extra
     });
     if (p === "x") {
@@ -92,20 +104,20 @@ function start(req, res, next) {
 }
 
 /* Swap the code for { id, name, email, emailVerified, photo } */
-async function fetchProfile(p, code, verifier) {
+async function fetchProfile(p, code, verifier, req) {
     const cfg = PROVIDERS[p];
 
     if (p === "google") {
         const t = await getJson(cfg.tokenUrl, {
             method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ code, client_id: cfg.id(), client_secret: cfg.secret(), redirect_uri: redirectUri(p), grant_type: "authorization_code" })
+            body: new URLSearchParams({ code, client_id: cfg.id(), client_secret: cfg.secret(), redirect_uri: redirectUri(p, req), grant_type: "authorization_code" })
         });
         const u = await getJson("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${t.access_token}` } });
         return { id: u.sub, name: u.name || "", email: u.email || "", emailVerified: u.email_verified === true, photo: u.picture || "" };
     }
 
     if (p === "facebook") {
-        const t = await getJson(`${cfg.tokenUrl}?${new URLSearchParams({ client_id: cfg.id(), client_secret: cfg.secret(), redirect_uri: redirectUri(p), code })}`);
+        const t = await getJson(`${cfg.tokenUrl}?${new URLSearchParams({ client_id: cfg.id(), client_secret: cfg.secret(), redirect_uri: redirectUri(p, req), code })}`);
         const u = await getJson(`https://graph.facebook.com/v19.0/me?${new URLSearchParams({ fields: "id,name,email,picture.width(200).height(200)", access_token: t.access_token })}`);
         return { id: u.id, name: u.name || "", email: u.email || "", emailVerified: !!u.email, photo: (u.picture && u.picture.data && u.picture.data.url) || "" };
     }
@@ -114,7 +126,7 @@ async function fetchProfile(p, code, verifier) {
     const basic = Buffer.from(`${cfg.id()}:${cfg.secret()}`).toString("base64");
     const t = await getJson(cfg.tokenUrl, {
         method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: `Basic ${basic}` },
-        body: new URLSearchParams({ code, grant_type: "authorization_code", redirect_uri: redirectUri(p), code_verifier: verifier })
+        body: new URLSearchParams({ code, grant_type: "authorization_code", redirect_uri: redirectUri(p, req), code_verifier: verifier })
     });
     const fields = "profile_image_url" + (process.env.X_REQUEST_EMAIL === "true" ? ",confirmed_email" : "");
     const u = (await getJson(`https://api.twitter.com/2/users/me?user.fields=${fields}`, { headers: { Authorization: `Bearer ${t.access_token}` } })).data || {};
@@ -146,7 +158,7 @@ async function callback(req, res, next) {
         }
         if (!enabled(p)) return back({ auth_error: "provider_unavailable" });
 
-        const profile = await fetchProfile(p, String(req.query.code), saved.verifier);
+        const profile = await fetchProfile(p, String(req.query.code), saved.verifier, req);
         if (!profile.id) return back({ auth_error: "provider_unavailable" });
 
         /* 0. Banned and deleted earlier: this social account may not sign up again */

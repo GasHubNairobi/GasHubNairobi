@@ -84,6 +84,28 @@ app.use(express.urlencoded({
     limit: "10mb"
 }));
 
+/* Netlify safety net: if the normal body parsers left the body empty but the function request carries one
+   (JSON or form data), read it straight from the function event so logins and forms still receive their fields. */
+app.use((req, res, next) => {
+    try {
+        const ev = req.apiGateway && req.apiGateway.event;
+        const b = req.body;
+        const empty = !b || (typeof b === "object" && !Array.isArray(b) && Object.keys(b).length === 0);
+        if (ev && ev.body && empty) {
+            const type = String(req.headers["content-type"] || "").toLowerCase();
+            let raw = ev.body;
+            if (Buffer.isBuffer(raw)) raw = raw.toString("utf8");
+            else if (typeof raw === "object") { req.body = raw; return next(); }
+            else if (ev.isBase64Encoded) raw = Buffer.from(raw, "base64").toString("utf8");
+            if (type.includes("application/json")) req.body = JSON.parse(raw);
+            else if (type.includes("application/x-www-form-urlencoded")) req.body = Object.fromEntries(new URLSearchParams(raw));
+        }
+    } catch (e) {
+        console.error("[body-fallback]", e.message);
+    }
+    next();
+});
+
 // ============================================================
 // FRONTEND PATHS
 // ============================================================
