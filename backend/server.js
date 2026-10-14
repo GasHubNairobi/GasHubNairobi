@@ -84,21 +84,33 @@ app.use(express.urlencoded({
     limit: "10mb"
 }));
 
-/* Netlify safety net: if the normal body parsers left the body empty but the function request carries one
-   (JSON or form data), read it straight from the function event so logins and forms still receive their fields. */
+/* Netlify safety net: on Netlify the request body can reach Express as a raw Buffer (or string) that the normal body parsers
+   skip, or as an empty object. Here it is turned into the usual fields (JSON or form data) so logins and forms work. */
 app.use((req, res, next) => {
     try {
-        const ev = req.apiGateway && req.apiGateway.event;
-        const b = req.body;
-        const empty = !b || (typeof b === "object" && !Array.isArray(b) && Object.keys(b).length === 0);
-        if (ev && ev.body && empty) {
-            const type = String(req.headers["content-type"] || "").toLowerCase();
-            let raw = ev.body;
-            if (Buffer.isBuffer(raw)) raw = raw.toString("utf8");
-            else if (typeof raw === "object") { req.body = raw; return next(); }
-            else if (ev.isBase64Encoded) raw = Buffer.from(raw, "base64").toString("utf8");
-            if (type.includes("application/json")) req.body = JSON.parse(raw);
-            else if (type.includes("application/x-www-form-urlencoded")) req.body = Object.fromEntries(new URLSearchParams(raw));
+        const type = String(req.headers["content-type"] || "").toLowerCase();
+        const isJson = type.includes("application/json");
+        const isForm = type.includes("application/x-www-form-urlencoded");
+        const parseRaw = (raw) => {
+            raw = String(raw || "");
+            if (isJson) return raw.trim() ? JSON.parse(raw) : {};
+            if (isForm) return Object.fromEntries(new URLSearchParams(raw));
+            return undefined;
+        };
+        let b = req.body;
+        if (Buffer.isBuffer(b) || typeof b === "string") {
+            const parsed = b.length === 0 ? {} : parseRaw(Buffer.isBuffer(b) ? b.toString("utf8") : b);
+            if (parsed !== undefined) req.body = parsed;
+        } else {
+            const ev = req.apiGateway && req.apiGateway.event;
+            const empty = !b || (typeof b === "object" && !Array.isArray(b) && Object.keys(b).length === 0);
+            if (ev && ev.body && empty && (isJson || isForm)) {
+                let raw = ev.body;
+                if (Buffer.isBuffer(raw)) raw = raw.toString("utf8");
+                else if (typeof raw === "object") { req.body = raw; return next(); }
+                else if (ev.isBase64Encoded) raw = Buffer.from(raw, "base64").toString("utf8");
+                req.body = parseRaw(raw);
+            }
         }
     } catch (e) {
         console.error("[body-fallback]", e.message);
