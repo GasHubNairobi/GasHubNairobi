@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- light / dark / system theme (chosen on the Profile page): script first, stylesheet last -->
+    <script src="gashub-theme.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1f4fd8">
+    <title>Products | GasHub</title>
+    <link rel="icon" type="image/png" href="/Images/favicon.png">
+    <link rel="stylesheet" href="customer-product.css">
+    <link rel="stylesheet" href="customer-cards.css">
+    <link rel="stylesheet" href="gashub-theme.css">
+    <script src="gashub-ban-guard.js"></script>
+</head>
+<body>
+    <script src="customer-nav.js" data-active="products" data-sidebar="true" data-tabs="true"></script>
+
+    <script src="customer-logout.js"></script>
+    <script src="customer-photo.js"></script>
+    <!-- HEADER -->
+    <header class="customer-header">
+        <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+
+        <a href="customer-home.html" class="customer-logo"><img src="/Images/logo.png" alt="GasHub"></a>
+
+        <!-- location is set on the home page; tapping this goes there -->
+        <a href="customer-home.html" class="location-btn" id="locationBtn" aria-label="Change delivery location">
+            <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+            <span id="customerLocation">Select location</span>
+        </a>
+
+        <a href="customer-orders.html" class="notification-link" aria-label="My orders">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </a>
+    </header>
+
+    <!-- SIDE MENU -->
+    <main>
+
+        <!-- SLIM HERO + SEARCH -->
+        <section class="page-hero">
+            <div class="hero-inner">
+                <p class="hero-eyebrow">Gas &amp; accessories</p>
+                <p class="hero-text">Compare prices, dealers and delivery time from dealers near you.</p>
+                <label class="search-box">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+                    <input type="search" id="productSearch" placeholder="Search gas, cylinders, brands..." autocomplete="off" aria-label="Search products">
+                </label>
+            </div>
+        </section>
+
+        <!-- FILTERS -->
+        <section class="controls">
+            <div class="type-chips" id="typeChips" role="tablist" aria-label="Product type">
+                <button type="button" class="chip active" data-type="all">All</button>
+                <button type="button" class="chip" data-type="gas">Gas</button>
+                <button type="button" class="chip" data-type="cylinder">Cylinders</button>
+                <button type="button" class="chip" data-type="gas-cylinder">Gas + Cylinder</button>
+                <button type="button" class="chip" data-type="accessory">Accessories</button>
+            </div>
+
+            <div class="filter-row">
+                <select id="sizeFilter" aria-label="Cylinder size">
+                    <option value="all">All sizes</option>
+                    <option value="3kg">3 KG</option>
+                    <option value="6kg">6 KG</option>
+                    <option value="13kg">13 KG</option>
+                    <option value="22.5kg">22.5 KG</option>
+                    <option value="50kg">50 KG</option>
+                </select>
+                <select id="availabilityFilter" aria-label="Availability">
+                    <option value="all">Any stock</option>
+                    <option value="available">Available</option>
+                    <option value="unavailable">Unavailable</option>
+                </select>
+                <button type="button" class="fav-filter" id="favFilter" aria-pressed="false">
+                    <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9.2C1.2 8.6 3 5 6.4 5c2 0 3.5 1.1 4.3 2.5h.6C12.1 6.1 13.6 5 15.6 5 19 5 20.8 8.6 21.5 11.8 19.5 16.4 12 21 12 21z"/></svg>
+                    Favourites
+                </button>
+            </div>
+
+            <div class="control-bottom">
+                <p id="productCount">0 products</p>
+                <button type="button" id="resetFilters" class="reset-button">Reset filters</button>
+            </div>
+        </section>
+
+        <!-- PRODUCTS -->
+        <section class="products-section">
+            <div class="products-loading" id="productsLoading">
+                <div class="loading-spinner"></div>
+                <p>Loading products...</p>
+            </div>
+
+            <div class="products-empty" id="productsEmpty" hidden>
+                <h3 id="emptyTitle">No products found</h3>
+                <p id="emptyMessage">We could not find products matching your search or filters.</p>
+                <button type="button" id="emptyResetButton">Clear filters</button>
+            </div>
+
+            <div class="product-grid" id="productList"></div>
+        </section>
+
+    </main>
+
+    <!-- PRODUCT DETAILS + DEALER CHAT -->
+    <div class="product-modal" id="productModal" hidden>
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-label="Product details">
+            <button type="button" class="modal-close" id="modalClose" aria-label="Close">×</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <!-- Tracking helper: provides recordView() -->
+    <script src="customer-track.js"></script>
+    <script src="customer-product-card.js"></script>
+    <script src="customer-product.js"></script>
+    <script src="customer-review-popup.js" defer></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="gashub-assistant.js" defer></script>
+    <script src="customer-pay-prompt.js" defer></script>
+</body>
+</html>

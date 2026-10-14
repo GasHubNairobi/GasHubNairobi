@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4fd8">
+<title>Privacy Policy | GasHub</title>
+<meta name="description" content="How GasHub collects, uses, shares and protects the information of customers, dealers and delivery messengers in Kenya, and the choices and rights you have.">
+<link rel="icon" type="image/png" href="/Images/favicon.png">
+<script src="/gashub-theme.js"></script>
+<style>
+:root{
+    --blue:#1f4fd8;--blue-dark:#0f2a7a;--blue-soft:#eaf0ff;--yellow:#ffc20e;--red:#e03131;
+    --ink:#10233f;--muted:#53637c;--line:#e3e9f2;--bg:#f4f7fb;--card:#ffffff;--head:#0f2a7a;--table-head:#eef3fc;--note:#fff8e1;--note-line:#ffe08a;
+}
+html[data-theme="dark"]{
+    --blue:#3f6df0;--blue-soft:#1b2750;--ink:#e8eef9;--muted:#a3b3cc;--line:#26354d;--bg:#0c1524;--card:#111d31;--head:#a9c1ff;--table-head:#16243d;--note:#2a2410;--note-line:#5c4a12;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--blue)}
+.topbar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0)}
+.topbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800;font-size:19px}
+.brand img{height:34px;width:auto}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--blue);font-weight:700;text-decoration:none;font-size:15px;padding:8px 12px;border-radius:999px;background:var(--blue-soft)}
+.hero{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;padding:36px 16px 44px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--blue) 0 34%,var(--red) 34% 67%,var(--yellow) 67% 100%)}
+.hero-in{max-width:1080px;margin:0 auto}
+.hero h1{margin:0 0 8px;font-size:clamp(26px,5vw,38px);line-height:1.2}
+.hero p{margin:0;max-width:640px;color:#dbe6ff}
+.updated{display:inline-block;margin-top:14px;background:rgba(255,255,255,.14);padding:5px 12px;border-radius:999px;font-size:13px;color:#fff}
+.layout{max-width:1080px;margin:0 auto;padding:22px 16px 56px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+.toc{position:sticky;top:84px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;max-height:calc(100vh - 110px);overflow:auto}
+.toc h2{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.toc ol{margin:0;padding:0;list-style:none;counter-reset:t}
+.toc li{counter-increment:t}
+.toc a{display:block;padding:6px 8px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.35}
+.toc a::before{content:counter(t) ". ";color:var(--muted)}
+.toc a:hover,.toc a.on{background:var(--blue-soft);color:var(--blue)}
+.toc-toggle{display:none}
+.doc{min-width:0}
+.glance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.glance div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;border-top:4px solid var(--blue)}
+.glance div:nth-child(2){border-top-color:var(--red)}
+.glance div:nth-child(3){border-top-color:var(--yellow)}
+.glance div:nth-child(4){border-top-color:var(--blue-dark)}
+.glance b{display:block;margin-bottom:4px;font-size:15px}
+.glance span{color:var(--muted);font-size:14px;line-height:1.5;display:block}
+section.sec{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 22px;margin-bottom:16px}
+section.sec h2{margin:0 0 10px;font-size:21px;color:var(--head);line-height:1.3}
+section.sec h3{margin:20px 0 6px;font-size:16px}
+section.sec p,section.sec li{color:var(--muted)}
+section.sec ul{padding-left:20px;margin:8px 0}
+section.sec li{margin:4px 0}
+strong{color:var(--ink)}
+.note{background:var(--note);border:1px solid var(--note-line);border-radius:12px;padding:12px 14px;margin:14px 0;color:var(--ink)}
+.note p{margin:0;color:var(--ink)}
+.tbl{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+th{background:var(--table-head);color:var(--ink);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td:first-child{color:var(--ink);font-weight:600}
+.contact-box{display:grid;gap:10px;margin-top:12px}
+.contact-box a.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;background:var(--blue);color:#fff;font-weight:700;text-decoration:none}
+.contact-box a.btn.wa{background:#1e9e55}
+.contact-box a.btn.mail{background:var(--red)}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 16px calc(30px + env(safe-area-inset-bottom,0))}
+@media(max-width:1000px){.glance{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.glance{grid-template-columns:1fr}}
+@media(max-width:860px){
+    .layout{grid-template-columns:1fr;gap:14px}
+    .toc{position:static;max-height:none}
+    .toc-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;background:none;border:0;color:var(--ink);font:700 15px system-ui;padding:2px 2px 6px;cursor:pointer}
+    .toc h2{display:none}
+    .toc ol{display:none}
+    .toc.open ol{display:block}
+    section.sec{padding:20px 16px}
+}
+@media print{.topbar,.toc,.back{display:none}.layout{display:block}.hero{background:none;color:#000;padding:0}.hero p,.updated{color:#000}section.sec{border:0;padding:0}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+    <a class="brand" href="/customer-home.html"><img src="/Images/logo.png" alt="GasHub logo"><span>GasHub</span></a>
+    <a class="back" href="customer-login.html" id="backLink">&larr; Back</a>
+</div></div>
+
+<header class="hero"><div class="hero-in">
+    <h1>Privacy Policy</h1>
+    <p>Your privacy matters to us. This page explains in plain language what information GasHub collects, why we need it, who sees it, and the choices you have.</p>
+    <span class="updated">Last updated: 13 October 2026</span>
+</div></header>
+
+<div class="layout">
+
+<nav class="toc" id="toc" aria-label="Contents">
+    <button type="button" class="toc-toggle" id="tocToggle" aria-expanded="false">Contents <span>&#9662;</span></button>
+    <h2>Contents</h2>
+    <ol>
+        <li><a href="#who">Who we are and who this covers</a></li>
+        <li><a href="#collect">Information we collect</a></li>
+        <li><a href="#use">How and why we use it</a></li>
+        <li><a href="#location">Your location</a></li>
+        <li><a href="#tracking">Live order tracking</a></li>
+        <li><a href="#payments">Payments, refunds and points</a></li>
+        <li><a href="#share">Who we share it with</a></li>
+        <li><a href="#social">Social sign-in, invites and rewards</a></li>
+        <li><a href="#messages">Messages, reviews and the assistant</a></li>
+        <li><a href="#notify">Notifications and reminders</a></li>
+        <li><a href="#cookies">Cookies and on-device storage</a></li>
+        <li><a href="#keep">How long we keep information</a></li>
+        <li><a href="#security">How we protect it</a></li>
+        <li><a href="#rights">Your rights and choices</a></li>
+        <li><a href="#delete">Deleting your account</a></li>
+        <li><a href="#transfer">Where your data is processed</a></li>
+        <li><a href="#children">Children</a></li>
+        <li><a href="#partners">Dealers and messengers</a></li>
+        <li><a href="#changes">Changes to this policy</a></li>
+        <li><a href="#contact">Contact us</a></li>
+    </ol>
+</nav>
+
+<main class="doc">
+
+<div class="glance" aria-label="The short version">
+    <div><b>We collect what we need</b><span>Only the details needed to run your account, show nearby dealers and deliver orders.</span></div>
+    <div><b>We never sell your data</b><span>Your personal information is not sold to advertisers or data brokers.</span></div>
+    <div><b>Location is for delivery</b><span>Your pin and live position are used for delivery and nearby dealers, not for anything else.</span></div>
+    <div><b>You stay in control</b><span>Edit your details, change your pin, switch off notifications and delete your account.</span></div>
+</div>
+
+<section class="sec" id="who">
+    <h2>1. Who we are and who this covers</h2>
+    <p>GasHub is an online platform in Kenya that connects customers with gas (LPG) dealers for the sale and delivery of gas, cylinders and accessories. In this policy, &ldquo;GasHub&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo; mean the operator of the GasHub website and apps. For the information described here, GasHub is the &ldquo;data controller&rdquo; under the Kenya Data Protection Act, 2019.</p>
+    <p>This policy applies to everyone who uses GasHub:</p>
+    <ul>
+        <li><strong>Customers</strong> who browse, order and pay for products.</li>
+        <li><strong>Dealers</strong> who apply to sell on GasHub, or who run a dealer account.</li>
+        <li><strong>Delivery messengers</strong> (riders and drivers) who deliver a dealer&rsquo;s orders.</li>
+        <li><strong>GasHub administrators</strong> and support staff who manage the platform.</li>
+        <li><strong>Visitors</strong> who open the website without an account.</li>
+    </ul>
+    <p>By creating an account, signing in or using GasHub, you confirm that you have read this policy. Where the law requires your consent for something (for example sharing your device location), we ask for it separately and you can say no.</p>
+</section>
+
+<section class="sec" id="collect">
+    <h2>2. Information we collect</h2>
+    <p>What we collect depends on how you use GasHub. We try to collect as little as possible.</p>
+
+    <h3>Information you give us</h3>
+    <div class="tbl"><table>
+        <thead><tr><th>Who</th><th>What we collect</th></tr></thead>
+        <tbody>
+        <tr><td>Customers</td><td>Full name, phone number, email address, delivery address, password (stored only as a one-way hash, never in readable form), optional profile photo, the pin you place on the map, delivery landmark or town, and your order details.</td></tr>
+        <tr><td>Dealers</td><td>Applicant and contact name, business name, business type, email, phone number, county, town and address, a description of the business, the pinned business location, products and prices you list, and the account details used to receive your payouts. When you finish first-time setup we also store the username and password you choose (password stored as a one-way hash).</td></tr>
+        <tr><td>Delivery messengers</td><td>Name, phone number, email address (where a dealer adds one), ID number, vehicle registration, and the live GPS position shared from the messenger&rsquo;s phone while a delivery is in progress.</td></tr>
+        <tr><td>Administrators</td><td>Name, email, phone number, username, profile image, role, and sign-in history needed to keep admin access secure.</td></tr>
+        </tbody>
+    </table></div>
+
+    <h3>Information created when you use GasHub</h3>
+    <ul>
+        <li><strong>Orders and payments:</strong> items ordered, quantities, totals, delivery fee, discounts, order status and times, payment method, payment status, and payment references such as the M-Pesa receipt number or bank reference. We do <strong>not</strong> see or store your M-Pesa PIN or card details.</li>
+        <li><strong>Activity:</strong> products you view, favourites, dealers you follow, GasHub points earned and used, and invites you send or receive.</li>
+        <li><strong>Reviews and complaints:</strong> ratings, comments and complaints you submit about dealers, products or orders.</li>
+        <li><strong>Messages:</strong> chats with dealers and support, and messages you type into the GasHub assistant.</li>
+        <li><strong>Theme and preferences:</strong> your light, dark or system theme and notification choices.</li>
+    </ul>
+
+    <h3>Information from other sources</h3>
+    <ul>
+        <li><strong>Social sign-in:</strong> if you choose to continue with Google, Facebook or X, we receive your name, email address and profile photo from that service (see section 8).</li>
+        <li><strong>Payment providers:</strong> confirmation from Safaricom M-Pesa or your bank that a payment succeeded, failed or was reversed, including the phone number and receipt for that payment.</li>
+        <li><strong>Your device and browser:</strong> basic technical information (such as browser type, device type, IP address and a security hash of the device that opens a delivery tracking link) used to keep GasHub working and secure.</li>
+    </ul>
+</section>
+
+<section class="sec" id="use">
+    <h2>3. How and why we use it</h2>
+    <div class="tbl"><table>
+        <thead><tr><th>Purpose</th><th>Why we are allowed to do it</th></tr></thead>
+        <tbody>
+        <tr><td>Create and secure your account, sign you in, reset passwords</td><td>To perform our agreement with you</td></tr>
+        <tr><td>Show dealers and products near you, process, confirm, deliver and track your orders</td><td>To perform our agreement with you</td></tr>
+        <tr><td>Take payments, confirm them, issue refunds and pay dealers</td><td>To perform our agreement; legal and accounting duties</td></tr>
+        <tr><td>Review dealer applications, verify dealers and manage messengers</td><td>Our legitimate interest in running a safe marketplace</td></tr>
+        <tr><td>Run GasHub points, invites and rewards</td><td>To perform our agreement with you</td></tr>
+        <tr><td>Send order updates, receipts and account messages</td><td>To perform our agreement with you</td></tr>
+        <tr><td>Send reminders and offers</td><td>Your consent or our legitimate interest; you can opt out at any time</td></tr>
+        <tr><td>Handle complaints, support requests and disputes</td><td>Our legitimate interest; to perform our agreement</td></tr>
+        <tr><td>Prevent fraud, abuse and unauthorised access; keep GasHub secure</td><td>Our legitimate interest; legal duties</td></tr>
+        <tr><td>Improve GasHub (for example understanding which products are popular)</td><td>Our legitimate interest, using the least personal data possible</td></tr>
+        <tr><td>Meet tax, accounting, regulatory and court requirements</td><td>Legal obligation</td></tr>
+        </tbody>
+    </table></div>
+    <p>We do not use your information to make decisions that have legal effects on you through fully automated means, and we do not sell it.</p>
+</section>
+
+<section class="sec" id="location">
+    <h2>4. Your location</h2>
+    <p>Location is central to how GasHub works, so we want to be especially clear about it.</p>
+    <ul>
+        <li><strong>Your pin.</strong> You choose where to place your pin on the map, or you can allow GasHub to use your phone&rsquo;s current location. We use it to show nearby dealers, to work out distance and delivery fees, and so the dealer and messenger can find you.</li>
+        <li><strong>Your control.</strong> Your device only shares its location after you give permission. You can move or remove your pin, and you can turn location access off at any time in your phone or browser settings. If you do, you can still pin a place on the map by hand.</li>
+        <li><strong>Dealers&rsquo; locations.</strong> A dealer&rsquo;s business pin is shown to customers so they can find the shop and arrange pickup.</li>
+        <li><strong>What we do not do.</strong> We do not follow your phone in the background, and we do not use your location for advertising.</li>
+    </ul>
+    <p>Maps on GasHub are drawn using OpenStreetMap-based map tiles. When a map loads, your browser contacts the map provider, which can see your IP address and the area of map you view.</p>
+</section>
+
+<section class="sec" id="tracking">
+    <h2>5. Live order tracking</h2>
+    <ul>
+        <li>For delivery orders, the messenger can share their phone&rsquo;s GPS position through a private tracking link so you can see the delivery on a map with an estimated arrival time.</li>
+        <li>Tracking works only while your order is open. When the order is completed or cancelled, the map is removed and the server stops accepting and sending the messenger&rsquo;s position.</li>
+        <li>The messenger&rsquo;s tracking link is private to that order, expires after 12 hours, and is locked to the first device that opens it, so it cannot be passed around.</li>
+        <li>The messenger chooses to start and stop sharing, and can stop at any time. Sharing is limited to the delivery.</li>
+        <li>For pickup orders, we show you the dealer&rsquo;s shop location instead. No live tracking is used.</li>
+    </ul>
+</section>
+
+<section class="sec" id="payments">
+    <h2>6. Payments, refunds and points</h2>
+    <ul>
+        <li><strong>M-Pesa.</strong> When you pay with M-Pesa, you receive a prompt on your phone and enter your PIN on your phone, not on GasHub. Safaricom tells us whether the payment succeeded and gives us a receipt number and the paying phone number, which we match to your order.</li>
+        <li><strong>Bank payments.</strong> If you pay by bank, we ask for the bank reference so we can confirm the payment.</li>
+        <li><strong>Cash.</strong> For cash orders we record that the order was paid in cash.</li>
+        <li><strong>Refunds.</strong> If a paid order is cancelled and you are due a refund, we return it using the payment details held for that order and keep a record of it.</li>
+        <li><strong>Dealer payouts.</strong> We share with each dealer the sales and payout information for their own orders, including how much was sent and the account that received it. Dealers see this for their own business only.</li>
+        <li><strong>GasHub points.</strong> Points are recorded against your account and can be used as a discount on online payments, according to the rules set by GasHub.</li>
+    </ul>
+</section>
+
+<section class="sec" id="share">
+    <h2>7. Who we share it with</h2>
+    <p>We share information only when it is needed to provide GasHub, when you ask us to, or when the law requires it.</p>
+
+    <h3>Dealers and messengers</h3>
+    <ul>
+        <li>When you place an order, the dealer fulfilling it sees what they need to complete it: your name, delivery address, delivery pin, the items ordered and your delivery phone number.</li>
+        <li>If the dealer assigns a messenger to your delivery, that messenger sees your name, delivery address and pin, and the order contact needed to deliver.</li>
+        <li>You can see the dealer&rsquo;s and messenger&rsquo;s phone number while your order is open and for 2 days after it is completed or cancelled. After that the number is masked.</li>
+        <li>Your password, payment PIN and other customers&rsquo; details are never shown to dealers or messengers.</li>
+    </ul>
+
+    <h3>Service providers who help us run GasHub</h3>
+    <div class="tbl"><table>
+        <thead><tr><th>Type of provider</th><th>What they do for us</th></tr></thead>
+        <tbody>
+        <tr><td>Database and hosting</td><td>Store GasHub&rsquo;s data and run the website and apps (we use Supabase and our hosting provider)</td></tr>
+        <tr><td>Payments</td><td>Safaricom M-Pesa (Daraja) and banks, to take payments and send refunds and payouts</td></tr>
+        <tr><td>Email and SMS</td><td>Deliver account emails, order updates, reminders and broadcast messages</td></tr>
+        <tr><td>Image storage</td><td>Store profile photos, logos and product images (Cloudinary)</td></tr>
+        <tr><td>Maps</td><td>Display maps and work out routes and distances (OpenStreetMap-based services)</td></tr>
+        <tr><td>Social sign-in</td><td>Google, Facebook and X, only if you choose to use them</td></tr>
+        </tbody>
+    </table></div>
+    <p>These providers may only use your information to provide their service to us, and must protect it.</p>
+
+    <h3>Others</h3>
+    <ul>
+        <li><strong>Authorities and advisers.</strong> We may disclose information to the police, courts, regulators, the tax authority or our professional advisers where the law requires it, or to protect people, GasHub or others from fraud or harm.</li>
+        <li><strong>Business changes.</strong> If GasHub is merged, sold or reorganised, your information may move to the new owner, who must honour this policy.</li>
+        <li><strong>Public content.</strong> Reviews you post are public and may be shown with your name next to the dealer or product they are about.</li>
+    </ul>
+    <div class="note"><p><strong>We do not sell your personal information</strong> and we do not share it with advertisers.</p></div>
+</section>
+
+<section class="sec" id="social">
+    <h2>8. Social sign-in, invites and rewards</h2>
+    <ul>
+        <li><strong>Sign in with Google, Facebook or X.</strong> If you use one of these, we receive your name, email address and profile photo (X only shares an email if permitted). We use them to create or find your GasHub account. We do not post anything on your behalf. Your use of those services is governed by their own privacy policies.</li>
+        <li><strong>Inviting friends.</strong> You can share an invite link through WhatsApp or other apps. We do not read your contacts. We only record that an invited person signed up through your link so we can award your points.</li>
+        <li><strong>Following us.</strong> Links to GasHub&rsquo;s social accounts open those platforms, which then collect information under their own policies.</li>
+    </ul>
+</section>
+
+<section class="sec" id="messages">
+    <h2>9. Messages, reviews, complaints and the assistant</h2>
+    <ul>
+        <li><strong>Chats.</strong> Messages between you and a dealer or GasHub support are stored so both sides can continue the conversation and so we can resolve disputes. Phone numbers stay private inside chat.</li>
+        <li><strong>Reviews and complaints.</strong> Reviews are visible to others. Complaints are handled by GasHub and may be shared with the dealer concerned so it can be resolved.</li>
+        <li><strong>GasHub assistant.</strong> Messages you type to the assistant are used to answer your question. Please do not type passwords, PINs or full card numbers into the assistant.</li>
+    </ul>
+</section>
+
+<section class="sec" id="notify">
+    <h2>10. Notifications and reminders</h2>
+    <ul>
+        <li>We send service messages you need, such as order confirmations, payment prompts and delivery updates, by email, in the app and, where enabled, SMS.</li>
+        <li>We may send reminders, for example if an order was left unfinished or it has been a while since your last gas order, and offers or announcements. Dealers can receive broadcast messages from GasHub on the email and phone number they gave us.</li>
+        <li>You can turn notifications on or off in your profile Settings, and use the unsubscribe option in emails. Essential account and order messages may still be sent.</li>
+    </ul>
+</section>
+
+<section class="sec" id="cookies">
+    <h2>11. Cookies and on-device storage</h2>
+    <p>GasHub keeps small pieces of information on your device so the site works properly. We do not use advertising cookies.</p>
+    <div class="tbl"><table>
+        <thead><tr><th>What</th><th>Why</th></tr></thead>
+        <tbody>
+        <tr><td>Sign-in session and tokens</td><td>Keep you signed in as a customer, dealer or administrator until you log out</td></tr>
+        <tr><td>Saved profile, location and last order</td><td>Load pages faster and remember your pin and recent order</td></tr>
+        <tr><td>Theme choice</td><td>Remember light, dark or system theme</td></tr>
+        <tr><td>Short-lived security cookies</td><td>Protect social sign-in and prevent forged requests</td></tr>
+        <tr><td>Messenger device marker</td><td>Lock a delivery tracking link to one device</td></tr>
+        </tbody>
+    </table></div>
+    <p>You can clear this storage in your browser settings. If you do, you will be signed out and some preferences will reset.</p>
+</section>
+
+<section class="sec" id="keep">
+    <h2>12. How long we keep information</h2>
+    <div class="tbl"><table>
+        <thead><tr><th>Information</th><th>How long</th></tr></thead>
+        <tbody>
+        <tr><td>Account and profile details</td><td>While your account is active. Removed after account deletion (section 15).</td></tr>
+        <tr><td>Order and payment records</td><td>For as long as the law requires for tax, accounting and dispute purposes. After that they are deleted or anonymised.</td></tr>
+        <tr><td>Live tracking link and device lock</td><td>The link expires after 12 hours. Position sharing stops when the order is completed or cancelled.</td></tr>
+        <tr><td>Dealer and messenger phone numbers on your order</td><td>Shown in full while the order is open and for 2 days afterwards, then masked.</td></tr>
+        <tr><td>Messages, reviews and complaints</td><td>While needed to run the service and handle disputes, or until your account is deleted. Reviews may be kept without your name.</td></tr>
+        <tr><td>Dealer applications that are declined</td><td>For a limited period so we can handle questions or repeat applications, then deleted.</td></tr>
+        <tr><td>Security and sign-in logs</td><td>For a limited period, to detect and investigate abuse.</td></tr>
+        </tbody>
+    </table></div>
+    <p>When we no longer need information, we delete it or remove anything that identifies you.</p>
+</section>
+
+<section class="sec" id="security">
+    <h2>13. How we protect it</h2>
+    <ul>
+        <li>Passwords are stored only as one-way hashes. We cannot read them and we will never ask you for your password by email, SMS or WhatsApp.</li>
+        <li>Access is controlled by role. Customers, dealers and administrators each have separate sign-ins, and a dealer can only reach their own products, orders and payouts.</li>
+        <li>Admin pages require an administrator sign-in.</li>
+        <li>Tracking links are private, expire, and are locked to one device.</li>
+        <li>Payment confirmations from M-Pesa are checked before an order is marked as paid.</li>
+        <li>Only the staff who need information to do their job can see it.</li>
+    </ul>
+    <p>No system is completely secure. Please use a strong, unique password, keep it private, and log out on shared phones and computers. If you think your account has been accessed without permission, contact us straight away (see section 20).</p>
+</section>
+
+<section class="sec" id="rights">
+    <h2>14. Your rights and choices</h2>
+    <p>Under the Kenya Data Protection Act, 2019, you have the right to:</p>
+    <ul>
+        <li><strong>Be informed</strong> about how your information is used, which is what this policy is for.</li>
+        <li><strong>Access</strong> the personal information we hold about you.</li>
+        <li><strong>Correct</strong> information that is wrong or out of date.</li>
+        <li><strong>Delete</strong> information we no longer need or have no lawful reason to keep.</li>
+        <li><strong>Object</strong> to your information being used for certain purposes, including direct marketing.</li>
+        <li><strong>Withdraw consent</strong> you have given, for example for location or marketing. This will not affect use that happened before you withdrew it.</li>
+        <li><strong>Receive a copy</strong> of the information you gave us in a commonly used format, where this applies.</li>
+    </ul>
+    <h3>How to use your rights</h3>
+    <ul>
+        <li>Update your name, phone, photo, pin and settings yourself from your profile.</li>
+        <li>For access, correction, deletion or objection requests, contact us using the details in section 20. We may ask you to confirm who you are before we act, and we will reply within the time the law requires.</li>
+        <li>Some information we may have to keep (for example payment records) even after you ask for deletion. We will tell you if that applies.</li>
+    </ul>
+    <p>If you are not happy with how we handle your information, please tell us first so we can put it right. You also have the right to complain to the <strong>Office of the Data Protection Commissioner (ODPC)</strong> in Kenya.</p>
+</section>
+
+<section class="sec" id="delete">
+    <h2>15. Deleting your account</h2>
+    <ul>
+        <li>You can ask to delete your customer account from your profile once it is <strong>7 days old</strong>. You confirm by typing DELETE.</li>
+        <li>Your account is then fully deleted <strong>7 days after your request</strong>. You can cancel the request during these 7 days by signing in again.</li>
+        <li>When deletion completes, we remove your profile, saved pin, photo, favourites, followed dealers and similar personal details. Your GasHub points are removed with the account.</li>
+        <li>We may keep order and payment records, in a form that is not tied to your profile where possible, for as long as the law requires.</li>
+    </ul>
+    <p>Dealers and messengers who want their information removed should contact us using the details in section 20. Closing a dealer account does not remove records of past orders, which we must keep for accounting and dispute purposes.</p>
+</section>
+
+<section class="sec" id="transfer">
+    <h2>16. Where your data is processed</h2>
+    <p>GasHub is built for Kenya, but some of our service providers (for example cloud hosting, email delivery and image storage) run servers outside Kenya. When your information is processed abroad, we use providers that protect it and we take the steps the Data Protection Act requires for transfers outside Kenya.</p>
+</section>
+
+<section class="sec" id="children">
+    <h2>17. Children</h2>
+    <p>GasHub is meant for adults who are 18 or older. Buying and delivering gas is not something for children. We do not knowingly collect information from children. If you believe a child has created an account, please contact us and we will delete it.</p>
+</section>
+
+<section class="sec" id="partners">
+    <h2>18. Dealers and messengers</h2>
+    <p>Dealers and messengers receive customer information only so they can complete an order. By using GasHub they agree to:</p>
+    <ul>
+        <li>use a customer&rsquo;s name, phone number, address and pin <strong>only</strong> to fulfil that order and handle questions about it;</li>
+        <li>not copy, sell, share or use it for their own marketing, and delete it when it is no longer needed;</li>
+        <li>keep their login details private and not share their account;</li>
+        <li>share live location only through the private tracking link and only while delivering.</li>
+    </ul>
+    <p>Dealers are responsible for the personal information of any messengers they add (such as ID number and vehicle registration) and must have the messenger&rsquo;s permission to share it with GasHub. If you believe a dealer or messenger has misused your information, contact us and we will investigate and, where needed, suspend the account.</p>
+</section>
+
+<section class="sec" id="changes">
+    <h2>19. Changes to this policy</h2>
+    <p>We may update this policy as GasHub grows or the law changes. The &ldquo;Last updated&rdquo; date at the top shows when it last changed. If we make an important change, we will tell you in the app or by email. If you keep using GasHub after a change, it applies to you from then on.</p>
+</section>
+
+<section class="sec" id="contact">
+    <h2>20. Contact us</h2>
+    <p>Questions about this policy, or want to use any of your rights? Reach us using the details below. Please say which account (phone number or email) your message is about so we can help quickly.</p>
+    <div class="contact-box" id="contactBox"><p style="margin:0">Loading contact details&hellip;</p></div>
+    <p style="margin-top:14px">You can also use <strong>Contact us</strong> on your GasHub profile page once you are signed in.</p>
+</section>
+
+</main>
+</div>
+
+<footer>&copy; <span id="y"></span> GasHub. All rights reserved.</footer>
+
+<script>
+(function () {
+    "use strict";
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    /* Back button: return to whichever login page sent you here */
+    var qs = new URLSearchParams(location.search), from = (qs.get("from") || "").toLowerCase();
+    var back = document.getElementById("backLink");
+    var loggedIn = false;
+    try { loggedIn = !!(localStorage.getItem("gasHubLoggedIn") || localStorage.getItem("gasHubCustomer") || localStorage.getItem("customerToken")); } catch (e) { }
+    var fallback = from === "dealer" ? "/dealer/dealer-login.html"
+        : from === "admin" ? "/admin/admin-login.html"
+        : (from === "app" || (!from && loggedIn)) ? "/customer-home.html"
+        : "/customer-login.html";
+    back.setAttribute("href", fallback);
+    back.addEventListener("click", function (e) {
+        var ref = document.referrer, sameSite = ref && ref.indexOf(location.origin) === 0;
+        if (sameSite && history.length > 1) { e.preventDefault(); history.back(); }
+    });
+
+    /* Contents: collapsible on phones, highlight the section being read */
+    var toc = document.getElementById("toc"), tg = document.getElementById("tocToggle");
+    tg.addEventListener("click", function () {
+        var open = toc.classList.toggle("open");
+        tg.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    toc.addEventListener("click", function (e) { if (e.target.closest("a")) { toc.classList.remove("open"); tg.setAttribute("aria-expanded", "false"); } });
+    var links = [].slice.call(toc.querySelectorAll("a"));
+    if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                if (en.isIntersecting) {
+                    links.forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === "#" + en.target.id); });
+                }
+            });
+        }, { rootMargin: "-20% 0px -70% 0px" });
+        [].slice.call(document.querySelectorAll("section.sec")).forEach(function (s) { io.observe(s); });
+    }
+
+    /* Contact details come from the numbers set on the admin page */
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function intl(n) { n = String(n || "").replace(/[^\d]/g, ""); if (n.indexOf("0") === 0) n = "254" + n.slice(1); return n; }
+    var box = document.getElementById("contactBox");
+    fetch("/api/settings/contact", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (c) {
+        var h = "";
+        if (c && c.phone) h += '<a class="btn" href="tel:' + esc(c.phone) + '">Call ' + esc(c.phone) + "</a>";
+        if (c && c.whatsapp) h += '<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/' + esc(intl(c.whatsapp)) + '">WhatsApp ' + esc(c.whatsapp) + "</a>";
+        if (c && c.email) h += '<a class="btn mail" href="mailto:' + esc(c.email) + '">Email ' + esc(c.email) + "</a>";
+        if (c && c.hours) h += '<p style="margin:4px 0 0">' + esc(c.hours) + "</p>";
+        box.innerHTML = h || "<p style=\"margin:0\">Contact details will appear here once GasHub adds them. In the meantime, use Contact us on your profile page.</p>";
+    }).catch(function () {
+        box.innerHTML = "<p style=\"margin:0\">Use Contact us on your GasHub profile page, or the phone and WhatsApp numbers shown on the GasHub home page.</p>";
+    });
+})();
+</script>
+</body>
+</html>

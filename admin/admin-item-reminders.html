@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Item Reminders | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <link rel="stylesheet" href="admin-customers.css">
+    <link rel="stylesheet" href="admin-messaging.css">
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body data-msg-page="item-reminder">
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">☰</button>
+                <div>
+                    <h2>Item Reminders</h2>
+                    <p>Automatically remind customers about an item they selected but have not ordered.</p>
+                </div>
+            </div>
+
+            <div class="admin-user-area">
+                <div class="admin-user-info">
+                    <strong id="adminUserName">Administrator</strong>
+                    <span id="adminUserRole">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="admin-content">
+
+            <div class="admin-message" id="msgFlash" role="alert"></div>
+            <div class="msg-banner" id="msgBanner" role="status"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Due right now</span>
+                        <strong class="stat-value" id="statDue">0</strong>
+                    </div>
+                    <div class="stat-icon">◔</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Emails sent (7 days)</span>
+                        <strong class="stat-value" id="statEmailWeek">0</strong>
+                    </div>
+                    <div class="stat-icon">✉</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">SMS sent (7 days)</span>
+                        <strong class="stat-value" id="statSmsWeek">0</strong>
+                    </div>
+                    <div class="stat-icon">☎</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Failed (7 days)</span>
+                        <strong class="stat-value" id="statFailedWeek">0</strong>
+                    </div>
+                    <div class="stat-icon">!</div>
+                </div>
+            </div>
+
+            <div class="msg-grid">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div>
+                            <h3>When to send</h3>
+                            <p>Turn the reminder on and choose the time. Then set up the email and the SMS below.</p>
+                        </div>
+                    </div>
+                    <div class="msg-body">
+
+                        <div class="msg-switch-row">
+                            <div>
+                                <strong>Automatic selected item reminder</strong>
+                                <span id="switchState">OFF - no reminders are sent</span>
+                            </div>
+                            <label class="msg-switch">
+                                <input type="checkbox" id="fEnabled" aria-label="Automatic selected item reminder">
+                                <i></i>
+                            </label>
+                        </div>
+
+                        <div class="msg-field" style="margin-bottom:0">
+                            <label for="fTiming">Remind the customer after</label>
+                            <div class="msg-timing">
+                                <input type="number" id="fTiming" min="1" max="720" step="1">
+                                <span>hours</span>
+                            </div>
+                            <div class="msg-hint">Counted from the moment the customer opened checkout for the product. Choose 1 to 720 hours.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header"><div><h3>How it works</h3></div></div>
+                    <div class="msg-body">
+                        <ul class="msg-side-list">
+                            <li><span>Who</span><strong>Picked a product, did not order</strong></li>
+                            <li><span>Skipped when</span><strong>They ordered it, or it is out of stock</strong></li>
+                            <li><span>Per selection</span><strong>One reminder only</strong></li>
+                            <li><span>Per customer</span><strong>Max one a day</strong></li>
+                        </ul>
+                        <div class="msg-note">The system checks every 5 minutes. After saving, press Check now to check right away.</div>
+                        <div class="msg-actions" style="margin-top:14px;justify-content:flex-start">
+                            <button type="button" class="secondary-button" id="runBtn">Check now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="msg-chip-bar">
+                <span>Click a word to put it in the message you are editing:</span>
+                <div class="msg-chips" style="margin:0"><button type="button" class="msg-chip" data-token="{name}">{name}</button><button type="button" class="msg-chip" data-token="{product}">{product}</button><button type="button" class="msg-chip" data-token="{dealer}">{dealer}</button><button type="button" class="msg-chip" data-token="{link}">{link}</button></div>
+            </div>
+
+            <div class="msg-channels">
+
+                <div class="content-card msg-channel" id="emailPanel">
+                    <div class="card-header">
+                        <div>
+                            <h3>&#9993; Email reminder</h3>
+                            <p id="emailState">Not sent</p>
+                        </div>
+                        <label class="msg-switch">
+                            <input type="checkbox" id="fEmailOn" aria-label="Send the email reminder">
+                            <i></i>
+                        </label>
+                    </div>
+                    <div class="msg-body msg-channel-fields">
+                        <div class="msg-field">
+                            <label for="fEmailSubject">Email subject</label>
+                            <input type="text" id="fEmailSubject" maxlength="150" autocomplete="off">
+                        </div>
+                        <div class="msg-field">
+                            <label for="fEmailMessage">Email message</label>
+                            <textarea id="fEmailMessage" maxlength="5000"></textarea>
+                        </div>
+                        <div class="msg-actions">
+                            <button type="button" class="secondary-button" id="testEmailBtn">Send test email to me</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card msg-channel" id="smsPanel">
+                    <div class="card-header">
+                        <div>
+                            <h3>&#9742; SMS reminder</h3>
+                            <p id="smsState">Not sent</p>
+                        </div>
+                        <label class="msg-switch">
+                            <input type="checkbox" id="fSmsOn" aria-label="Send the SMS reminder">
+                            <i></i>
+                        </label>
+                    </div>
+                    <div class="msg-body msg-channel-fields">
+                        <div class="msg-field">
+                            <label for="fSmsMessage">SMS message</label>
+                            <textarea id="fSmsMessage" maxlength="612" style="min-height:170px"></textarea>
+                            <div class="msg-counter" id="smsCounter"></div>
+                        </div>
+                        <div class="msg-actions">
+                            <button type="button" class="secondary-button" id="testSmsBtn">Send test SMS to me</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="msg-savebar">
+                <span>Changes only apply after you save.</span>
+                <button type="button" class="primary-button" id="saveBtn">Save settings</button>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Recent reminders</h3>
+                        <p>The last 30 reminders the system sent.</p>
+                    </div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Sent</th>
+                                <th>Customer</th>
+                                <th>Channel</th>
+                                <th>Details</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logBody">
+                            <tr><td colspan="5" class="table-loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-messaging.js"></script>
+
+</body>
+</html>

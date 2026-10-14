@@ -1,0 +1,30 @@
+PAYMENT CONFIRMATION + ORDER COMPLETION
+
+RULES
+- CASH: only the dealer can confirm it (button "Confirm cash received" on the dealer orders page).
+- M-PESA / BANK: the customer pays into the GasHub account the admin set. Dealers CANNOT confirm these (the server refuses).
+  The customer sends the M-Pesa code on their order page; it shows as "Confirming your payment". GasHub then checks its M-Pesa
+  statement and confirms it in Admin > Payments (open the pending payment > Confirm money received, or Reject code).
+  Money with no code sent: Admin > Payments > "Confirm M-Pesa Money Received" (order number + code).
+- PAID: set when the money is confirmed. The customer gets their GasHub points then.
+- COMPLETED: a delivery order completes by itself when it is both delivered (messenger confirmed) and paid, whichever happens last.
+  A pickup order is completed by the dealer once it is paid and collected.
+- The dealer can no longer mark a delivery order delivered/completed by hand, and nothing can be completed while unpaid.
+- MESSENGER: the confirm button appears only when about 1 minute from the customer (distance x 1.3 road factor at the phone's
+  speed, 25 km/h when parked: about 320 m at walking/parked speed). The server re-checks the phone's last position when the
+  button is pressed. Orders with no delivery pin cannot be measured, so the button shows once the delivery has started.
+  The messenger page also tells them whether to collect cash or not.
+
+SETUP (once)
+1) Supabase SQL Editor: run backend/payment-confirmation-migration.sql (safe to run again).
+2) Restart the server.
+3) Admin > Settings > "GasHub Payment Account (M-Pesa)": enter your Paybill / Till / phone and Save.
+   Until it is saved, customers are told to contact support to pay.
+
+NOTES
+- The checkout no longer calls /api/payments/mpesa/stk-push (that endpoint does not exist yet). In customer-checkout.js,
+  USE_STK_PUSH = false. When the Safaricom Daraja endpoints are built, set it to true and call markOrderPaid()
+  (backend/utils/order-fulfilment.js) from the callback: it already settles the payment, awards points and completes the order.
+- New/changed: backend/utils/order-fulfilment.js, gashub-settings.js, controllers/{dealer-order,payment,tracking,customer-order,admin-settings}-controller.js,
+  routes/{payment,settings,admin,customer-order}-routes.js; admin/admin-settings.*, admin-payment.*; dealer/dealer-order.js;
+  frontend/customer-orders.*, customer-checkout.*, rider-track.*.

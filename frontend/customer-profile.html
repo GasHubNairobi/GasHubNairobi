@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1f4fd8">
+    <meta name="color-scheme" content="light dark">
+    <title>My Profile | GasHub</title>
+    <link rel="icon" type="image/png" href="Images/favicon.png">
+    <!-- theme script first, so the page never flashes the wrong colours -->
+    <script src="gashub-theme.js"></script>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="customer-profile.css">
+    <link rel="stylesheet" href="gashub-theme.css">
+    <script src="gashub-ban-guard.js"></script>
+</head>
+<body>
+    <script src="customer-nav.js" data-active="profile" data-sidebar="true" data-tabs="true"></script>
+
+    <!-- HEADER -->
+    <header class="customer-header">
+        <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+        <a href="customer-home.html" class="customer-logo"><img src="Images/logo.png" alt="GasHub"></a>
+        <a href="customer-home.html" class="location-btn" aria-label="Change delivery location">
+            <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+            <span id="customerLocation">Select location</span>
+        </a>
+        <a href="customer-orders.html" class="notification-link" aria-label="My orders">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </a>
+    </header>
+
+    <!-- SIDE MENU -->
+    <main>
+
+        <!-- ================= PROFILE HEADER: photo, then sign in (guests) or stats (logged in) ================= -->
+        <section class="profile-hero">
+            <div class="hero-in">
+                <div class="who">
+                    <div class="avatar" id="avatar">
+                        <img id="avatarImg" alt="Profile photo" hidden>
+                        <span id="avatarText">C</span>
+                    </div>
+                    <div class="who-text">
+                        <h1 id="profileName">Welcome to GasHub</h1>
+                        <p id="profileSub">Sign in to see your orders, rewards and favourites.</p>
+                        <span class="since" id="memberSince" hidden></span>
+                    </div>
+                </div>
+
+                <div class="photo-actions">
+                    <button type="button" class="pill" id="btnGallery">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 9"/></svg>Upload photo
+                    </button>
+                    <button type="button" class="pill" id="btnCamera">
+                        <svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>Take photo
+                    </button>
+                    <button type="button" class="pill ghost" id="btnRemovePhoto" hidden>Remove</button>
+                </div>
+                <!-- gallery picker / camera -->
+                <input type="file" id="galInput" accept="image/*" hidden>
+                <input type="file" id="camInput" accept="image/*" capture="user" hidden>
+
+                <!-- not logged in -->
+                <div class="guest-cta" id="guestCta">
+                    <a href="customer-login.html" class="btn yellow block">Sign in or log in</a>
+                    <p>New to GasHub? You can create your account on the same page.</p>
+                </div>
+
+                <!-- logged in -->
+                <div class="stats" id="statsRow" hidden>
+                    <div class="stat"><strong id="totalOrders">0</strong><span>Orders</span></div>
+                    <div class="stat"><strong id="completedOrders">0</strong><span>Completed</span></div>
+                    <div class="stat"><strong id="totalSpent">KSh 0</strong><span>Spent</span></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="page">
+
+            <!-- ================= ACCOUNT DETAILS (logged in): closed until Edit is tapped ================= -->
+            <section class="card" id="accountSection" data-auth="in" hidden>
+                <div class="acct-head">
+                    <div class="acct-title">
+                        <span class="row-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+                        <div><h2>Account details</h2><small id="acctSummary">Name, phone and email</small></div>
+                    </div>
+                    <button type="button" class="edit-btn" id="editAccountBtn" aria-expanded="false" aria-controls="accountPanel">
+                        <svg viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3zM14.5 7.5l3 3"/></svg><span>Edit</span>
+                    </button>
+                </div>
+                <div class="panel" id="accountPanel" hidden>
+                    <form id="profileForm" novalidate>
+                        <div class="form-message" id="profileMessage"></div>
+                        <div class="field">
+                            <label for="fullName">Full name</label>
+                            <input type="text" id="fullName" autocomplete="name">
+                            <span class="err" id="fullNameError"></span>
+                        </div>
+                        <div class="field">
+                            <label for="phone">Phone number</label>
+                            <input type="tel" id="phone" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX">
+                            <span class="err" id="phoneError"></span>
+                        </div>
+                        <div class="field">
+                            <label for="email">Email address</label>
+                            <input type="email" id="email" autocomplete="email">
+                            <span class="err" id="emailError"></span>
+                        </div>
+                        <div class="field locked">
+                            <label for="address">Delivery address <em>Set when you signed up</em></label>
+                            <div class="lock-wrap">
+                                <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                                <input type="text" id="address" readonly aria-readonly="true" tabindex="-1" placeholder="No address saved">
+                            </div>
+                        </div>
+                        <div class="btn-row">
+                            <button type="submit" class="btn primary" id="saveProfileButton">Save changes</button>
+                            <button type="button" class="btn outline" id="cancelEditBtn">Cancel</button>
+                        </div>
+                    </form>
+                    <div class="loc-line">
+                        <div><strong>Delivery pin</strong><small id="locValue">Not set</small></div>
+                        <button type="button" class="link-btn" id="editPinBtn">Edit pin</button>
+                    </div>
+                    <button type="button" class="btn outline block" id="changePasswordButton" style="margin-top:12px">Change password</button>
+                </div>
+            </section>
+
+            <!-- ================= MY GASHUB POINTS ================= -->
+            <section class="card" id="rewardsSection">
+                <button type="button" class="row-btn" id="rewardsToggle" aria-expanded="false" aria-controls="rewardsPanel">
+                    <span class="coin sm" aria-hidden="true"><span class="face"><img src="images/logo.png" alt="" onerror="this.onerror=null;this.src='Images/logo.png'"></span></span>
+                    My GasHub Points
+                    <span class="row-val" id="rewardsBadge"></span>
+                    <svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+                <div class="panel" id="rewardsPanel" hidden>
+                    <div id="rewardsGuest" hidden>
+                        <p class="hint" style="margin-bottom:10px">Sign in to see your GasHub points.</p>
+                        <a href="customer-login.html" class="btn yellow block">Sign in or log in</a>
+                    </div>
+                    <div id="rewardsBody" hidden>
+                        <div class="points-box">
+                            <span class="coin xl" aria-hidden="true"><span class="face"><img src="images/logo.png" alt="" onerror="this.onerror=null;this.src='Images/logo.png'"></span></span>
+                            <small>Your GasHub points</small>
+                            <strong id="pointsTotal">0</strong>
+                            <span id="pointsWorth"></span>
+                        </div>
+                        <button type="button" class="btn outline block" id="rateToggle" aria-expanded="false" aria-controls="ratePanel" style="margin-top:10px">See conversion rate</button>
+                        <div class="rate-box" id="ratePanel" hidden>
+                            <strong id="rateText">Loading...</strong>
+                            <p id="rateMeta"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= EARN MORE POINTS: invite, share, follow (logged in) ================= -->
+            <section class="card" id="earnSection" data-auth="in" hidden>
+                <div class="sec-head"><h2><span class="coin xs" aria-hidden="true"><span class="face"><img src="images/logo.png" alt="" onerror="this.onerror=null;this.src='Images/logo.png'"></span></span>Earn more GasHub Points</h2></div>
+                <div id="earnBody"><div class="empty">Loading rewards...</div></div>
+            </section>
+
+            <!-- ================= FAVOURITE PRODUCTS ================= -->
+            <section class="card" id="favSection">
+                <div class="sec-head"><h2>Favourite products <span class="count" id="favCount">0</span></h2></div>
+                <div class="mini-grid" id="favList"></div>
+                <div class="empty" id="favEmpty" hidden>No favourites yet. Tap the heart on a product to save it. <a href="customer-product.html">Browse products</a></div>
+            </section>
+
+            <!-- ================= DEALERS FOLLOWED ================= -->
+            <section class="card" id="followSection">
+                <div class="sec-head"><h2>Dealers you follow <span class="count" id="followCount">0</span></h2></div>
+                <div class="drows" id="followList"></div>
+                <div class="empty" id="followEmpty" hidden>You are not following any dealer yet. <a href="customer-dealer.html">Find a dealer</a></div>
+            </section>
+
+            <!-- ================= SETTINGS ================= -->
+            <section class="card" id="settingsSection">
+                <div class="sec-head"><h2>Settings</h2></div>
+                <div class="set-row">
+                    <span>App appearance<small id="themeHint">Light or dark colours</small></span>
+                    <button type="button" class="edit-btn" id="themeToggle" aria-expanded="false" aria-controls="themePanel">Change theme</button>
+                </div>
+                <div id="themePanel" hidden style="margin-bottom:6px">
+                    <div class="seg" id="themeSeg" role="group" aria-label="Choose a theme">
+                        <button type="button" data-theme-pick="light">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Light
+                        </button>
+                        <button type="button" data-theme-pick="dark">
+                            <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Dark
+                        </button>
+                        <button type="button" data-theme-pick="system">
+                            <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>Auto
+                        </button>
+                    </div>
+                    <p class="hint" style="margin-top:6px">Auto switches between light and dark to match your phone's setting.</p>
+                </div>
+            </section>
+
+            <!-- ================= PRIVACY POLICY ================= -->
+            <section class="card">
+                <button type="button" class="row-btn" id="privacyBtn">
+                    <span class="row-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
+                    Privacy policy
+                    <svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </section>
+
+            <!-- ================= CONTACT US (numbers are set in the admin page) ================= -->
+            <section class="card" id="contactCard">
+                <div class="sec-head"><h2>Contact us</h2></div>
+                <div id="contactBody"></div>
+            </section>
+
+            <!-- ================= LOG OUT / SIGN IN ================= -->
+            <section class="card" data-auth="in" hidden>
+                <button type="button" class="btn outline block" id="logoutButton">
+                    <svg viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9"/></svg>Log out
+                </button>
+            </section>
+            <section class="card" data-auth="out">
+                <a href="customer-login.html" class="btn primary block">Sign in or log in</a>
+            </section>
+
+            <!-- ================= DELETE ACCOUNT ================= -->
+            <section class="card danger-card" id="deleteSection" data-auth="in" hidden>
+                <div class="sec-head"><h2>Delete account</h2></div>
+                <div class="notice" id="deleteNotice" hidden>
+                    <strong>Deletion scheduled</strong>
+                    <span id="deleteNoticeText"></span>
+                    <button type="button" class="btn outline block" id="cancelDeleteBtn">Keep my account</button>
+                </div>
+                <p class="lock-note" id="deleteLockNote" hidden></p>
+                <button type="button" class="btn danger outline block" id="deleteBtn">Delete my account</button>
+            </section>
+
+            <p class="foot-note">GasHub customer app · <a href="customer-about.html">About GasHub</a></p>
+        </div>
+    </main>
+
+    <!-- ================= SHEETS ================= -->
+
+    <!-- change password -->
+    <div class="sheet" id="passwordSheet" aria-hidden="true">
+        <div class="sheet-card" role="dialog" aria-label="Change password">
+            <button type="button" class="sheet-x" data-close aria-label="Close">×</button>
+            <h2>Change password</h2>
+            <p>Enter your current password and choose a new one.</p>
+            <form id="passwordForm" novalidate>
+                <div class="form-message" id="passwordMessage"></div>
+                <div class="field"><label for="currentPassword">Current password</label><input type="password" id="currentPassword" autocomplete="current-password"><span class="err" id="currentPasswordError"></span></div>
+                <div class="field"><label for="newPassword">New password</label><input type="password" id="newPassword" autocomplete="new-password"><span class="err" id="newPasswordError"></span></div>
+                <div class="field"><label for="confirmNewPassword">Confirm new password</label><input type="password" id="confirmNewPassword" autocomplete="new-password"><span class="err" id="confirmNewPasswordError"></span></div>
+                <button type="submit" class="btn primary block">Update password</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- privacy policy -->
+    <div class="sheet" id="privacySheet" aria-hidden="true">
+        <div class="sheet-card" role="dialog" aria-label="Privacy policy">
+            <button type="button" class="sheet-x" data-close aria-label="Close">×</button>
+            <h2>Privacy policy</h2>
+            <p>Last updated: 13 October 2026</p>
+            <div class="policy">
+                <h3>The short version</h3>
+                <ul>
+                    <li>We collect only what we need: your name, phone, email, delivery address, pin, orders and activity.</li>
+                    <li>Dealers and messengers see your details only to complete your order.</li>
+                    <li>Your location is used for nearby dealers and delivery, and live tracking stops when the order is done.</li>
+                    <li>We never sell your personal information.</li>
+                    <li>You can edit your details, change your pin, turn off notifications and delete your account.</li>
+                </ul>
+                <p>The full policy explains what we collect, why, who we share it with, how long we keep it and your rights under the Kenya Data Protection Act, 2019.</p>
+                <a class="btn primary" href="privacy-policy.html?from=app" style="display:block;text-align:center;margin-top:12px;padding:12px 16px;border-radius:12px;background:var(--blue);color:#fff;font-weight:700;text-decoration:none">Read the full Privacy Policy</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- delivery pin -->
+    <div class="sheet" id="pinSheet" aria-hidden="true">
+        <div class="sheet-card" role="dialog" aria-label="Edit delivery pin">
+            <button type="button" class="sheet-x" data-close aria-label="Close">×</button>
+            <h2>Edit delivery pin</h2>
+            <p>Use your current location, or tap the map to drop a pin. Drag the pin to adjust it. Your delivery address stays the same.</p>
+            <button type="button" class="btn primary block" id="pinCurrentBtn">Use my current location</button>
+            <div class="map-box"><div id="pinMap"></div><div class="map-msg" id="pinMapMsg" hidden></div></div>
+            <p class="hint" id="pinStatus" style="margin-bottom:10px">No pin selected.</p>
+            <button type="button" class="btn yellow block" id="pinSaveBtn" disabled>Save pin</button>
+        </div>
+    </div>
+
+    <!-- delete account (strong confirmation) -->
+    <div class="sheet" id="deleteSheet" aria-hidden="true">
+        <div class="sheet-card" role="dialog" aria-label="Delete account">
+            <button type="button" class="sheet-x" data-close aria-label="Close">×</button>
+            <h2 style="color:var(--red)">Delete your account?</h2>
+            <p>Please read this carefully.</p>
+            <ul class="warn-list">
+                <li>Your account will be fully deleted 7 days from today.</li>
+                <li>Your details, GasHub points, favourites and followed dealers will be removed and cannot be recovered.</li>
+                <li>You can cancel at any time during the 7 days by opening this page.</li>
+            </ul>
+            <div class="field">
+                <label for="deleteConfirm">Type <strong>DELETE</strong> to confirm</label>
+                <input type="text" id="deleteConfirm" class="delete-input" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DELETE">
+            </div>
+            <label class="check"><input type="checkbox" id="deleteAck"><span>I understand my points and saved information will be lost.</span></label>
+            <div class="btn-row">
+                <button type="button" class="btn outline" data-close>Cancel</button>
+                <button type="button" class="btn danger" id="deleteGo" disabled>Delete my account</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="customer-logout.js"></script>
+    <script src="customer-photo.js"></script>
+    <script src="customer-profile.js"></script>
+    <script src="customer-review-popup.js" defer></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="gashub-assistant.js" defer></script>
+    <script src="customer-pay-prompt.js" defer></script>
+</body>
+</html>

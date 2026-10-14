@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#d97706">
+    <meta name="description" content="GasHub Executive Dealer Portal - Sales Performance, LPG Cylinders Run-Rate, and Retail Valuation.">
+
+    <title>Reviews | GasHub Dealer Pro</title>
+
+    <!-- Official GasHub Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="dealer-dashboard.css">
+    <link rel="stylesheet" href="dealer-products.css">
+    <link rel="stylesheet" href="dealer-sales.css">
+    <link rel="stylesheet" href="dealer-reviews.css">
+<link rel="stylesheet" href="dealer-logout.css">
+    <script src="dealer-cache-guard.js"></script>
+    <script src="gashub-dialog.js"></script>
+    <link rel="stylesheet" href="dealer-header.css">
+    <link rel="stylesheet" href="dealer-mobile.css">
+</head>
+
+<body>
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="dealer-sidebar-overlay" id="dealerSidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dealer-layout">
+        <!-- 1. EXECUTIVE SIDEBAR (7 EXACT ITEMS) -->
+        <aside class="dealer-sidebar" id="dealerSidebar" aria-label="Dealer Navigation">
+            <div class="sidebar-brand">
+                <a href="dealer-dashboard.html" class="brand-link" aria-label="GasHub Home">
+                    <img src="images/logo.png" alt="GasHub Logo" class="brand-logo-img">
+                    <div class="brand-text">
+                        <span class="brand-title">GasHub</span>
+                        <span class="brand-badge">DEALER PRO</span>
+                    </div>
+                </a>
+                <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Main navigation">
+                <a href="dealer-dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie nav-icon" aria-hidden="true"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="dealer-orders.html" class="nav-item">
+                    <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
+                    <span>Orders</span>
+                    <span class="nav-badge" id="sidebarOrdersBadge">4</span>
+                </a>
+
+                <a href="dealer-messengers.html" class="nav-item">
+                    <i class="fa-solid fa-motorcycle nav-icon" aria-hidden="true"></i>
+                    <span>Messengers</span>
+                </a>
+
+                <a href="dealer-products.html" class="nav-item">
+                    <i class="fa-solid fa-boxes-stacked nav-icon" aria-hidden="true"></i>
+                    <span>Stock</span>
+                    <span class="nav-badge warning" id="sidebarLowStockBadge" hidden>0</span>
+                </a>
+
+                <a href="dealer-purchases.html" class="nav-item">
+                    <i class="fa-solid fa-cart-shopping nav-icon" aria-hidden="true"></i>
+                    <span>Purchases</span>
+                </a>
+
+                <a href="dealer-sales.html" class="nav-item">
+                    <i class="fa-solid fa-arrow-trend-up nav-icon" aria-hidden="true"></i>
+                    <span>Sales</span>
+                </a>
+
+                <a href="dealer-payouts.html" class="nav-item">
+                    <i class="fa-solid fa-money-bill-transfer nav-icon" aria-hidden="true"></i>
+                    <span>Payouts</span>
+                </a>
+
+                <a href="dealer-reviews.html" class="nav-item active" aria-current="page">
+                    <i class="fa-solid fa-star nav-icon" aria-hidden="true"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="dealer-messages.html" class="nav-item">
+                    <i class="fa-solid fa-comments nav-icon" aria-hidden="true"></i>
+                    <span>Messages</span>
+                    <span class="nav-badge info" id="sidebarMessagesBadge">3</span>
+                </a>
+
+                <a href="dealer-profile.html" class="nav-item">
+                    <i class="fa-solid fa-store nav-icon" aria-hidden="true"></i>
+                    <span>Profile</span>
+                </a>
+            </nav>
+
+            <!-- Sidebar Footer: Profile Followers, Reviews & TikTok Blue Verification Badge -->
+            <div class="sidebar-footer">
+                <div class="outlet-status-card">
+                    <div class="dealer-profile-mini">
+                        <button type="button" class="btn-request-verification" id="btnRequestVerification" title="Request official GasHub blue check badge">
+                            <svg viewBox="0 0 24 24" class="tiktok-badge-svg-sm" aria-hidden="true">
+                                <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                                <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                            </svg>
+                            <span id="verificationBtnText">Request Verification</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 2. MAIN APPLICATION CONTENT -->
+        <main class="dealer-main">
+            <!-- Header Bar -->
+            <header class="dealer-header">
+                <div class="header-left">
+                    <button type="button" class="mobile-menu-trigger" id="dealerMobileMenu" aria-label="Open navigation menu">
+                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                    </button>
+                    <div class="header-breadcrumb">
+                        <span class="breadcrumb-root">Portal</span>
+                        <i class="fa-solid fa-chevron-right breadcrumb-separator" aria-hidden="true"></i>
+                        <span class="breadcrumb-current">Customer Reviews</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <a href="dealer-profile.html" class="dealer-profile-btn" aria-label="Dealer profile">
+                        <div class="dealer-avatar" id="dealerHeaderAvatar"><span id="dealerAvatarInitial">G</span></div>
+                        <div class="dealer-info">
+                            <span class="gh-name-row"><span class="dealer-name" id="dealerHeaderName">GasHub Depot</span><span class="tiktok-verified-badge" id="sidebarVerifiedBadge" title="Verified EPRA Dealer"></span></span>
+                            <span class="user-stats"><span class="user-stat"><i class="fa-solid fa-users fa-xs" aria-hidden="true"></i> <strong id="sidebarFollowersCount">0</strong> followers</span><span class="user-stat"><i class="fa-solid fa-star fa-xs text-warning" aria-hidden="true"></i> <strong id="sidebarReviewsCount">0.0 (0)</strong></span></span>
+                        </div>
+                    </a>
+                </div>
+            </header>
+
+            <section class="stock-content">
+                <div class="stock-intro-bar">
+                    <div class="stock-intro-text">
+                        <div class="stock-eyebrow">
+                            <i class="fa-solid fa-star fa-xs"></i>
+                            <span>CUSTOMER FEEDBACK</span>
+                        </div>
+                        <h1>Reviews &amp; Ratings</h1>
+                        <p>What customers say after their order is completed. The admin team sees the same reviews.</p>
+                    </div>
+                </div>
+
+                <div class="rv-summary" id="rvSummary">
+                    <div class="rv-score">
+                        <strong id="rvAverage">0.0</strong>
+                        <div class="rv-stars" id="rvAverageStars" aria-hidden="true"></div>
+                        <span id="rvCount">0 reviews</span>
+                    </div>
+                    <div class="rv-bars" id="rvBars"></div>
+                </div>
+
+                <div class="stock-table-card">
+                    <div class="stock-table-toolbar">
+                        <div class="toolbar-title"><h3>All reviews</h3></div>
+                        <select id="rvFilter" class="form-control rv-filter" aria-label="Filter by rating">
+                            <option value="">All ratings</option>
+                            <option value="5">5 stars</option>
+                            <option value="4">4 stars</option>
+                            <option value="3">3 stars</option>
+                            <option value="2">2 stars</option>
+                            <option value="1">1 star</option>
+                        </select>
+                    </div>
+                    <div id="rvList" class="rv-list" aria-live="polite">
+                        <div class="rv-empty">Loading reviews...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Verification Modal -->
+    <div class="modal-backdrop" id="verificationModalBackdrop" hidden>
+        <div class="modal-dialog modal-dialog-sm" role="dialog" aria-modal="true" aria-labelledby="verificationModalTitle">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <div class="modal-icon-badge verified">
+                        <svg viewBox="0 0 24 24" class="tiktok-badge-svg-modal" aria-hidden="true">
+                            <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                            <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="verificationModalTitle">Request Blue Badge Verification</h2>
+                        <span class="modal-subtitle">Official GasHub &amp; EPRA Dealer Badge</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeVerificationModalBtn" aria-label="Close dialog">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="verificationForm">
+                <div class="modal-body">
+                    <div class="verification-perks-box">
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Official TikTok-style Blue Check Badge on your outlet profile</span></div>
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Top ranking in customer cylinder searches on GasHub App</span></div>
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>EPRA Safety Compliance digital certificate seal</span></div>
+                    </div>
+                    <div class="verification-fee-pill">
+                        <span>Admin Verification Fee:</span>
+                        <strong id="verificationFeeAmount">KSh 2,500 / Year</strong>
+                    </div>
+                    <div class="form-group">
+                        <label for="verifyOutletName" class="form-label required">Depot / Outlet Name</label>
+                        <input type="text" id="verifyOutletName" class="form-control" required placeholder="e.g. GasHub Nairobi Central Depot">
+                    </div>
+                    <div class="form-group">
+                        <label for="verifyEpraLicense" class="form-label required">EPRA License Number</label>
+                        <input type="text" id="verifyEpraLicense" class="form-control" required placeholder="e.g. EPRA/LPG/2026/8942">
+                    </div>
+                    <div class="form-group">
+                        <label for="verifyMpesaPhone" class="form-label required">M-Pesa Phone Number (for STK Prompt)</label>
+                        <input type="tel" id="verifyMpesaPhone" class="form-control" required placeholder="07XX XXX XXX or 2547XX XXX XXX">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="cancelVerificationBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitVerificationBtn">
+                        <i class="fa-solid fa-mobile-screen-button fa-sm"></i>
+                        <span>Pay KSh 2,500 via M-Pesa</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="gashub-core.js"></script>
+    <script src="dealer-logout.js"></script>
+    <script src="dealer-reviews.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const menuBtn = document.getElementById("dealerMobileMenu");
+            const closeBtn = document.getElementById("sidebarCloseBtn");
+            const sidebar = document.getElementById("dealerSidebar");
+            const overlay = document.getElementById("dealerSidebarOverlay");
+            if (menuBtn && sidebar && overlay) {
+                menuBtn.addEventListener("click", () => {
+                    sidebar.classList.add("open");
+                    overlay.classList.add("active");
+                });
+                const closeNav = () => {
+                    sidebar.classList.remove("open");
+                    overlay.classList.remove("active");
+                };
+                overlay.addEventListener("click", closeNav);
+                if (closeBtn) closeBtn.addEventListener("click", closeNav);
+            }
+
+            // Verification Engine
+            const isVerified = localStorage.getItem("gashub_dealer_verified") === "true";
+            const badge = document.getElementById("sidebarVerifiedBadge");
+            const btn = document.getElementById("btnRequestVerification");
+            if (isVerified) {
+                if (badge) badge.classList.add("verified-active");
+                if (btn) {
+                    btn.classList.add("is-verified");
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check fa-sm text-success"></i> <span>EPRA Verified Outlet</span>';
+                    btn.disabled = true;
+                }
+            }
+            const modal = document.getElementById("verificationModalBackdrop");
+            const openBtn = document.getElementById("btnRequestVerification");
+            const closeMBtn = document.getElementById("closeVerificationModalBtn");
+            const cancelBtn = document.getElementById("cancelVerificationBtn");
+            const form = document.getElementById("verificationForm");
+            if (openBtn && !isVerified) openBtn.addEventListener("click", () => { if (modal) modal.hidden = false; });
+            const closeM = () => { if (modal) modal.hidden = true; };
+            if (closeMBtn) closeMBtn.addEventListener("click", closeM);
+            if (cancelBtn) cancelBtn.addEventListener("click", closeM);
+            if (form) {
+                form.addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    localStorage.setItem("gashub_dealer_verified", "true");
+                    closeM();
+                    window.location.reload();
+                });
+            }
+        });
+    </script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="dealer-mobile.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+/* =========================================================
+   DEALER PAGES ON PHONES  (screens up to 640px wide only)
+   Linked last on every dealer page. Desktop and tablet are not affected.
+   - smaller graphics / cards, two stat cards per row
+   - wide tables become one card per row (labels come from dealer-mobile.js)
+   - header, filters, forms and windows kept inside the screen
+   ========================================================= */
+@media (max-width: 640px) {
+    html, body { max-width: 100%; overflow-x: clip; }
+    img, svg, video, canvas { max-width: 100%; }
+    .dealer-main, .dealer-main > *, section, article { min-width: 0; }
+
+    /* ---- header ---- */
+    .dealer-header { padding-left: 10px; padding-right: 10px; gap: 6px; }
+    .header-left { min-width: 0; gap: 8px; flex: 1 1 auto; }
+    .header-breadcrumb { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; }
+    .header-breadcrumb .breadcrumb-root, .header-breadcrumb .breadcrumb-separator { display: none; }
+    .header-right { min-width: 0; max-width: 60%; gap: 6px; flex: 0 1 auto; }
+    .header-profile-card, .dealer-profile-btn, .dealer-header-profile { min-width: 0; max-width: 130px; gap: 6px; }
+    .header-profile-card .header-avatar, .dealer-profile-btn .dealer-avatar, .dealer-header-profile .dealer-avatar {
+        width: 34px; height: 34px; min-width: 34px; max-width: 34px; flex-basis: 34px; font-size: 15px; }
+    .header-user-meta, .dealer-info { min-width: 0; max-width: 84px; overflow: hidden; }
+    .header-user-meta .user-name, .dealer-info .dealer-name { max-width: 62px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+    .user-stats { display: none !important; }
+    .gh-name-row { max-width: 100%; overflow: hidden; flex-wrap: nowrap; }
+    .header-search { display: none; }
+
+    /* ---- page area and titles ---- */
+    .dealer-orders-content, .stock-content, .dealer-content, .dealer-dashboard-content,
+    .dealer-profile-content, .dealer-settings-content, main > section { padding-left: 10px; padding-right: 10px; }
+    .stock-content, .dealer-content { padding-top: 12px; padding-bottom: 80px; gap: 12px; }
+    h1 { font-size: 20px; line-height: 1.25; }
+    h2 { font-size: 16px; }
+    .stock-intro-text p, .stock-intro-bar p { font-size: 12px; line-height: 1.45; }
+    .stock-eyebrow, .card-eyebrow { font-size: 9px; }
+    .stock-intro-bar, .stock-intro-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+    .stock-intro-actions { display: grid; grid-template-columns: 1fr 1fr; }
+    .stock-intro-actions > * { min-height: 40px; font-size: 13px; justify-content: center; }
+    .btn, button.btn, a.btn { min-height: 38px; font-size: 13px; padding: 8px 12px; }
+
+    /* ---- stat / metric cards: two per row, small ---- */
+    .stats-grid, .stock-metrics-grid, .messengers-stats, .po-summary, .rv-summary, .orders-stats-grid {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .stats-grid > :last-child:nth-child(odd), .stock-metrics-grid > :last-child:nth-child(odd),
+    .orders-stats-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .stat-card, .stock-metric-card, .po-card, .rv-summary > * { padding: 9px 10px; gap: 6px; border-radius: 10px; min-width: 0; }
+    .stock-metric-card { display: flex; align-items: center; }
+    .stat-title, .metric-label { font-size: 9px; letter-spacing: .2px; }
+    .stat-value, .metric-value { font-size: 16px; line-height: 1.2; word-break: break-word; }
+    .stat-breakdown, .stat-breakdown span, .metric-subtext { font-size: 10px; line-height: 1.3; }
+    .stat-icon-wrapper, .metric-icon { width: 24px; height: 24px; min-width: 24px; flex: 0 0 24px; font-size: 11px; border-radius: 6px; }
+
+    /* ---- cards, grids, forms ---- */
+    .dashboard-analytics-grid, .dashboard-orders-grid, .form-grid-2, .form-grid-3, .fa-grid-2,
+    .dealer-profile-form-grid, .dealer-orders-info-grid { grid-template-columns: 1fr !important; gap: 12px; }
+    .dealer-card, .stock-table-card, .dealer-settings-card, .dealer-profile-form-card, .guide-card, .po-card, .remittance-card {
+        border-radius: 12px; }
+    .dealer-card-header, .card-header, .stock-table-toolbar { padding: 12px; gap: 8px; flex-wrap: wrap; }
+    .dealer-card-body, .card-body { padding: 12px; }
+    .dealer-card-title, .card-title-group h2, .card-title-group h3, .toolbar-title { font-size: 15px; }
+    .stock-toolbar, .stock-table-toolbar, .filter-row { flex-direction: column; align-items: stretch; gap: 8px; }
+    .stock-toolbar > *, .stock-table-toolbar > * { min-width: 0; max-width: 100%; }
+    .filter-box { min-width: 0; width: 100%; }
+    input, select, textarea { max-width: 100%; box-sizing: border-box; font-size: 16px; }   /* 16px stops iPhones zooming in on tap */
+    .stock-table-toolbar input, .stock-table-toolbar select, .filter-box input, .filter-box select { min-height: 38px; }
+    .photo-actions-row, .dealer-profile-form-actions, .dealer-settings-password-actions { flex-wrap: wrap; gap: 8px; }
+    .photo-actions-row, .dealer-profile-form-actions, .dealer-settings-password-actions { flex-direction: row !important; align-items: stretch; }
+    .photo-actions-row > *, .dealer-profile-form-actions > *, .dealer-settings-password-actions > * {
+        flex: 1 1 130px; height: auto !important; min-height: 42px; max-height: 56px; }
+    .dealer-order-card-icon, .dealer-settings-card-icon { width: 30px; height: 30px; font-size: 13px; }
+
+    /* ---- tables: one card per row ---- */
+    .stock-table-wrapper, .table-responsive, .dealer-table-wrapper, .table-wrap { overflow-x: visible !important; }
+    table.dealer-data-table, table.stock-table, table.dealer-products-table, table.messengers-table,
+    table.dealer-data-table tbody, table.stock-table tbody, table.dealer-products-table tbody, table.messengers-table tbody {
+        display: block; width: 100%; min-width: 0; }
+    table.dealer-data-table thead, table.stock-table thead, table.dealer-products-table thead, table.messengers-table thead { display: none; }
+    table.dealer-data-table tbody tr, table.stock-table tbody tr, table.dealer-products-table tbody tr, table.messengers-table tbody tr {
+        display: block; margin: 8px 10px; padding: 8px 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
+    table.dealer-data-table tbody td, table.stock-table tbody td, table.dealer-products-table tbody td, table.messengers-table tbody td {
+        display: flex; justify-content: space-between; align-items: center; gap: 12px;
+        padding: 6px 0; border: 0; border-bottom: 1px dashed #eef2f7; text-align: right; font-size: 12px; min-width: 0; white-space: normal; }
+    table.dealer-data-table tbody td:last-child, table.stock-table tbody td:last-child,
+    table.dealer-products-table tbody td:last-child, table.messengers-table tbody td:last-child { border-bottom: 0; }
+    table td[data-label]::before { content: attr(data-label); flex: 0 0 38%; max-width: 38%; text-align: left; font-weight: 700; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .2px; }
+    table td[colspan] { display: block !important; text-align: center !important; }
+    table td[colspan]::before { display: none !important; content: none !important; }
+    table tbody td:empty { display: none; }
+    table td .table-actions, table td .row-actions { justify-content: flex-end; flex-wrap: wrap; }
+
+    /* ---- windows (modals) ---- */
+    .modal-overlay, .dealer-modal-overlay { padding: 8px; }
+    .modal-container, .dealer-modal-container, .modal-content { width: 100% !important; max-width: 100% !important; max-height: 94vh; border-radius: 14px; }
+    .modal-header, .dealer-modal-header { padding: 12px 14px; }
+    .modal-body, .dealer-modal-body { padding: 12px 14px; overflow-x: auto; }
+    .modal-footer, .dealer-modal-footer { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+    .modal-footer > *, .dealer-modal-footer > * { flex: 1 1 120px; }
+
+    /* ---- bottom menu stays small and clear of the content ---- */
+    .dealer-bottom-nav, .mobile-bottom-nav, nav.bottom-nav { font-size: 11px; }
+}
+
+/* very small phones */
+@media (max-width: 380px) {
+    .stat-value, .metric-value { font-size: 15px; }
+    .stock-intro-actions { grid-template-columns: 1fr; }
+}

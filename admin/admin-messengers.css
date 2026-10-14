@@ -1,0 +1,11 @@
+.msgr-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; padding: 4px 22px 22px; align-items: end; }
+.msgr-filters label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: #475569; }
+.msgr-filters select, .msgr-filters input { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; background: #fff; color: #14233f; min-width: 0; }
+.msgr-filter-actions { display: flex; gap: 8px; }
+.msgr-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #e5edf9; color: #0b2a6b; white-space: nowrap; }
+.msgr-pill.ok { background: #dcfce7; color: #166534; }
+.msgr-pill.warn { background: #fef3c7; color: #92400e; }
+.msgr-pill.bad { background: #fee2e2; color: #991b1b; }
+.msgr-sub { display: block; font-size: 12px; color: #64748b; font-weight: 400; }
+.admin-table td .btn-link { background: none; border: 0; color: #1d4ed8; font-weight: 700; cursor: pointer; padding: 0; }
+@media (max-width: 640px) { .msgr-filters { padding: 4px 16px 18px; } }

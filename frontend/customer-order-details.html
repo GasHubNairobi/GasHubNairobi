@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- light / dark / system theme (chosen on the Profile page): script first, stylesheet last -->
+    <script src="gashub-theme.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Order Details | GasHub</title>
+
+    <link rel="icon" type="image/png" href="/Images/favicon.png">
+    <link rel="stylesheet" href="customer-order-details.css">
+    <link rel="stylesheet" href="gashub-theme.css">
+    <script src="gashub-ban-guard.js"></script>
+</head>
+
+<body>
+    <script src="customer-nav.js" data-active="orders" data-tabs="true"></script>
+
+    <script src="customer-logout.js"></script>
+    <script src="customer-photo.js"></script>
+    <!-- Header -->
+    <header class="order-header">
+        <div class="header-inner">
+
+            <a href="customer-home.html" class="brand">
+                <img src="/Images/logo.png" alt="GasHub Logo">
+                <span>GasHub</span>
+            </a>
+
+            <div class="header-actions">
+                <a href="customer-orders.html" class="orders-link">
+                    My Orders
+                </a>
+
+                <button class="menu-button" id="menuButton" type="button" aria-label="Open menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+
+        </div>
+
+        <nav class="mobile-menu" id="mobileMenu">
+            <a href="customer-home.html">Home</a>
+            <a href="customer-product.html">Products</a>
+            <a href="customer-dealer.html">Dealers</a>
+            <a href="customer-orders.html">My Orders</a>
+            <a href="customer-profile.html">Profile</a>
+        </nav>
+    </header>
+
+
+    <!-- Main -->
+    <main class="order-page">
+
+        <div class="page-container">
+
+            <!-- Back -->
+            <a href="customer-orders.html" class="back-link">
+                ← Back to My Orders
+            </a>
+
+
+            <!-- Loading -->
+            <section class="state-card" id="orderLoading">
+                <div class="loading-spinner"></div>
+                <h2>Loading order...</h2>
+                <p>Please wait while we load your order details.</p>
+            </section>
+
+
+            <!-- Error -->
+            <section class="state-card error-state" id="orderError" hidden>
+                <div class="state-symbol">!</div>
+                <h2>Order not found</h2>
+                <p>
+                    We could not find the order details you are looking for.
+                </p>
+
+                <a href="customer-orders.html" class="primary-button">
+                    View My Orders
+                </a>
+            </section>
+
+
+            <!-- Order Content -->
+            <section id="orderContent" hidden>
+
+                <!-- Page heading -->
+                <div class="page-heading">
+                    <div>
+                        <p class="eyebrow">Order Details</p>
+                        <h1 id="orderTitle">Your Order</h1>
+                        <p class="order-number">
+                            Order <strong id="orderId">—</strong>
+                        </p>
+                    </div>
+
+                    <span class="order-status" id="orderStatus">
+                        Pending
+                    </span>
+                </div>
+
+
+                <!-- Progress -->
+                <section class="order-card tracking-card">
+
+                    <div class="card-heading">
+                        <div>
+                            <p class="section-label">Order progress</p>
+                            <h2>Track your order</h2>
+                        </div>
+                    </div>
+
+                    <div class="tracking">
+
+                        <div class="tracking-step active" id="stepPlaced">
+                            <div class="step-circle">1</div>
+                            <div class="step-content">
+                                <strong>Order placed</strong>
+                                <span id="placedDate">—</span>
+                            </div>
+                        </div>
+
+                        <div class="tracking-line" id="lineConfirmed"></div>
+
+                        <div class="tracking-step" id="stepConfirmed">
+                            <div class="step-circle">2</div>
+                            <div class="step-content">
+                                <strong>Confirmed</strong>
+                                <span>Dealer confirmation</span>
+                            </div>
+                        </div>
+
+                        <div class="tracking-line" id="lineDelivery"></div>
+
+                        <div class="tracking-step" id="stepDelivery">
+                            <div class="step-circle">3</div>
+                            <div class="step-content">
+                                <strong>Out for delivery</strong>
+                                <span>On the way to you</span>
+                            </div>
+                        </div>
+
+                        <div class="tracking-line" id="lineCompleted"></div>
+
+                        <div class="tracking-step" id="stepCompleted">
+                            <div class="step-circle">4</div>
+                            <div class="step-content">
+                                <strong>Completed</strong>
+                                <span>Order delivered</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <div class="details-grid">
+
+                    <!-- Product -->
+                    <section class="order-card product-card">
+
+                        <div class="card-heading">
+                            <div>
+                                <p class="section-label">Product</p>
+                                <h2>Order item</h2>
+                            </div>
+                        </div>
+
+                        <div class="product-row">
+
+                            <div class="product-image">
+                                <img id="productImage" src="/Images/logo.png" alt="Gas product">
+                            </div>
+
+                            <div class="product-info">
+                                <h3 id="productName">Gas Cylinder</h3>
+                                <p id="productDetails">Product details</p>
+
+                                <div class="product-meta">
+                                    <span>
+                                        Quantity:
+                                        <strong id="productQuantity">1</strong>
+                                    </span>
+
+                                    <span>
+                                        Price:
+                                        <strong id="productPrice">KSh 0</strong>
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- Dealer -->
+                    <section class="order-card dealer-card">
+
+                        <div class="card-heading">
+                            <div>
+                                <p class="section-label">Dealer</p>
+                                <h2>Seller information</h2>
+                            </div>
+                        </div>
+
+                        <div class="dealer-info">
+                            <div class="dealer-avatar">
+                                <span id="dealerInitial">G</span>
+                            </div>
+
+                            <div>
+                                <h3 id="dealerName">GasHub Dealer</h3>
+                                <p id="dealerLocation">Dealer information</p>
+                            </div>
+                        </div>
+
+                        <a href="customer-dealer.html" class="secondary-button">
+                            View Dealers
+                        </a>
+
+                    </section>
+
+
+                    <!-- Delivery -->
+                    <section class="order-card">
+
+                        <div class="card-heading">
+                            <div>
+                                <p class="section-label">Delivery</p>
+                                <h2>Delivery information</h2>
+                            </div>
+                        </div>
+
+                        <div class="info-list">
+
+                            <div class="info-item">
+                                <span>Delivery option</span>
+                                <strong id="deliveryOption">Delivery</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>County</span>
+                                <strong id="deliveryCounty">—</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Town</span>
+                                <strong id="deliveryTown">—</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Address</span>
+                                <strong id="deliveryAddress">—</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Landmark</span>
+                                <strong id="deliveryLandmark">—</strong>
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- Payment -->
+                    <section class="order-card">
+
+                        <div class="card-heading">
+                            <div>
+                                <p class="section-label">Payment</p>
+                                <h2>Payment summary</h2>
+                            </div>
+                        </div>
+
+                        <div class="info-list">
+
+                            <div class="info-item">
+                                <span>Payment method</span>
+                                <strong id="paymentMethod">M-Pesa</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Payment status</span>
+                                <strong class="payment-status" id="paymentStatus">
+                                    Pending
+                                </strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Product total</span>
+                                <strong id="summaryProductPrice">KSh 0</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Delivery fee</span>
+                                <strong id="summaryDelivery">KSh 0</strong>
+                            </div>
+
+                            <div class="total-row">
+                                <span>Total</span>
+                                <strong id="summaryTotal">KSh 0</strong>
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- Customer -->
+                    <section class="order-card">
+
+                        <div class="card-heading">
+                            <div>
+                                <p class="section-label">Customer</p>
+                                <h2>Your information</h2>
+                            </div>
+                        </div>
+
+                        <div class="info-list">
+
+                            <div class="info-item">
+                                <span>Name</span>
+                                <strong id="customerName">—</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Phone</span>
+                                <strong id="customerPhone">—</strong>
+                            </div>
+
+                            <div class="info-item">
+                                <span>Email</span>
+                                <strong id="customerEmail">—</strong>
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- Notes -->
+                    <section class="order-card notes-card" id="notesCard">
+
+                        <div class="card-heading">
+                            <div>
+                                <p class="section-label">Additional information</p>
+                                <h2>Order notes</h2>
+                            </div>
+                        </div>
+
+                        <p id="orderNotes">
+                            No additional notes.
+                        </p>
+
+                    </section>
+
+                </div>
+
+
+                <!-- Actions -->
+                <section class="order-actions">
+
+                    <a href="customer-orders.html" class="secondary-button">
+                        My Orders
+                    </a>
+
+                    <button type="button" class="cancel-button" id="cancelOrderButton">
+                        Cancel Order
+                    </button>
+
+                </section>
+
+                <p class="action-message" id="actionMessage"></p>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <!-- Bottom Navigation -->
+    <footer class="site-footer">
+        <p>© 2026 GasHub. All rights reserved.</p>
+        <p>Reliable gas delivery and dealer connections.</p>
+    </footer>
+
+
+    <script src="customer-order-details.js"></script>
+
+    <script src="customer-review-popup.js" defer></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="gashub-assistant.js" defer></script>
+</body>
+</html>

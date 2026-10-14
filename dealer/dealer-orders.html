@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#d97706">
+    <meta name="description" content="GasHub Executive Dealer Portal - Complete management of customer LPG cylinder orders, GasHub commission deductions, dealer payouts, and invoice printing.">
+
+    <title>Orders | GasHub Executive Dealer Portal</title>
+
+    <!-- Official GasHub Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6 Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="dealer-dashboard.css">
+    <link rel="stylesheet" href="dealer-orders.css">
+    <link rel="stylesheet" href="dealer-products.css">
+    <link rel="stylesheet" href="dealer-messengers.css">
+<link rel="stylesheet" href="dealer-logout.css">
+    <script src="dealer-cache-guard.js"></script>
+    <script src="gashub-dialog.js"></script>
+    <link rel="stylesheet" href="dealer-header.css">
+    <link rel="stylesheet" href="dealer-mobile.css">
+</head>
+
+<body>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div
+        class="dealer-sidebar-overlay"
+        id="dealerSidebarOverlay"
+        aria-hidden="true"
+    ></div>
+
+    <div class="dealer-layout">
+
+        <!-- =====================================================
+             1. REFINED EXECUTIVE SIDEBAR (Matches Dashboard)
+             ===================================================== -->
+        <aside
+            class="dealer-sidebar"
+            id="dealerSidebar"
+            aria-label="Dealer Navigation"
+        >
+            <!-- Brand Header -->
+            <div class="sidebar-brand">
+                <a href="dealer-dashboard.html" class="brand-link" aria-label="GasHub Home">
+                    <div class="brand-logo-icon">
+                        <img
+                            src="images/logo.png"
+                            alt="GasHub Logo"
+                            class="brand-logo-img"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"
+                        >
+                        <i class="fa-solid fa-fire-flame-simple" style="display: none;" aria-hidden="true"></i>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-title">GasHub</span>
+                        <span class="brand-badge">DEALER PRO</span>
+                    </div>
+                </a>
+                <button
+                    type="button"
+                    class="sidebar-close-btn"
+                    id="sidebarCloseBtn"
+                    aria-label="Close navigation"
+                >
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <!-- Only: Dashboard, Orders, Stock, Purchases, Sales, Messages, Profile -->
+            <nav class="sidebar-nav" aria-label="Main navigation">
+                <a
+                    href="dealer-dashboard.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-chart-pie nav-icon" aria-hidden="true"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a
+                    href="dealer-orders.html"
+                    class="nav-item active"
+                    aria-current="page"
+                >
+                    <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
+                    <span>Orders</span>
+                    <span class="nav-badge" id="sidebarOrdersBadge">0</span>
+                </a>
+
+                <a
+                    href="dealer-messengers.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-motorcycle nav-icon" aria-hidden="true"></i>
+                    <span>Messengers</span>
+                </a>
+
+                <a
+                    href="dealer-products.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-boxes-stacked nav-icon" aria-hidden="true"></i>
+                    <span>Stock</span>
+                    <span class="nav-badge warning" id="sidebarLowStockBadge" hidden>0</span>
+                </a>
+
+                <a
+                    href="dealer-purchases.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-cart-shopping nav-icon" aria-hidden="true"></i>
+                    <span>Purchases</span>
+                </a>
+
+                <a
+                    href="dealer-sales.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-arrow-trend-up nav-icon" aria-hidden="true"></i>
+                    <span>Sales</span>
+                </a>
+
+                <a
+                    href="dealer-payouts.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-money-bill-transfer nav-icon" aria-hidden="true"></i>
+                    <span>Payouts</span>
+                </a>
+
+                <a
+                    href="dealer-reviews.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-star nav-icon" aria-hidden="true"></i>
+                    <span>Reviews</span>
+                </a>
+
+                <a
+                    href="dealer-messages.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-comments nav-icon" aria-hidden="true"></i>
+                    <span>Messages</span>
+                    <span class="nav-badge info" id="sidebarMessagesBadge">3</span>
+                </a>
+
+                <a
+                    href="dealer-profile.html"
+                    class="nav-item"
+                >
+                    <i class="fa-solid fa-store nav-icon" aria-hidden="true"></i>
+                    <span>Profile</span>
+                </a>
+            </nav>
+
+            <!-- Sidebar Footer: Profile Followers, Reviews & TikTok Blue Verification Badge -->
+            <div class="sidebar-footer">
+                <div class="outlet-status-card">
+                    <div class="dealer-profile-mini">
+                        <button type="button" class="btn-request-verification" id="btnRequestVerification" title="Request official GasHub blue check badge">
+                            <svg viewBox="0 0 24 24" class="tiktok-badge-svg-sm" aria-hidden="true">
+                                <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                                <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                            </svg>
+                            <span id="verificationBtnText">Request Verification</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- =====================================================
+             2. MAIN APPLICATION CONTENT
+             ===================================================== -->
+        <main class="dealer-main">
+
+            <!-- Top Header Bar -->
+            <header class="dealer-header">
+                <div class="header-left">
+                    <button
+                        type="button"
+                        class="mobile-menu-trigger"
+                        id="dealerMobileMenu"
+                        aria-label="Open navigation menu"
+                        aria-controls="dealerSidebar"
+                        aria-expanded="false"
+                    >
+                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="header-breadcrumb">
+                        <span class="breadcrumb-root">Portal</span>
+                        <i class="fa-solid fa-chevron-right breadcrumb-separator" aria-hidden="true"></i>
+                        <span class="breadcrumb-current">Orders</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <!-- Search Input -->
+                    <div class="header-search">
+                        <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+                        <input
+                            type="search"
+                            id="headerSearchInput"
+                            placeholder="Search orders, phone, M-Pesa..."
+                            aria-label="Search orders"
+                        >
+                    </div>
+
+                    <!-- Export & Print Action -->
+                    <button
+                        type="button"
+                        class="btn btn-secondary btn-sm header-action-btn"
+                        id="btnHeaderExportReport"
+                        title="Print or export orders report by timeline"
+                    >
+                        <i class="fa-solid fa-print" aria-hidden="true"></i>
+                        <span>Export & Print</span>
+                    </button>
+
+                    <!-- Notifications -->
+                    <button
+                        type="button"
+                        class="notification-trigger"
+                        id="dealerNotificationButton"
+                        aria-label="Notifications"
+                    >
+                        <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                        <span class="notification-pill" id="notificationBadge">0</span>
+                    </button>
+
+                    <!-- Profile Pill -->
+                    <a href="dealer-profile.html" class="header-profile-card">
+                        <div class="header-avatar" id="dealerHeaderAvatar">
+                            <span id="dealerAvatarInitial">D</span>
+                        </div>
+                        <div class="header-user-meta">
+                            <span class="gh-name-row"><span class="user-name" id="dealerHeaderName">GasHub Dealer</span><span class="tiktok-verified-badge" id="sidebarVerifiedBadge" title="Verified EPRA Dealer"></span></span>
+                            <span class="user-stats"><span class="user-stat"><i class="fa-solid fa-users fa-xs" aria-hidden="true"></i> <strong id="sidebarFollowersCount">0</strong> followers</span><span class="user-stat"><i class="fa-solid fa-star fa-xs text-warning" aria-hidden="true"></i> <strong id="sidebarReviewsCount">0.0 (0)</strong></span></span>
+                        </div>
+                        <i class="fa-solid fa-angle-down profile-dropdown-arrow" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </header>
+
+            <!-- =====================================================
+                 ORDERS WORKSPACE
+                 ===================================================== -->
+            <div class="dealer-orders-content dealer-orders-page">
+
+                <!-- Greeting Bar & Admin Commission Indicator -->
+                <section class="dashboard-greeting-bar orders-greeting-bar">
+                    <div class="greeting-text">
+                        <div class="greeting-eyebrow">
+                            <i class="fa-solid fa-receipt" aria-hidden="true"></i>
+                            REAL-TIME ORDER DISPATCH & FINANCIAL SETTLEMENTS
+                        </div>
+                        <h2>LPG Cylinder Orders Management</h2>
+                        <p>Track customer cylinder orders, review dispatches, monitor GasHub admin commission deductions, and download receipts.</p>
+                    </div>
+
+                    <div class="greeting-actions">
+                        <div class="admin-commission-pill" id="adminCommissionBadge" title="Admin platform discount set for GasHub">
+                            <i class="fa-solid fa-percent" aria-hidden="true"></i>
+                            <span>Admin Commission: <strong id="adminCommissionRateText">...</strong></span>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-sm" id="btnOpenExportModal">
+                            <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                            <span>Report & Print</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Toast / Notification Banner -->
+                <div
+                    class="dashboard-alert-banner"
+                    id="ordersMessage"
+                    role="status"
+                    aria-live="polite"
+                    hidden
+                ></div>
+
+                <!-- =====================================================
+                     3. ENHANCED KPI STATS GRID (With GasHub Cut & Net)
+                     ===================================================== -->
+                <section class="orders-stats-grid" aria-label="Order statistics and financial summary">
+
+                    <!-- Metric 1: Total Orders -->
+                    <article class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Orders</span>
+                            <div class="stat-icon-wrapper orders">
+                                <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="totalOrdersCount">—</div>
+                        <div class="stat-breakdown">
+                            <span id="ordersCompletedRatio">0 completed</span>
+                        </div>
+                    </article>
+
+                    <!-- Metric 2: Pending Approval -->
+                    <article class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Pending Orders</span>
+                            <div class="stat-icon-wrapper pending">
+                                <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value text-warning" id="pendingOrdersCount">—</div>
+                        <div class="stat-breakdown">
+                            <span>Requires action</span>
+                        </div>
+                    </article>
+
+                    <!-- Metric 3: Gross Order Revenue -->
+                    <article class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Gross Revenue</span>
+                            <div class="stat-icon-wrapper revenue">
+                                <i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="grossSalesAmount">—</div>
+                        <div class="stat-breakdown">
+                            <span>Customer total paid</span>
+                        </div>
+                    </article>
+
+                    <!-- Metric 4: Amount Issued to GasHub (Admin Discount Rate) -->
+                    <article class="stat-card gashub-cut-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Issued to GasHub</span>
+                            <div class="stat-icon-wrapper gashub">
+                                <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value text-gashub" id="gashubIssuedAmount">—</div>
+                        <div class="stat-breakdown">
+                            <span id="gashubRateSubtext">... Admin platform fee</span>
+                        </div>
+                    </article>
+
+                    <!-- Metric 5: Net Dealer Payout -->
+                    <article class="stat-card dealer-payout-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Dealer Net Payout</span>
+                            <div class="stat-icon-wrapper payout">
+                                <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value text-success" id="dealerNetPayoutAmount">—</div>
+                        <div class="stat-breakdown">
+                            <span id="dealerNetSubtext">... Net to dealer</span>
+                        </div>
+                    </article>
+
+                </section>
+
+                <!-- =====================================================
+                     4. ORDERS REGISTRY (Filters, Table, Pagination)
+                     ===================================================== -->
+                <div class="dealer-card dealer-orders-management">
+
+                    <div class="dealer-card-header">
+                        <div class="dealer-orders-header-title">
+                            <h3>Orders Registry</h3>
+                            <p>Filter by timeline, search customer contact or M-Pesa code, and manage dispatches.</p>
+                        </div>
+
+                        <div class="dealer-orders-header-tools">
+                            <button
+                                type="button"
+                                class="btn btn-secondary btn-sm"
+                                id="btnRefreshOrders"
+                                title="Reload orders"
+                            >
+                                <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                                <span>Refresh</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="dealer-card-body">
+
+                        <!-- FILTERS BAR -->
+                        <div class="dealer-orders-filters">
+
+                            <!-- Search -->
+                            <div class="dealer-order-filter-group filter-search">
+                                <label for="orderSearch">Search Registry</label>
+                                <div class="dealer-order-search">
+                                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                    <input
+                                        type="search"
+                                        id="orderSearch"
+                                        placeholder="Order #, customer, phone, M-Pesa..."
+                                        autocomplete="off"
+                                    >
+                                    <button
+                                        type="button"
+                                        class="dealer-order-search-clear"
+                                        id="clearOrderSearch"
+                                        aria-label="Clear search"
+                                        hidden
+                                    >
+                                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Timeline Filter -->
+                            <div class="dealer-order-filter-group">
+                                <label for="orderTimelineFilter">Timeline Period</label>
+                                <select id="orderTimelineFilter" aria-label="Filter by timeline">
+                                    <option value="all">All Timelines</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week (7 Days)</option>
+                                    <option value="month" selected>This Month (30 Days)</option>
+                                    <option value="quarter">This Quarter (90 Days)</option>
+                                </select>
+                            </div>
+
+                            <!-- Order Status -->
+                            <div class="dealer-order-filter-group">
+                                <label for="orderStatusFilter">Order Status</label>
+                                <select id="orderStatusFilter" aria-label="Filter by order status">
+                                    <option value="">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="dispatched">In Transit / Dispatched</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+
+                            <!-- Payment Status -->
+                            <div class="dealer-order-filter-group">
+                                <label for="paymentStatusFilter">Payment Status</label>
+                                <select id="paymentStatusFilter" aria-label="Filter by payment status">
+                                    <option value="">All Payments</option>
+                                    <option value="paid">Paid (M-Pesa / Card)</option>
+                                    <option value="pending">Pending Payment</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="refunded">Refunded</option>
+                                </select>
+                            </div>
+
+                            <!-- Fulfilment -->
+                            <div class="dealer-order-filter-group">
+                                <label for="fulfilmentFilter">Fulfilment</label>
+                                <select id="fulfilmentFilter" aria-label="Filter by fulfilment method">
+                                    <option value="">All Methods</option>
+                                    <option value="delivery">Delivery</option>
+                                    <option value="pickup">Pickup Depot</option>
+                                </select>
+                            </div>
+
+                            <!-- Reset Button -->
+                            <div class="dealer-order-filter-group filter-actions">
+                                <label>&nbsp;</label>
+                                <button
+                                    type="button"
+                                    class="btn btn-secondary btn-sm btn-clear-filters"
+                                    id="clearOrderFilters"
+                                    title="Reset all filters"
+                                >
+                                    <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+                                    <span>Reset</span>
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <!-- ORDERS TABLE -->
+                        <div class="dealer-orders-table-wrapper">
+                            <table class="dealer-orders-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order Info</th>
+                                        <th>Customer</th>
+                                        <th>LPG Cylinder / Product</th>
+                                        <th class="text-center">Qty</th>
+                                        <th class="text-right">Gross Total</th>
+                                        <th class="text-right">GasHub Cut (<span class="admin-rate-col">...</span>)</th>
+                                        <th class="text-right">Dealer Net</th>
+                                        <th>Fulfilment</th>
+                                        <th>Payment</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody">
+                                    <!-- Populated dynamically by dealer-order.js -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- EMPTY STATE -->
+                        <div class="dealer-orders-empty" id="ordersEmptyState" hidden>
+                            <div class="dealer-orders-empty-icon">
+                                <i class="fa-solid fa-receipt" aria-hidden="true"></i>
+                            </div>
+                            <h3 id="ordersEmptyHeading">No orders found</h3>
+                            <p id="ordersEmptyMessage">There are no orders matching your selected filters or timeline.</p>
+                            <button
+                                type="button"
+                                class="btn btn-secondary btn-sm"
+                                id="clearEmptyStateFilters"
+                            >
+                                <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+                                <span>Reset Filters</span>
+                            </button>
+                        </div>
+
+                        <!-- LOADING STATE -->
+                        <div class="dealer-orders-loading" id="ordersLoading" hidden>
+                            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                            <span>Loading orders registry...</span>
+                        </div>
+
+                        <!-- PAGINATION -->
+                        <div class="dealer-orders-pagination" id="ordersPagination">
+                            <div class="dealer-orders-pagination-info" id="ordersPaginationInfo">
+                                Showing 0 of 0 orders
+                            </div>
+                            <div class="dealer-orders-pagination-controls" id="ordersPaginationControls">
+                                <button
+                                    type="button"
+                                    class="dealer-orders-page-button"
+                                    id="ordersPreviousPage"
+                                    disabled
+                                    aria-label="Previous page"
+                                >
+                                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                                </button>
+                                <div class="dealer-orders-page-numbers" id="ordersPageNumbers"></div>
+                                <button
+                                    type="button"
+                                    class="dealer-orders-page-button"
+                                    id="ordersNextPage"
+                                    disabled
+                                    aria-label="Next page"
+                                >
+                                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- =====================================================
+                     5. INFORMATIVE OPERATIONAL CARDS
+                     ===================================================== -->
+                <div class="dealer-orders-info-grid">
+
+                    <div class="dealer-orders-info-card">
+                        <div class="dealer-orders-info-icon">
+                            <i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>
+                        </div>
+                        <div class="dealer-orders-info-content">
+                            <h3>GasHub Commission & Settlement</h3>
+                            <p>
+                                Platform commission is set by GasHub Admin (currently <strong class="admin-rate-text">...</strong>).
+                                Net dealer proceeds (<strong class="dealer-rate-text">...</strong>) are automatically credited to your dealer bank/M-Pesa payout wallet upon order completion.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="dealer-orders-info-card">
+                        <div class="dealer-orders-info-icon">
+                            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        </div>
+                        <div class="dealer-orders-info-content">
+                            <h3>EPRA & Safety Compliance</h3>
+                            <p>
+                                Always verify standard cylinder safety seals and weight before customer dispatch. Printable invoices contain certified safety tracking barcodes for customer verification.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="dealer-dashboard-footer">
+                <div class="footer-left">
+                    <span>&copy; 2026 GasHub Technologies Ltd. All rights reserved.</span>
+                    <span class="footer-dot">&bull;</span>
+                    <span class="footer-compliance">EPRA Certified LPG Portal</span>
+                </div>
+                <div class="footer-right">
+                    <span class="system-ping-status">
+                        <span class="ping-dot"></span> Live Orders Feed
+                    </span>
+                </div>
+            </footer>
+
+        </main>
+    </div>
+
+    <!-- =====================================================
+         MODAL 1: PRINTABLE ORDER INVOICE / RECEIPT
+         ===================================================== -->
+    <div
+        class="dealer-modal-overlay"
+        id="orderInvoiceModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="invoiceModalTitle"
+        hidden
+    >
+        <div class="dealer-modal-container invoice-modal-container">
+            <div class="dealer-modal-header no-print">
+                <h3 id="invoiceModalTitle">
+                    <i class="fa-solid fa-print" aria-hidden="true"></i>
+                    Print Customer Invoice
+                </h3>
+                <div class="modal-header-actions">
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        id="btnTriggerPrintInvoice"
+                    >
+                        <i class="fa-solid fa-print" aria-hidden="true"></i>
+                        <span>Print Now</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="modal-close-button"
+                        id="btnCloseInvoiceModal"
+                        aria-label="Close invoice"
+                    >
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PRINTABLE INVOICE SHEET -->
+            <div class="printable-invoice-sheet" id="printableInvoiceSheet">
+                <!-- Invoice Header -->
+                <div class="invoice-brand-row">
+                    <div class="invoice-brand">
+                        <img src="images/logo.png" alt="GasHub" class="invoice-logo-img" onerror="this.style.display='none'">
+                        <div>
+                            <h2>GASHUB DEALER NETWORK</h2>
+                            <p>Official LPG Clean Cooking Supply</p>
+                            <small class="invoice-epra-tag">EPRA Licensed Dealer &bull; Safety Verified</small>
+                        </div>
+                    </div>
+                    <div class="invoice-meta-block">
+                        <div class="invoice-badge-status" id="invModalStatusBadge">COMPLETED</div>
+                        <h4 id="invModalOrderNumber">#GH-8941</h4>
+                        <span id="invModalDate">09 Oct 2026, 14:32</span>
+                    </div>
+                </div>
+
+                <div class="invoice-divider"></div>
+
+                <!-- Parties Information -->
+                <div class="invoice-parties-grid">
+                    <div class="invoice-party-col">
+                        <span class="party-label">DISPATCHED BY (DEALER)</span>
+                        <strong id="invModalDealerName">Dealer business</strong>
+                        <span id="invModalDealerLocation">Westlands Commercial Centre, Nairobi</span>
+                        <span id="invModalDealerPhone">Tel: +254 711 234 567</span>
+                        <small>EPRA License: EPRA/LPG/2026/892</small>
+                    </div>
+
+                    <div class="invoice-party-col">
+                        <span class="party-label">CUSTOMER DETAILS</span>
+                        <strong id="invModalCustomerName">Grace Wanjiku</strong>
+                        <span id="invModalCustomerPhone">Tel: +254 722 890 123</span>
+                        <span id="invModalCustomerAddress">Delivery: Kileleshwa, Gatundu Rd, Apt 4B</span>
+                        <small id="invModalFulfilmentType">Method: Doorstep Express Delivery</small>
+                    </div>
+                </div>
+
+                <!-- Cylinder Itemization Table -->
+                <table class="invoice-items-table">
+                    <thead>
+                        <tr>
+                            <th>LPG Product / Cylinder</th>
+                            <th>Brand & Size</th>
+                            <th class="text-center">Type</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-right">Unit Price</th>
+                            <th class="text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invModalItemsBody">
+                        <!-- Injected dynamically -->
+                    </tbody>
+                </table>
+
+                <!-- Financial Calculation Split -->
+                <div class="invoice-financial-split">
+                    <div class="invoice-notes-block">
+                        <strong>Payment & Audit Details:</strong>
+                        <p>Payment Method: <span id="invModalPaymentMethod">M-Pesa Express</span></p>
+                        <p>Transaction Ref: <code id="invModalTransactionRef">QJH7823KL9</code></p>
+                        <p class="epra-safety-note">
+                            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                            Safety Check: Certified safety seal and EPRA tamper-proof cap verified.
+                        </p>
+                    </div>
+
+                    <div class="invoice-totals-block">
+                        <div class="invoice-total-row">
+                            <span>Gross Cylinder Amount</span>
+                            <strong id="invModalGrossAmount">KSh 2,800.00</strong>
+                        </div>
+                        <div class="invoice-total-row text-muted">
+                            <span>Delivery Fee</span>
+                            <span id="invModalDeliveryFee">KSh 0.00</span>
+                        </div>
+                        <div class="invoice-total-row invoice-grand-total">
+                            <span>Customer Total Paid</span>
+                            <span id="invModalCustomerTotal">KSh 2,800.00</span>
+                        </div>
+
+                        <div class="invoice-divider"></div>
+
+                        <!-- Admin Commission Breakdown -->
+                        <div class="invoice-commission-breakdown">
+                            <div class="invoice-total-row text-gashub">
+                                <span>GasHub Commission (<span id="invModalCommissionRate">...</span>)</span>
+                                <strong id="invModalGashubFee">- KSh 140.00</strong>
+                            </div>
+                            <div class="invoice-total-row text-success invoice-net-payout">
+                                <span>Net Dealer Payout (<span id="invModalDealerRate">...</span>)</span>
+                                <strong id="invModalDealerNet">KSh 2,660.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Footer -->
+                <div class="invoice-footer-note">
+                    <p>Thank you for trading through GasHub. For support, call 0800 720 000 or email support@gashub.co.ke.</p>
+                    <small>Official Computer Generated Invoice &bull; Valid Without Physical Signature</small>
+                </div>
+            </div>
+
+            <div class="dealer-modal-footer no-print">
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    id="btnCloseInvoiceModalBottom"
+                >
+                    Close
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    id="btnTriggerPrintInvoiceBottom"
+                >
+                    <i class="fa-solid fa-print" aria-hidden="true"></i>
+                    <span>Print Receipt / PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         MODAL 2: EXPORT & PRINT REPORT (TIMELINE FILTER)
+         ===================================================== -->
+    <div
+        class="dealer-modal-overlay"
+        id="orderExportModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exportModalTitle"
+        hidden
+    >
+        <div class="dealer-modal-container export-modal-container">
+            <div class="dealer-modal-header">
+                <h3 id="exportModalTitle">
+                    <i class="fa-solid fa-file-invoice" aria-hidden="true"></i>
+                    Export & Print Orders Report
+                </h3>
+                <button
+                    type="button"
+                    class="modal-close-button"
+                    id="btnCloseExportModal"
+                    aria-label="Close export dialog"
+                >
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="dealer-modal-body">
+                <p class="export-modal-description">
+                    Generate an official reconciliation report of dealer orders, customer totals, and GasHub admin platform commission deductions.
+                </p>
+
+                <div class="export-timeline-selector">
+                    <label for="exportTimelineSelect">Select Timeline Period:</label>
+                    <select id="exportTimelineSelect" class="export-select">
+                        <option value="today">Today's Orders</option>
+                        <option value="week">Past 7 Days (This Week)</option>
+                        <option value="month" selected>Past 30 Days (This Month)</option>
+                        <option value="quarter">Past 90 Days (This Quarter)</option>
+                        <option value="all">All-Time Historical Orders</option>
+                    </select>
+                </div>
+
+                <!-- Live Timeline Preview Card -->
+                <div class="export-summary-card">
+                    <h4>Period Financial Preview</h4>
+                    <div class="export-summary-metrics">
+                        <div class="export-metric">
+                            <span>Orders in Period</span>
+                            <strong id="exportPreviewOrderCount">0</strong>
+                        </div>
+                        <div class="export-metric">
+                            <span>Gross Volume</span>
+                            <strong id="exportPreviewGross">KSh 0</strong>
+                        </div>
+                        <div class="export-metric text-gashub">
+                            <span>GasHub Fee (<span id="exportPreviewFeeRate">...</span>)</span>
+                            <strong id="exportPreviewGashub">KSh 0</strong>
+                        </div>
+                        <div class="export-metric text-success">
+                            <span>Net Dealer Payout</span>
+                            <strong id="exportPreviewNet">KSh 0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-options-grid">
+                    <div class="export-option-box">
+                        <div class="export-option-icon">
+                            <i class="fa-solid fa-file-csv" aria-hidden="true"></i>
+                        </div>
+                        <div class="export-option-info">
+                            <strong>Download CSV Spreadsheet</strong>
+                            <p>Full spreadsheet with customer names, cylinders, M-Pesa refs, and net payouts.</p>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-sm"
+                            id="btnDownloadReportCSV"
+                        >
+                            <i class="fa-solid fa-download" aria-hidden="true"></i>
+                            <span>Download CSV</span>
+                        </button>
+                    </div>
+
+                    <div class="export-option-box">
+                        <div class="export-option-icon print-icon">
+                            <i class="fa-solid fa-print" aria-hidden="true"></i>
+                        </div>
+                        <div class="export-option-info">
+                            <strong>Print Timeline Report / PDF</strong>
+                            <p>Formatted paper audit report with executive breakdown and EPRA compliance banner.</p>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-sm"
+                            id="btnPrintTimelineReport"
+                        >
+                            <i class="fa-solid fa-print" aria-hidden="true"></i>
+                            <span>Print Report</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dealer-modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    id="btnCloseExportModalBottom"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         MODAL 3: QUICK ORDER DETAILS MODAL
+         ===================================================== -->
+    <div
+        class="dealer-modal-overlay"
+        id="orderDetailsModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="orderDetailsModalTitle"
+        hidden
+    >
+        <div class="dealer-modal-container order-details-modal-container">
+            <div class="dealer-modal-header">
+                <h3 id="orderDetailsModalTitle">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                    Order Details: <span id="viewModalOrderNum">#GH-8941</span>
+                </h3>
+                <button
+                    type="button"
+                    class="modal-close-button"
+                    id="btnCloseOrderDetailsModal"
+                    aria-label="Close order details"
+                >
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="dealer-modal-body" id="orderDetailsModalBody">
+                <!-- Dynamically populated by dealer-order.js -->
+            </div>
+
+            <div class="dealer-modal-footer" id="orderDetailsModalFooter">
+                <!-- Action buttons populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         MODAL 4: ASSIGN A MESSENGER TO A DELIVERY ORDER
+         ===================================================== -->
+    <div
+        class="dealer-modal-overlay"
+        id="assignMessengerModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="assignMessengerModalTitle"
+        hidden
+    >
+        <div class="dealer-modal-container assign-messenger-modal-container">
+            <div class="dealer-modal-header">
+                <h3 id="assignMessengerModalTitle">
+                    <i class="fa-solid fa-motorcycle" aria-hidden="true"></i>
+                    Assign Messenger: <span id="assignModalOrderNum">#</span>
+                </h3>
+                <button
+                    type="button"
+                    class="modal-close-button"
+                    id="btnCloseAssignModal"
+                    aria-label="Close"
+                >
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="dealer-modal-body" id="assignMessengerModalBody">
+                <!-- Dynamically populated by dealer-order.js -->
+            </div>
+
+            <div class="dealer-modal-footer" id="assignMessengerModalFooter">
+                <!-- Action buttons populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="gashub-core.js"></script>
+    <script src="dealer-logout.js"></script>
+    <script src="dealer-order.js"></script>
+
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="dealer-mobile.js" defer></script>
+</body>
+</html>

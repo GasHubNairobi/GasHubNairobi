@@ -1,0 +1,726 @@
+/* =========================================================
+GAS HUB - DEALER SETTINGS
+dealer-settings.css
+========================================================= */
+
+/* =========================================================
+SETTINGS LAYOUT
+========================================================= */
+
+.dealer-settings-layout {
+display: grid;
+grid-template-columns: 1fr;
+gap: 20px;
+width: 100%;
+}
+
+/* =========================================================
+PAGE DESCRIPTION
+========================================================= */
+
+.dealer-content-description {
+margin: 6px 0 0;
+color: var(--dealer-text-muted, #6b7280);
+font-size: 14px;
+line-height: 1.6;
+}
+
+/* =========================================================
+SETTINGS MESSAGE
+========================================================= */
+
+.dealer-settings-message {
+display: none;
+width: 100%;
+margin-bottom: 20px;
+padding: 13px 16px;
+border: 1px solid transparent;
+border-radius: 10px;
+font-size: 14px;
+line-height: 1.5;
+}
+
+.dealer-settings-message.visible {
+display: flex;
+align-items: center;
+}
+
+.dealer-settings-message.success {
+color: #166534;
+background: #f0fdf4;
+border-color: #bbf7d0;
+}
+
+.dealer-settings-message.error {
+color: #991b1b;
+background: #fef2f2;
+border-color: #fecaca;
+}
+
+.dealer-settings-message.info {
+color: #1e40af;
+background: #eff6ff;
+border-color: #bfdbfe;
+}
+
+/* =========================================================
+SETTINGS CARD
+========================================================= */
+
+.dealer-settings-card {
+overflow: hidden;
+}
+
+.dealer-settings-card .dealer-card-header {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 20px;
+}
+
+.dealer-settings-card-description {
+margin: 5px 0 0;
+color: var(--dealer-text-muted, #6b7280);
+font-size: 13px;
+line-height: 1.5;
+}
+
+.dealer-settings-card-icon {
+width: 42px;
+height: 42px;
+flex: 0 0 42px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 10px;
+color: var(--dealer-primary, #d89b00);
+background: var(--dealer-primary-light, #fff4d6);
+font-size: 17px;
+}
+
+.dealer-settings-card-icon.danger {
+color: #dc2626;
+background: #fef2f2;
+}
+
+/* =========================================================
+SETTINGS OPTION
+========================================================= */
+
+.dealer-settings-option {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 24px;
+min-height: 58px;
+}
+
+.dealer-settings-option-info {
+min-width: 0;
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+
+.dealer-settings-option-info strong {
+color: var(--dealer-text, #111827);
+font-size: 14px;
+font-weight: 700;
+}
+
+.dealer-settings-option-info span {
+color: var(--dealer-text-muted, #6b7280);
+font-size: 13px;
+line-height: 1.55;
+}
+
+/* =========================================================
+DIVIDER
+========================================================= */
+
+.dealer-settings-divider {
+width: 100%;
+height: 1px;
+margin: 18px 0;
+background: var(--dealer-border, #e5e7eb);
+}
+
+/* =========================================================
+TOGGLE SWITCH
+========================================================= */
+
+.dealer-switch {
+position: relative;
+display: inline-flex;
+width: 46px;
+height: 26px;
+flex: 0 0 46px;
+cursor: pointer;
+}
+
+.dealer-switch input {
+position: absolute;
+width: 1px;
+height: 1px;
+opacity: 0;
+pointer-events: none;
+}
+
+.dealer-switch-slider {
+position: absolute;
+inset: 0;
+border-radius: 999px;
+background: #d1d5db;
+transition:
+background-color 0.2s ease,
+box-shadow 0.2s ease;
+}
+
+.dealer-switch-slider::before {
+content: "";
+position: absolute;
+width: 20px;
+height: 20px;
+left: 3px;
+top: 3px;
+border-radius: 50%;
+background: #ffffff;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+transition: transform 0.2s ease;
+}
+
+.dealer-switch input:checked + .dealer-switch-slider {
+background: var(--dealer-primary, #d89b00);
+}
+
+.dealer-switch input:checked + .dealer-switch-slider::before {
+transform: translateX(20px);
+}
+
+.dealer-switch input:focus-visible + .dealer-switch-slider {
+box-shadow: 0 0 0 3px rgba(216, 155, 0, 0.2);
+}
+
+/* =========================================================
+SECURITY
+========================================================= */
+
+.dealer-settings-security-item {
+display: flex;
+align-items: center;
+gap: 14px;
+}
+
+.dealer-settings-security-icon {
+width: 42px;
+height: 42px;
+flex: 0 0 42px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 10px;
+color: #374151;
+background: #f3f4f6;
+font-size: 16px;
+}
+
+.dealer-settings-security-item .dealer-settings-option-info {
+flex: 1;
+}
+
+/* =========================================================
+PASSWORD PANEL
+========================================================= */
+
+.dealer-settings-password-panel {
+margin-top: 22px;
+padding: 22px;
+border: 1px solid var(--dealer-border, #e5e7eb);
+border-radius: 12px;
+background: #fafafa;
+}
+
+.dealer-settings-password-panel[hidden] {
+display: none;
+}
+
+.dealer-settings-password-panel form {
+width: 100%;
+}
+
+.dealer-form-group {
+margin-bottom: 18px;
+}
+
+.dealer-form-group:last-child {
+margin-bottom: 0;
+}
+
+.dealer-form-group label {
+display: block;
+margin-bottom: 7px;
+color: var(--dealer-text, #111827);
+font-size: 13px;
+font-weight: 700;
+}
+
+.dealer-password-input {
+position: relative;
+width: 100%;
+}
+
+.dealer-password-input input {
+width: 100%;
+min-height: 44px;
+padding: 11px 46px 11px 13px;
+border: 1px solid var(--dealer-border, #d1d5db);
+border-radius: 9px;
+outline: none;
+color: var(--dealer-text, #111827);
+background: #ffffff;
+font-family: inherit;
+font-size: 14px;
+transition:
+border-color 0.2s ease,
+box-shadow 0.2s ease;
+}
+
+.dealer-password-input input::placeholder {
+color: #9ca3af;
+}
+
+.dealer-password-input input:focus {
+border-color: var(--dealer-primary, #d89b00);
+box-shadow: 0 0 0 3px rgba(216, 155, 0, 0.12);
+}
+
+.dealer-password-toggle {
+position: absolute;
+top: 50%;
+right: 7px;
+width: 34px;
+height: 34px;
+transform: translateY(-50%);
+display: flex;
+align-items: center;
+justify-content: center;
+border: 0;
+border-radius: 7px;
+color: #6b7280;
+background: transparent;
+cursor: pointer;
+transition:
+color 0.2s ease,
+background-color 0.2s ease;
+}
+
+.dealer-password-toggle:hover {
+color: var(--dealer-primary-dark, #b67f00);
+background: #f9fafb;
+}
+
+.dealer-password-toggle:focus-visible {
+outline: 2px solid var(--dealer-primary, #d89b00);
+outline-offset: 1px;
+}
+
+.dealer-settings-field-error {
+display: block;
+min-height: 17px;
+margin-top: 5px;
+color: #dc2626;
+font-size: 12px;
+line-height: 1.4;
+}
+
+.dealer-settings-input-error {
+border-color: #dc2626 !important;
+box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08) !important;
+}
+
+.dealer-settings-password-actions {
+display: flex;
+justify-content: flex-end;
+align-items: center;
+gap: 10px;
+margin-top: 20px;
+}
+
+.dealer-settings-password-actions .dealer-button {
+min-width: 120px;
+}
+
+/* =========================================================
+ACCOUNT INFORMATION
+========================================================= */
+
+.dealer-settings-account-grid {
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 1px;
+overflow: hidden;
+border: 1px solid var(--dealer-border, #e5e7eb);
+border-radius: 10px;
+background: var(--dealer-border, #e5e7eb);
+}
+
+.dealer-settings-account-item {
+display: flex;
+flex-direction: column;
+gap: 7px;
+min-width: 0;
+padding: 16px;
+background: #ffffff;
+}
+
+.dealer-settings-account-item span {
+color: var(--dealer-text-muted, #6b7280);
+font-size: 12px;
+font-weight: 500;
+}
+
+.dealer-settings-account-item strong {
+min-width: 0;
+overflow: hidden;
+color: var(--dealer-text, #111827);
+font-size: 14px;
+font-weight: 700;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+.dealer-settings-account-item strong.active,
+.dealer-settings-status-active {
+color: #15803d;
+}
+
+.dealer-settings-account-item strong.inactive {
+color: #6b7280;
+}
+
+.dealer-settings-account-item strong.pending {
+color: #b45309;
+}
+
+.dealer-settings-account-item strong.suspended {
+color: #dc2626;
+}
+
+/* =========================================================
+PROFILE LINK
+========================================================= */
+
+.dealer-settings-profile-link {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 15px;
+margin-top: 18px;
+padding: 13px 14px;
+border: 1px solid var(--dealer-border, #e5e7eb);
+border-radius: 9px;
+color: var(--dealer-text, #111827);
+background: #ffffff;
+text-decoration: none;
+font-size: 13px;
+font-weight: 600;
+transition:
+border-color 0.2s ease,
+background-color 0.2s ease,
+color 0.2s ease;
+}
+
+.dealer-settings-profile-link span {
+display: flex;
+align-items: center;
+gap: 9px;
+}
+
+.dealer-settings-profile-link i {
+color: var(--dealer-primary, #d89b00);
+}
+
+.dealer-settings-profile-link:hover {
+border-color: var(--dealer-primary, #d89b00);
+background: var(--dealer-primary-light, #fff4d6);
+}
+
+.dealer-settings-profile-link:focus-visible {
+outline: 2px solid var(--dealer-primary, #d89b00);
+outline-offset: 2px;
+}
+
+/* =========================================================
+LOGOUT
+========================================================= */
+
+.dealer-settings-logout-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 24px;
+}
+
+.dealer-button-danger {
+color: #ffffff;
+background: #dc2626;
+border-color: #dc2626;
+}
+
+.dealer-button-danger:hover {
+background: #b91c1c;
+border-color: #b91c1c;
+}
+
+/* =========================================================
+DANGER ZONE
+========================================================= */
+
+.dealer-settings-danger-zone {
+border-color: #fecaca;
+}
+
+.dealer-settings-danger-zone .dealer-card-header {
+background: #fffafa;
+}
+
+.dealer-settings-danger-content {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 24px;
+}
+
+.dealer-settings-danger-content > div {
+min-width: 0;
+}
+
+.dealer-settings-danger-content strong {
+display: block;
+margin-bottom: 5px;
+color: #991b1b;
+font-size: 14px;
+}
+
+.dealer-settings-danger-content p {
+margin: 0;
+color: #6b7280;
+font-size: 13px;
+line-height: 1.55;
+}
+
+/* =========================================================
+BUTTON LOADER
+========================================================= */
+
+#savePasswordButton {
+position: relative;
+}
+
+#savePasswordButton .button-loader {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+
+#savePasswordButton .button-loader[hidden] {
+display: none;
+}
+
+/* =========================================================
+RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 768px) {
+
+
+.dealer-settings-layout {
+    gap: 16px;
+}
+
+.dealer-settings-card .dealer-card-header {
+    gap: 14px;
+}
+
+.dealer-settings-security-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.dealer-settings-security-item .dealer-settings-option-info {
+    flex: 1;
+    min-width: 180px;
+}
+
+.dealer-settings-security-item > .dealer-button {
+    width: 100%;
+    margin-left: 56px;
+}
+
+.dealer-settings-account-grid {
+    grid-template-columns: 1fr;
+}
+
+.dealer-settings-logout-row,
+.dealer-settings-danger-content {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.dealer-settings-logout-row .dealer-button,
+.dealer-settings-danger-content .dealer-button {
+    width: 100%;
+}
+
+
+}
+
+/* =========================================================
+RESPONSIVE - MOBILE
+========================================================= */
+
+@media (max-width: 560px) {
+
+.dealer-settings-layout {
+    gap: 14px;
+}
+
+.dealer-settings-card .dealer-card-header {
+    align-items: flex-start;
+}
+
+.dealer-settings-card-icon {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+    font-size: 15px;
+}
+
+.dealer-settings-option {
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.dealer-settings-option-info {
+    flex: 1;
+}
+
+.dealer-settings-password-panel {
+    padding: 16px;
+}
+
+.dealer-settings-password-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+}
+
+.dealer-settings-password-actions .dealer-button {
+    width: 100%;
+}
+
+.dealer-settings-security-item {
+    gap: 11px;
+}
+
+.dealer-settings-security-icon {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+}
+
+.dealer-settings-security-item .dealer-settings-option-info {
+    min-width: 0;
+}
+
+.dealer-settings-security-item > .dealer-button {
+    margin-left: 49px;
+}
+
+.dealer-settings-account-item {
+    padding: 14px;
+}
+
+.dealer-settings-profile-link {
+    padding: 12px;
+}
+
+.dealer-settings-message {
+    margin-bottom: 14px;
+    padding: 12px 13px;
+    font-size: 13px;
+}
+
+
+}
+
+/* =========================================================
+RESPONSIVE - SMALL PHONES
+========================================================= */
+
+@media (max-width: 380px) {
+
+
+.dealer-settings-option {
+    gap: 10px;
+}
+
+.dealer-settings-option-info strong {
+    font-size: 13px;
+}
+
+.dealer-settings-option-info span {
+    font-size: 12px;
+}
+
+.dealer-switch {
+    width: 42px;
+    flex-basis: 42px;
+}
+
+.dealer-switch input:checked + .dealer-switch-slider::before {
+    transform: translateX(16px);
+}
+
+.dealer-settings-security-item > .dealer-button {
+    margin-left: 0;
+}
+
+.dealer-settings-account-item strong {
+    font-size: 13px;
+}
+
+.dealer-settings-danger-content p {
+    font-size: 12px;
+}
+
+
+}
+
+/* =========================================================
+ACCESSIBILITY
+========================================================= */
+
+.dealer-settings-card button:focus-visible,
+.dealer-settings-card a:focus-visible,
+.dealer-settings-card input:focus-visible {
+outline: 2px solid var(--dealer-primary, #d89b00);
+outline-offset: 2px;
+}
+
+/* =========================================================
+REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+
+.dealer-switch-slider,
+.dealer-switch-slider::before,
+.dealer-settings-profile-link,
+.dealer-password-toggle,
+.dealer-password-input input {
+    transition: none;
+}
+
+
+}

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finish Dealer Setup | GasHub</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="stylesheet" href="dealer-auth.css">
+  <link rel="stylesheet" href="dealer-first-login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+<body>
+  <main class="auth-page setup-page"><section class="auth-container setup-container">
+    <div class="auth-brand"><div class="brand-logo"><img src="images/logo.png" alt="GasHub company logo" class="brand-logo-image"></div><div><h1>GAS HUB</h1><p>Dealer account setup</p></div></div>
+    <div class="auth-card setup-card">
+      <div class="auth-header"><h2>Set up your dealer account</h2><p>This is required before you can access your dashboard. Your initial password has been used and cannot be used again.</p></div>
+      <div id="setupMessage" class="auth-message" role="alert" aria-live="polite"></div>
+      <form id="dealerSetupForm" class="auth-form setup-form">
+        <h3>Account login</h3>
+        <label for="setupUsername">Choose a new username *</label><input id="setupUsername" name="username" required minlength="3" maxlength="40" pattern="[A-Za-z0-9._-]+" autocomplete="username">
+        <h3>Contact person</h3>
+        <label for="setupFullName">Full name *</label><input id="setupFullName" name="full_name" required maxlength="150" autocomplete="name">
+        <label for="setupEmail">Business email *</label><input id="setupEmail" name="email" type="email" required maxlength="254" autocomplete="email">
+        <label for="setupPhone">Phone number *</label><input id="setupPhone" name="phone" type="tel" required maxlength="40" autocomplete="tel">
+        <h3>Business details</h3>
+        <label for="setupBusinessName">Business name *</label><input id="setupBusinessName" name="business_name" required maxlength="150" autocomplete="organization">
+        <label for="setupCounty">County *</label><input id="setupCounty" name="county" required maxlength="100">
+        <label for="setupTown">Town *</label><input id="setupTown" name="town" required maxlength="100">
+        <label for="setupLocation">Area / location</label><input id="setupLocation" name="location" maxlength="200">
+        <label for="setupAddress">Physical business address *</label><input id="setupAddress" name="address" required maxlength="250" autocomplete="street-address">
+
+        <div class="map-picker-container">
+          <div class="map-picker-top">
+            <span class="map-picker-title"><i class="fa-solid fa-map-location-dot"></i> Pin Business GPS Location *</span>
+            <button type="button" class="btn-detect-gps" id="btnDetectLocation">
+              <i class="fa-solid fa-location-crosshairs"></i> Detect My GPS Location
+            </button>
+          </div>
+          <p class="map-picker-desc">Click the map or drag the pin to your exact business premises. These coordinates are synced across GasHub customer pages for live distance measurement and Admin verification.</p>
+          <div id="dealerLocationMap" class="dealer-location-map"></div>
+          <div id="pinStatus" class="pin-status-box">
+            <i class="fa-solid fa-location-dot"></i> <span id="pinStatusText">No GPS pinned yet. Click the map or tap Detect GPS.</span>
+          </div>
+          <input type="hidden" id="latitude" name="latitude" required>
+          <input type="hidden" id="longitude" name="longitude" required>
+        </div>
+
+        <label for="setupDescription">Business description</label><textarea id="setupDescription" name="description" rows="3" maxlength="1000"></textarea>
+        <h3>Create a new password</h3>
+        <label for="setupPassword">New password *</label><input id="setupPassword" name="new_password" type="password" required minlength="8" autocomplete="new-password">
+        <label for="setupConfirmPassword">Confirm new password *</label><input id="setupConfirmPassword" name="confirm_password" type="password" required minlength="8" autocomplete="new-password">
+        <p style="font-size:12px;color:#6b7280;margin:6px 0 10px;line-height:1.5">By saving you agree to the GasHub <a href="/privacy-policy.html?from=dealer" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+        <button class="auth-button" type="submit" id="setupSubmit">Save details and secure account</button>
+      </form>
+    </div>
+  </section></main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script src="dealer-first-login.js"></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+</body>
+</html>

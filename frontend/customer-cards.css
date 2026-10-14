@@ -1,0 +1,211 @@
+/* GasHub shared cards: ONE product card (the belt design) and ONE dealer card (the Find a Dealer design).
+   Used by customer-home.html, customer-product.html and customer-dealer.html.
+   Link it AFTER the page's own css:  <link rel="stylesheet" href="customer-cards.css">
+   Every rule starts with "body" so it always wins over older card styles left in the page css. */
+
+/* ================= PRODUCT CARD (belt design) ================= */
+body .gcard { display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+body .belt .gcard { flex: none; width: 158px; }
+body .gphoto { position: relative; height: 104px; background: linear-gradient(145deg, #f4f7ff 0%, #eaf0ff 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+/* the whole photo is always visible and centred (never cropped or stretched) */
+body .gphoto img { display: block; width: 100%; height: 100%; padding: 6px; object-fit: contain; object-position: center; }
+body .gph-art { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+body .gph-art svg { height: 72%; width: auto; }
+body .gfav {
+    position: absolute; top: 4px; right: 4px; z-index: 2; width: 27px; height: 27px; border: 0; border-radius: 50%;
+    background: rgba(255, 255, 255, .95); box-shadow: 0 1px 4px rgba(0, 0, 0, .18);
+    display: flex; align-items: center; justify-content: center;
+}
+body .gfav svg { width: 14px; height: 14px; fill: none; stroke: var(--red); stroke-width: 2; stroke-linejoin: round; transition: transform .15s; }
+body .gfav.on svg { fill: var(--red); }
+body .gfav:active svg { transform: scale(1.25); }
+body .gbadge { position: absolute; top: 5px; left: 5px; max-width: calc(100% - 40px); padding: 1px 7px; border-radius: 10px; color: #fff; font-size: 8px; font-weight: 700; line-height: 1.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body .gbadge.views { background: var(--blue); }
+body .gbadge.bought { background: var(--red); }
+body .gbadge.mine { background: var(--yellow); color: var(--ink); }
+body .gbadge.pick { background: var(--blue-dark); }
+body .gbadge.out { background: var(--red); }
+body .gbody { display: flex; flex-direction: column; flex: 1; padding: 7px 7px 8px; }
+body .gname { overflow-wrap: anywhere; font-size: 12px; line-height: 1.25; font-weight: 700; min-height: 30px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+/* the type the dealer chose (e.g. Gas Cylinder): plain text on its own line, no label, same on every page */
+body .gtype { margin-top: 2px; min-height: 13px; font-size: 10px; line-height: 1.3; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body .belt .gtype { font-size: 9px; min-height: 12px; }
+/* brand + gas weight: same line, same wording on every page */
+body .gspecs { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 5px; margin-top: 2px; min-height: 16px; }
+body .gbrand { min-width: 0; font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body .gweight { flex: none; padding: 0 6px; border: 1px solid #f4e3a0; border-radius: 6px; background: #fff8dc; color: #6b5600; font-size: 9.5px; font-weight: 800; line-height: 1.6; white-space: nowrap; }
+body .gprice { margin-top: 2px; font-size: 14px; font-weight: 800; color: var(--blue-dark); }
+body .gdealer { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 4px; }
+/* dealer name + blue verified tick (only dealers the admin verified) */
+body .gdn { display: flex; align-items: center; gap: 3px; min-width: 0; }
+body .gdn .vbadge { flex: none; display: inline-flex; width: 13px; height: 13px; }
+body .gdn .vbadge svg { width: 100%; height: 100%; display: block; }
+body .glink { min-width: 0; font-size: 10px; font-weight: 700; color: var(--blue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body .glink:hover { text-decoration: underline; }
+body .grating { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 700; color: var(--ink); }
+body .grating b { color: #f5a800; font-size: 11px; line-height: 1; font-weight: 400; }
+body .gmeta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 4px; font-size: 10px; color: var(--muted); }
+body .gmeta-i { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+body .gmeta-i svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+body .gmeta-i.dist { color: var(--ink); font-weight: 700; }
+body .setloc { padding: 0; border: 0; background: none; font-size: 10px; font-weight: 600; color: var(--blue); text-align: left; text-decoration: none; }
+/* views + bought: ONE line, ONE source for the numbers (GasHubProducts.viewsOf / soldOf) */
+body .gstat { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 9px; color: var(--muted); }
+body .gstat i { width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex: none; }
+body .gactions { display: flex; gap: 5px; margin-top: auto; padding-top: 7px; }
+body .gview { flex: 1; min-height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; }
+body .gview:active { background: var(--blue-dark); }
+body .gcart { flex: none; width: 34px; min-height: 32px; border: 0; border-radius: 8px; background: var(--yellow); color: var(--ink); display: flex; align-items: center; justify-content: center; }
+body .gcart:active { background: var(--yellow-dark); }
+body .gcart:disabled { background: #d9deec; color: #8d95b2; cursor: not-allowed; }
+body .gcart svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (min-width: 700px) {
+    body .belt .gcard { width: 188px; }
+    body .gphoto { height: 130px; }
+    body .gbody { padding: 9px 9px 10px; }
+    body .gname { font-size: 13px; min-height: 32px; }
+    body .gbrand { font-size: 11px; }
+    body .gweight { font-size: 10.5px; }
+    body .gprice { font-size: 16px; }
+    body .glink, body .grating, body .gmeta, body .setloc { font-size: 11px; }
+    body .gdn .vbadge { width: 15px; height: 15px; }
+    body .gstat { font-size: 10px; }
+    body .gview { min-height: 38px; font-size: 12px; border-radius: 9px; }
+    body .gcart { width: 40px; min-height: 38px; border-radius: 9px; }
+    body .gfav { top: 6px; right: 6px; width: 32px; height: 32px; }
+    body .gfav svg { width: 17px; height: 17px; }
+    body .gbadge { font-size: 9px; }
+}
+@media (max-width: 360px) { body .belt .gcard { width: 146px; } body .gprice { font-size: 13px; } }
+
+/* phones: the belt is a little smaller than the grid, but it is the same card */
+@media (max-width: 699px) {
+    body .belt { gap: 6px; }
+    body .belt .gcard { width: 118px; border-radius: 9px; }
+    body .belt .gphoto { height: 76px; }
+    body .belt .gphoto img { padding: 4px; }
+    body .belt .gph-art svg { height: 78%; }
+    body .belt .gbody { padding: 5px 6px 6px; }
+    body .belt .gname { font-size: 11px; min-height: 27px; }
+    body .belt .gbrand { display: none; }
+    body .belt .gspecs { min-height: 14px; }
+    body .belt .gweight { font-size: 8.5px; }
+    body .belt .gprice { font-size: 12.5px; margin-top: 1px; }
+    body .belt .gdealer { margin-top: 3px; }
+    body .belt .glink, body .belt .grating { font-size: 9px; }
+    body .belt .gdn .vbadge { width: 11px; height: 11px; }
+    body .belt .grating b { font-size: 10px; }
+    body .belt .gmeta { font-size: 9px; margin-top: 3px; gap: 1px 5px; }
+    body .belt .gmeta-i svg { width: 9px; height: 9px; }
+    body .belt .setloc { font-size: 9px; }
+    body .belt .gstat { font-size: 8px; margin-top: 3px; }
+    body .belt .gactions { gap: 4px; padding-top: 5px; }
+    body .belt .gview { min-height: 26px; font-size: 10px; border-radius: 7px; }
+    body .belt .gcart { width: 28px; min-height: 26px; border-radius: 7px; }
+    body .belt .gcart svg { width: 13px; height: 13px; }
+    body .belt .gfav { width: 21px; height: 21px; top: 3px; right: 3px; }
+    body .belt .gfav svg { width: 11px; height: 11px; }
+    body .belt .gbadge { top: 3px; left: 3px; padding: 0 5px; font-size: 7px; max-width: calc(100% - 30px); }
+
+    body .product-grid, body .m-products { gap: 6px; }
+    body .product-grid .gphoto, body .m-products .gphoto { height: 96px; }
+    body .product-grid .gph-art svg, body .m-products .gph-art svg { height: 78%; }
+    body .product-grid .gprice, body .m-products .gprice { font-size: 13px; }
+}
+@media (max-width: 360px) { body .belt .gcard { width: 108px; } body .product-grid .gphoto, body .m-products .gphoto { height: 80px; } }
+
+/* product grids (home "Products near you", Products page, dealer details) */
+body .product-grid, body .m-products { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 600px) {
+    body .product-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    body .m-products { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 900px) {
+    body .product-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+}
+
+/* ================= DEALER CARD (Find a Dealer design) ================= */
+body .dealer-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+@media (min-width: 600px) { body .dealer-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+@media (min-width: 900px) { body .dealer-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+
+body .dealer-grid .dcard {
+    display: flex; flex-direction: column; align-items: stretch; gap: 7px; padding: 9px; cursor: pointer;
+    background: var(--white); border: 1px solid var(--line); border-radius: 10px;
+}
+body .dealer-grid .dcard:active { background: #f8faff; }
+body .dealer-grid .dtop { display: flex; align-items: center; gap: 9px; }
+body .dealer-grid .dlogo {
+    flex: none; width: 42px; height: 42px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line);
+    background: var(--blue-soft); color: var(--blue); font-size: 14px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+}
+body .dealer-grid .dlogo img { width: 100%; height: 100%; object-fit: cover; }
+body .dealer-grid .dinfo { flex: 1; min-width: 0; }
+body .dealer-grid .dname { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 800; line-height: 1.25; }
+body .dealer-grid .dname span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body .dealer-grid .dloc { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body .dealer-grid .drow { display: flex; align-items: center; flex-wrap: wrap; gap: 3px 8px; margin-top: 2px; font-size: 11px; }
+body .dealer-grid .rt { display: inline-flex; align-items: center; gap: 3px; font-weight: 700; }
+body .dealer-grid .rt b { color: #f5a800; font-weight: 400; }
+body .dealer-grid .rt small { color: var(--muted); font-weight: 600; font-size: 10px; }
+body .dealer-grid .pill { display: inline-flex; align-items: center; gap: 4px; padding: 0 7px; border-radius: 9px; font-size: 10px; font-weight: 700; line-height: 1.7; background: #eef0f6; color: var(--muted); }
+body .dealer-grid .pill i { width: 6px; height: 6px; border-radius: 50%; background: #9aa3c4; }
+body .dealer-grid .pill.ok { background: #e6f6ee; color: var(--green); }
+body .dealer-grid .pill.ok i { background: var(--green); }
+body .dealer-grid .pill.bad { background: #fdecec; color: var(--red); }
+body .dealer-grid .pill.bad i { background: var(--red); }
+body .dealer-grid .dview { flex: none; align-self: center; min-height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; }
+body .dealer-grid .dmeta { display: flex; flex-wrap: wrap; gap: 3px 12px; padding-top: 6px; border-top: 1px dashed var(--line); font-size: 10.5px; color: var(--muted); }
+body .dealer-grid .mi { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+body .dealer-grid .mi svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+body .dealer-grid .mi.dist { color: var(--ink); font-weight: 700; }
+@media (max-width: 599px) {
+    body .dealer-grid .dlogo { width: 36px; height: 36px; font-size: 12px; }
+    body .dealer-grid .dname { font-size: 12.5px; }
+    body .dealer-grid .dview { min-height: 26px; padding: 0 10px; font-size: 10px; border-radius: 7px; }
+    body .dealer-grid .mi svg { width: 10px; height: 10px; }
+    body .dealer-grid .dmeta { font-size: 10px; gap: 2px 10px; }
+    body .dealer-grid .pill { font-size: 9px; }
+}
+/* ================= PHONES: shorter product cards in the 2-column grids =================
+   Same card, less height: smaller photo, no empty gaps, type + weight on one line, one-line
+   distance, slimmer buttons. (Home "Products near you", Products page, dealer Products tab.) */
+@media (max-width: 599px) {
+    body .product-grid, body .m-products { gap: 6px; }
+    body .product-grid .gcard, body .m-products .gcard { border-radius: 9px; }
+    body .product-grid .gphoto, body .m-products .gphoto { height: 68px; }
+    body .product-grid .gphoto img, body .m-products .gphoto img { padding: 3px; }
+    body .product-grid .gph-art svg, body .m-products .gph-art svg { height: 80%; }
+    body .product-grid .gfav, body .m-products .gfav { width: 22px; height: 22px; top: 3px; right: 3px; }
+    body .product-grid .gfav svg, body .m-products .gfav svg { width: 12px; height: 12px; }
+    body .product-grid .gbadge, body .m-products .gbadge { top: 3px; left: 3px; padding: 0 5px; font-size: 7.5px; max-width: calc(100% - 32px); }
+    body .product-grid .gbody, body .m-products .gbody { padding: 5px 6px 6px; }
+    body .product-grid .gname, body .m-products .gname { font-size: 11.5px; line-height: 1.2; min-height: 0; -webkit-line-clamp: 2; }
+    /* type and weight share one line; brand is shown on the product page */
+    body .product-grid .gtype, body .m-products .gtype { display: none; }
+    body .product-grid .gbrand, body .m-products .gbrand { display: none; }
+    body .product-grid .gspecs, body .m-products .gspecs { min-height: 0; margin-top: 1px; }
+    body .product-grid .gspecs:empty, body .m-products .gspecs:empty { display: none; }
+    body .product-grid .gweight, body .m-products .gweight { font-size: 8.5px; padding: 0 5px; line-height: 1.5; }
+    body .product-grid .gprice, body .m-products .gprice { font-size: 13px; margin-top: 1px; }
+    body .product-grid .gdealer, body .m-products .gdealer { margin-top: 2px; }
+    body .product-grid .glink, body .m-products .glink,
+    body .product-grid .grating, body .m-products .grating { font-size: 9.5px; }
+    body .product-grid .gdn .vbadge, body .m-products .gdn .vbadge { width: 11px; height: 11px; }
+    /* distance on ONE line (long "Set your location" text is cut, never wrapped) */
+    body .product-grid .gmeta, body .m-products .gmeta { flex-wrap: nowrap; margin-top: 2px; font-size: 9px; gap: 0 5px; overflow: hidden; }
+    body .product-grid .gmeta > *, body .m-products .gmeta > * { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body .product-grid .setloc, body .m-products .setloc { font-size: 9px; }
+    body .product-grid .gstat, body .m-products .gstat { margin-top: 2px; font-size: 8.5px; white-space: nowrap; overflow: hidden; }
+    body .product-grid .gactions, body .m-products .gactions { gap: 4px; padding-top: 4px; }
+    body .product-grid .gview, body .m-products .gview { min-height: 26px; font-size: 10.5px; border-radius: 7px; }
+    body .product-grid .gcart, body .m-products .gcart { width: 30px; min-height: 26px; border-radius: 7px; }
+    body .product-grid .gcart svg, body .m-products .gcart svg { width: 14px; height: 14px; }
+}
+@media (max-width: 360px) { body .product-grid .gphoto, body .m-products .gphoto { height: 62px; } body .product-grid .gname, body .m-products .gname { font-size: 11px; } }
+/* phones: the "Set your location" hint repeats on every card, so it is dropped here (the location bar is in the header) */
+@media (max-width: 599px) {
+    body .product-grid .gmeta:has(.setloc:only-child), body .m-products .gmeta:has(.setloc:only-child) { display: none; }
+}

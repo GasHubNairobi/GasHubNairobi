@@ -1,0 +1,47 @@
+/* Messenger tracking page: mobile first, GasHub blue / red / yellow */
+:root { --blue:#1f4fd8; --blue-dark:#0f2a7a; --blue-soft:#eaf0ff; --yellow:#ffc20e; --red:#e03131; --green:#12a150; --ink:#141b34; --muted:#5f6783; --line:#e3e8f5; --bg:#f4f6fc; --white:#fff; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html { -webkit-text-size-adjust:100%; }
+body { font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; font-size:14px; line-height:1.45; color:var(--ink); background:var(--bg); min-height:100vh; padding-bottom:env(safe-area-inset-bottom,0); }
+.top { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; padding:10px 14px; padding-top:calc(10px + env(safe-area-inset-top,0)); background:var(--white); border-bottom:3px solid var(--yellow); }
+.logo { height:30px; width:auto; }
+.role { font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--white); background:var(--blue); padding:4px 10px; border-radius:20px; }
+.wrap { max-width:480px; margin:0 auto; padding:14px; }
+.card { background:var(--white); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px; }
+.card.center { text-align:center; padding:34px 18px; }
+.card h1 { font-size:18px; color:var(--blue-dark); margin:8px 0 4px; }
+.card p { color:var(--muted); }
+.big { width:54px; height:54px; margin:0 auto; border-radius:50%; background:var(--blue-soft); color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; }
+.big.ok { background:#e6f6ec; color:var(--green); }
+.big.bad { background:#fdecec; color:var(--red); }
+.spinner { width:28px; height:28px; margin:0 auto 10px; border:3px solid var(--line); border-top-color:var(--blue); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--line); }
+.row small, .dest small { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+.row b { font-size:14px; color:var(--blue-dark); text-align:right; }
+.dest { padding-top:10px; }
+.dest p { font-size:15px; font-weight:700; color:var(--ink); margin-top:2px; }
+.dest p.landmark { font-size:13px; font-weight:500; color:var(--muted); }
+.actions { display:flex; gap:8px; margin-top:12px; }
+.btn { display:flex; align-items:center; justify-content:center; width:100%; min-height:48px; padding:0 16px; border:0; border-radius:12px; font:inherit; font-size:15px; font-weight:800; text-decoration:none; cursor:pointer; }
+.btn.primary { background:var(--blue); color:var(--white); margin-top:4px; }
+.btn.good { background:var(--green); color:var(--white); margin-top:8px; }
+.btn.ghost { background:var(--blue-soft); color:var(--blue-dark); min-height:42px; font-size:13px; }
+.btn[disabled] { opacity:.6; cursor:not-allowed; }
+.status { display:flex; gap:12px; align-items:flex-start; }
+.status b { color:var(--blue-dark); }
+.status p { font-size:13px; margin-top:2px; }
+.dot { flex:none; width:14px; height:14px; margin-top:4px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 4px rgba(255,194,14,.25); }
+.dot.live { background:var(--green); box-shadow:0 0 0 4px rgba(18,161,80,.22); animation:pulse 1.6s ease-in-out infinite; }
+.dot.err { background:var(--red); box-shadow:0 0 0 4px rgba(224,49,49,.2); }
+@keyframes pulse { 50% { box-shadow:0 0 0 8px rgba(18,161,80,.08); } }
+.warn { margin:0 0 10px; padding:10px 12px; border-radius:10px; background:#fff5e0; border:1px solid #ffd98a; color:#7a4b00; font-size:13px; }
+.hint { margin-top:14px; font-size:12px; color:var(--muted); text-align:center; }
+[hidden] { display:none !important; }
+
+/* payment at the door + "about 1 minute away" hint */
+.pay b { display: block; margin: 2px 0 4px; font-size: 15px; }
+.pay p { margin: 0; font-size: 13px; color: #475569; }
+.pay.cash { border-color: #f5b301; background: #fff9e6; }
+.near { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: #eef3ff; color: #1f3a8a; font-size: 13px; font-weight: 600; text-align: center; }
+.near.ready { background: #e7f8ee; color: #146c3a; }

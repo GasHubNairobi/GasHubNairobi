@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Customers | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="admin-customers.css">
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+
+            <div class="topbar-left">
+
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    id="mobileMenuButton"
+                    aria-label="Open menu"
+                >
+                    ☰
+                </button>
+
+                <div>
+                    <h2>Customers</h2>
+                    <p>View and manage registered GasHub customers.</p>
+                </div>
+
+            </div>
+
+            <div class="admin-user-area">
+
+                <div class="admin-user-info">
+                    <strong id="adminUserName">Administrator</strong>
+                    <span id="adminUserRole">Admin</span>
+                </div>
+
+            </div>
+
+        </header>
+
+        <section class="admin-content">
+
+            <!-- =================================================
+                 MESSAGE
+            ================================================== -->
+            <div
+                class="admin-message"
+                id="customersMessage"
+                role="alert"
+            ></div>
+
+            <!-- =================================================
+                 CUSTOMER STATISTICS
+            ================================================== -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">Total Customers</span>
+                        <strong
+                            class="stat-value"
+                            id="totalCustomers"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">♙</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">Active</span>
+                        <strong
+                            class="stat-value"
+                            id="activeCustomers"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">✓</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">Inactive</span>
+                        <strong
+                            class="stat-value"
+                            id="inactiveCustomers"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">◷</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">New Customers</span>
+                        <strong
+                            class="stat-value"
+                            id="newCustomers"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">+</div>
+
+                </div>
+
+            </div>
+
+            <!-- =================================================
+                 CUSTOMERS TABLE
+            ================================================== -->
+            <div class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>All Customers</h3>
+                        <p>Registered customers on the GasHub platform.</p>
+                    </div>
+
+                    <div class="table-tools">
+
+                        <div class="search-box">
+                            <input
+                                type="search"
+                                id="customerSearch"
+                                placeholder="Search customers..."
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <select id="customerStatusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
+                            <option value="banned">Banned</option>
+                            <option value="deleted">Deleted</option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Code</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Status</th>
+                                <th>Registered</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="customersTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="8"
+                                    class="table-loading"
+                                >
+                                    Loading customers...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+                <div class="table-pagination">
+
+                    <div
+                        class="pagination-info"
+                        id="customersPaginationInfo"
+                    >
+                        Showing 0 customers
+                    </div>
+
+                    <div
+                        class="pagination-buttons"
+                        id="customersPaginationButtons"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- =====================================================
+         CUSTOMER DETAILS MODAL
+    ====================================================== -->
+    <div
+        class="modal"
+        id="customerDetailsModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-backdrop"
+            id="customerModalBackdrop"
+        ></div>
+
+        <div
+            class="modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="customerModalTitle"
+        >
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="customerModalTitle">
+                        Customer Details
+                    </h2>
+
+                    <p id="customerModalSubtitle">
+                        View customer information.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="closeCustomerModal"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div
+                id="customerDetailsBody"
+                class="customer-details-body"
+            >
+                <div class="table-loading">
+                    Loading customer details...
+                </div>
+            </div>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="closeCustomerButton"
+                >
+                    Close
+                </button>
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="viewCustomerOrdersButton"
+                >
+                    View Orders
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-customers.js"></script>
+
+</body>
+</html>

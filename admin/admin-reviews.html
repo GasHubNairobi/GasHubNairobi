@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Reviews | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="admin-complaints.css">
+<style>.review-rating{color:#f59e0b;white-space:nowrap;letter-spacing:1px}.review-rating span{color:#64748b;letter-spacing:0;font-size:12px;margin-left:4px}.review-comment{max-width:320px;overflow-wrap:anywhere}.link-button{padding:6px 12px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}.link-button:hover{background:#f1f5f9}</style>
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">☰</button>
+                <div>
+                    <h2>Dealer Reviews</h2>
+                    <p>Ratings customers left for dealers after completed orders.</p>
+                </div>
+            </div>
+            <div class="admin-user-area">
+                <div class="admin-user-info">
+                    <strong id="adminUserName">Administrator</strong>
+                    <span id="adminUserRole">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="admin-content">
+            <div class="admin-message" id="reviewsMessage" role="alert"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Total Reviews</span><strong class="stat-value" id="totalReviews">0</strong></div><div class="stat-icon">★</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Published</span><strong class="stat-value" id="publishedReviews">0</strong></div><div class="stat-icon">✓</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Hidden</span><strong class="stat-value" id="hiddenReviews">0</strong></div><div class="stat-icon">◌</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Average Rating</span><strong class="stat-value" id="averageRating">0.0</strong></div><div class="stat-icon">☆</div></div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div>
+                        <h3>All Reviews</h3>
+                        <p>Dealers see the same reviews on their own Reviews page.</p>
+                    </div>
+                    <div class="table-tools">
+                        <div class="search-box">
+                            <input type="search" id="reviewSearch" placeholder="Search by dealer, customer, comment..." autocomplete="off">
+                        </div>
+                        <select id="reviewStatusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="published">Published</option>
+                            <option value="hidden">Hidden</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Dealer</th>
+                                <th>Customer</th>
+                                <th>Order</th>
+                                <th>Rating</th>
+                                <th>Comment</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviewsTableBody">
+                            <tr><td colspan="8" class="table-loading">Loading reviews...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-reviews.js"></script>
+
+</body>
+</html>

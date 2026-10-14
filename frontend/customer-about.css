@@ -1,0 +1,388 @@
+/* =========================================================
+   GASHUB CUSTOMER - ABOUT PAGE
+   Load AFTER customer-home.css (it provides the header, menu,
+   footer, bottom nav and the colour variables used here).
+   Brand: blue / yellow / red.  Developer: Vynex Web Solutions.
+   ========================================================= */
+
+:root {
+    --vx-navy: #0a1a3f;
+    --vx-navy-2: #10285e;
+    --vx-gold: #ffc20e;
+}
+
+.header-spacer { flex: 1; }
+html.vx-lock, html.vx-lock body { overflow: hidden; }
+
+/* =========================================================
+   1. OPENING ANIMATION  (GasHub x Vynex)
+   Timeline: 0-2.3s  "Powered by Vynex"
+             2.3-4.4s  GasHub x Vynex
+             4.4-4.9s  fade out
+   ========================================================= */
+.vx-splash {
+    position: fixed; inset: 0; z-index: 99999;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 40%, #16358a 0%, var(--vx-navy-2) 38%, var(--vx-navy) 100%);
+    color: #fff; overflow: hidden; cursor: pointer;
+    animation: vxOut .5s ease 4.4s forwards;   /* also hides itself if JS fails */
+}
+.vx-splash.done { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .35s ease, visibility .35s ease; animation: none; }
+
+.vx-glow {
+    position: absolute; width: 520px; height: 520px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 194, 14, .28), transparent 65%);
+    animation: vxGlow 4.4s ease-in-out infinite;
+}
+.vx-ring { position: absolute; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .12); }
+.vx-ring.r1 { width: 320px; height: 320px; animation: vxRing 4.4s ease-out both; }
+.vx-ring.r2 { width: 520px; height: 520px; border-color: rgba(255, 194, 14, .18); animation: vxRing 4.4s ease-out .3s both; }
+
+.vx-stage {
+    position: absolute; inset: 0; padding: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+}
+
+/* ---- stage 1 ---- */
+.vx-s1 { animation: vxStage1 2.3s ease both; }
+.vx-mark {
+    width: 124px; height: 124px; padding: 22px; border-radius: 30px; background: #fff;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .45), 0 0 0 8px rgba(255, 255, 255, .08);
+    animation: vxMark 1s cubic-bezier(.2, 1.3, .4, 1) .2s both;
+}
+.vx-mark img { width: 100%; height: 100%; object-fit: contain; }
+.vx-powered {
+    margin-top: 26px; font-size: 12px; font-weight: 700; letter-spacing: 5px; text-transform: uppercase; color: var(--vx-gold);
+    animation: vxUp .6s ease .9s both;
+}
+.vx-name {
+    margin-top: 6px; font-size: clamp(30px, 8vw, 46px); font-weight: 900; letter-spacing: 3px; line-height: 1.05;
+    animation: vxUp .7s ease 1.1s both;
+}
+.vx-name span { display: block; margin-top: 6px; font-size: .38em; font-weight: 700; letter-spacing: 6px; color: #cfd8ff; }
+
+/* ---- stage 2 ---- */
+.vx-s2 { opacity: 0; animation: vxStage2 2.3s ease 2.2s both; }
+.vx-pair { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.vx-tile {
+    width: min(132px, 32vw); height: min(132px, 32vw); padding: 14px; border-radius: 26px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .4);
+}
+.vx-tile img { width: 100%; height: 100%; object-fit: contain; }
+.vx-tile.left { animation: vxFromLeft .8s cubic-bezier(.2, 1, .3, 1) 2.35s both; }
+.vx-tile.right { animation: vxFromRight .8s cubic-bezier(.2, 1, .3, 1) 2.35s both; }
+.vx-x {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--vx-gold); color: var(--vx-navy);
+    display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; line-height: 1;
+    animation: vxPop .6s cubic-bezier(.2, 1.6, .4, 1) 3s both;
+}
+.vx-collab { margin-top: 26px; font-size: clamp(17px, 4.6vw, 24px); font-weight: 700; animation: vxUp .6s ease 3.1s both; }
+.vx-collab b { color: var(--vx-gold); margin: 0 4px; }
+.vx-tag { margin-top: 8px; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: #aebbea; animation: vxUp .6s ease 3.3s both; }
+
+.vx-progress { position: absolute; left: 50%; bottom: 46px; width: 150px; height: 3px; margin-left: -75px; border-radius: 2px; background: rgba(255, 255, 255, .15); overflow: hidden; }
+.vx-progress i { display: block; height: 100%; background: linear-gradient(90deg, #4f7dff, var(--vx-gold)); transform-origin: left; animation: vxBar 4.4s linear both; }
+.vx-skip {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px;
+    min-height: 34px; padding: 0 14px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 17px;
+    background: rgba(255, 255, 255, .08); color: #fff; font-size: 12px; font-weight: 600;
+}
+
+@keyframes vxOut { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+@keyframes vxStage1 { 0%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; transform: scale(.94) translateY(-10px); } }
+@keyframes vxStage2 { 0% { opacity: 0; } 12%, 100% { opacity: 1; } }
+@keyframes vxMark { from { opacity: 0; transform: scale(.3) rotate(-25deg); } to { opacity: 1; transform: none; } }
+@keyframes vxUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes vxFromLeft { from { opacity: 0; transform: translateX(-80px) scale(.8); } to { opacity: 1; transform: none; } }
+@keyframes vxFromRight { from { opacity: 0; transform: translateX(80px) scale(.8); } to { opacity: 1; transform: none; } }
+@keyframes vxPop { from { opacity: 0; transform: scale(0) rotate(-90deg); } to { opacity: 1; transform: none; } }
+@keyframes vxGlow { 0%, 100% { transform: scale(.9); opacity: .7; } 50% { transform: scale(1.15); opacity: 1; } }
+@keyframes vxRing { from { transform: scale(.4); opacity: 0; } 30% { opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+@keyframes vxBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vx-splash { animation-delay: 1.6s; }
+    .vx-s1, .vx-glow, .vx-ring { display: none; }
+    .vx-s2, .vx-s2 *, .vx-progress i { animation: none !important; opacity: 1; }
+}
+
+/* =========================================================
+   2. SHARED PAGE PIECES
+   ========================================================= */
+.about-page { position: relative; }
+.ab-wrap { position: relative; max-width: 1100px; margin: 0 auto; }
+
+.ab-label {
+    display: inline-block; margin-bottom: 8px; font-size: 11px; font-weight: 800;
+    letter-spacing: 1.8px; text-transform: uppercase; color: var(--blue);
+}
+.ab-label.light { color: var(--yellow); }
+.ab-label.gold { color: var(--vx-gold); }
+
+.ab-sec { max-width: 1100px; margin: 0 auto; padding: 36px 16px; }
+.ab-sec.flush { padding-left: 0; padding-right: 0; }
+.ab-sec.center, .center { text-align: center; }
+.ab-sec h2, .collab h2, .contact-band h2, .ab-cta h2 {
+    font-size: clamp(24px, 6vw, 38px); line-height: 1.15; letter-spacing: -.6px; color: var(--ink);
+}
+.ab-sub { margin-top: 10px; max-width: 640px; font-size: 14px; color: var(--muted); }
+
+.ab-text { margin-top: 16px; max-width: 780px; }
+.ab-text.narrow { margin-left: auto; margin-right: auto; }
+.ab-text p { margin-bottom: 14px; font-size: 14.5px; line-height: 1.75; color: var(--ink); }
+.ab-text p:last-child { margin-bottom: 0; }
+
+.ab-band { padding: 0 16px; }
+.ab-band.soft { background: var(--blue-soft); }
+.ab-band.dark { background: var(--blue-dark); color: #fff; }
+.ab-band .ab-sec { padding-top: 38px; padding-bottom: 38px; }
+
+/* scroll reveal (only when JS is running) */
+.js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+.js .reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .js .reveal { opacity: 1; transform: none; transition: none; } }
+
+/* =========================================================
+   3. HERO
+   ========================================================= */
+.ab-hero {
+    position: relative; overflow: hidden; color: #fff;
+    background: linear-gradient(135deg, var(--blue-dark), var(--blue) 70%);
+    padding: 34px 16px 40px;
+}
+.ab-hero .page-watermark { width: 90px; right: 14px; bottom: 10px; opacity: .1; }
+.ab-hero h1 { max-width: 760px; margin: 4px 0 14px; font-size: clamp(32px, 9vw, 60px); line-height: 1.05; letter-spacing: -1.2px; }
+.ab-hero h1 span { display: block; color: var(--yellow); }
+.ab-hero p { max-width: 620px; font-size: 14.5px; line-height: 1.7; color: #dbe4ff; }
+
+.ab-chip {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; padding: 6px 16px 6px 6px;
+    border-radius: 30px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .22);
+    font-size: 12.5px; color: #fff; backdrop-filter: blur(6px);
+}
+.ab-chip strong { color: var(--yellow); }
+.chip-logo { width: 32px; height: 32px; padding: 5px; border-radius: 50%; background: #fff; display: flex; }
+.chip-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+/* =========================================================
+   4. STORY / MISSION / VALUES
+   ========================================================= */
+.story-grid { display: grid; gap: 26px; }
+.story-date {
+    padding: 28px; border-radius: 22px; color: #fff; align-self: start;
+    background: linear-gradient(145deg, var(--blue-dark), var(--blue));
+    box-shadow: var(--shadow); display: flex; flex-direction: column;
+}
+.sd-label { margin-bottom: 14px; font-size: 11px; font-weight: 800; letter-spacing: 1.8px; text-transform: uppercase; color: #b9c8ff; }
+.story-date strong { font-size: 72px; line-height: .9; color: var(--yellow); }
+.sd-month { margin-top: 10px; font-size: 20px; font-weight: 700; letter-spacing: 3px; }
+.sd-year { font-size: 15px; color: #cfd8ff; }
+.story-date p { margin-top: 18px; font-size: 13px; line-height: 1.65; color: #cfd8ff; }
+
+.mission-line { margin: 14px 0 22px; max-width: 760px; font-size: clamp(17px, 4.2vw, 24px); font-weight: 600; line-height: 1.45; color: var(--ink); }
+
+.card-grid { display: grid; gap: 12px; margin-top: 22px; grid-template-columns: 1fr; }
+.num-card, .val-card {
+    background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.num-card:hover, .val-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: #c9d6ff; }
+.num-card { display: flex; gap: 14px; }
+.num-card > span, .val-card > span { flex: none; font-size: 12px; font-weight: 800; color: var(--blue); }
+.val-card > span { display: block; margin-bottom: 16px; }
+.num-card h3, .val-card h3 { margin-bottom: 5px; font-size: 15.5px; color: var(--ink); }
+.num-card p, .val-card p { font-size: 13px; line-height: 1.65; color: var(--muted); }
+
+.ab-band.dark h2 { color: #fff; }
+.ab-band.dark .ab-sec { max-width: 860px; }
+.ab-band.dark p { margin-top: 14px; font-size: 14.5px; line-height: 1.75; color: #cfd8ff; }
+
+/* =========================================================
+   5. THE COLLABORATION: GasHub x Vynex
+   ========================================================= */
+.collab {
+    position: relative; overflow: hidden; padding: 48px 16px; color: #fff;
+    background:
+        radial-gradient(circle at 85% 0%, rgba(255, 194, 14, .16), transparent 45%),
+        linear-gradient(160deg, var(--vx-navy), var(--vx-navy-2));
+}
+.collab::before {
+    content: ""; position: absolute; left: -60px; top: 34%; width: 240px; height: 240px; border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .08);
+}
+.collab h2 { color: #fff; max-width: 640px; }
+
+.collab-logos { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 28px 0 22px; }
+.logo-tile {
+    width: min(150px, 34vw); height: min(130px, 30vw); padding: 14px; border-radius: 20px; background: #fff;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
+}
+.logo-tile img { width: 100%; height: 100%; object-fit: contain; }
+.collab-x {
+    flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--vx-gold); color: var(--vx-navy);
+    display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; line-height: 1;
+}
+
+.collab-lead { max-width: 760px; margin: 0 auto 24px; text-align: center; font-size: 15px; line-height: 1.75; color: #dbe4ff; }
+.collab-lead strong { color: var(--vx-gold); }
+
+.collab-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+.collab-card { padding: 20px; border-radius: 16px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); }
+.collab-card h3 { margin-bottom: 6px; font-size: 15px; color: var(--vx-gold); }
+.collab-card p { font-size: 13.5px; line-height: 1.7; color: #cfd8ff; }
+
+.collab-sub { margin: 28px 0 12px; font-size: 16px; color: #fff; }
+.built-list { list-style: none; display: grid; gap: 8px; grid-template-columns: 1fr; }
+.built-list li {
+    position: relative; padding: 12px 14px 12px 40px; border-radius: 12px; background: rgba(255, 255, 255, .06);
+    font-size: 13.5px; line-height: 1.5; color: #e6ecff;
+}
+.built-list li::before {
+    content: ""; position: absolute; left: 14px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: var(--vx-gold);
+}
+.built-list li::after {
+    content: ""; position: absolute; left: 19px; top: 18px; width: 5px; height: 8px; border: solid var(--vx-navy); border-width: 0 2px 2px 0; transform: rotate(40deg);
+}
+
+/* =========================================================
+   6. ABOUT VYNEX + SERVICES
+   ========================================================= */
+.vx-head { display: flex; align-items: center; gap: 16px; }
+.vx-head-logo {
+    flex: none; width: 82px; height: 82px; padding: 14px; border-radius: 22px; background: #fff;
+    border: 1px solid var(--line); box-shadow: var(--shadow); display: flex;
+}
+.vx-head-logo img { width: 100%; height: 100%; object-fit: contain; }
+.vx-head h2 { font-size: clamp(24px, 6vw, 36px); }
+.vx-slogan { margin-top: 4px; font-size: 11.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+
+.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.pill-row span {
+    padding: 6px 14px; border-radius: 20px; background: var(--vx-navy); color: #fff; font-size: 12px; font-weight: 700;
+}
+.pill-row span:nth-child(3n+2) { background: var(--vx-gold); color: var(--vx-navy); }
+
+.sv-title { margin: 30px 0 14px; font-size: 20px; color: var(--ink); }
+.sv-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+.sv-card {
+    position: relative; padding: 16px 14px; border-radius: var(--radius); background: var(--white); border: 1px solid var(--line);
+    border-left: 4px solid var(--vx-gold);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.sv-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.sv-card svg { width: 26px; height: 26px; margin-bottom: 10px; fill: none; stroke: var(--vx-navy-2); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sv-card h4 { font-size: 13px; line-height: 1.35; color: var(--ink); }
+
+.price-banner {
+    display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 16px 18px; border-radius: 14px;
+    background: linear-gradient(100deg, #ffd23a, var(--vx-gold)); color: var(--vx-navy);
+}
+.price-banner svg { flex: none; width: 34px; height: 34px; fill: none; stroke: var(--vx-navy); stroke-width: 1.8; stroke-linecap: round; }
+.price-banner strong { display: block; font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: .3px; }
+.price-banner span { font-size: 12.5px; }
+
+/* =========================================================
+   7. CONTACT VYNEX
+   ========================================================= */
+.contact-band {
+    padding: 44px 16px; color: #fff; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--vx-navy) 60%, #14306f);
+    border-top: 5px solid var(--vx-gold);
+}
+.contact-grid { display: grid; gap: 28px; align-items: center; }
+.contact-info h2 { color: #fff; }
+.contact-info p { margin: 10px 0 20px; font-size: 14px; line-height: 1.7; color: #cfd8ff; max-width: 440px; }
+
+.contact-list { display: grid; gap: 10px; }
+.c-row {
+    display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 10px 14px; border-radius: 14px;
+    background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .14);
+    transition: background .2s ease, transform .2s ease;
+}
+.c-row:hover { background: rgba(255, 255, 255, .15); transform: translateX(3px); }
+.c-ico { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--vx-gold); display: flex; align-items: center; justify-content: center; }
+.c-ico.wa { background: #25d366; }
+.c-ico svg { width: 21px; height: 21px; fill: none; stroke: var(--vx-navy); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.c-row small { display: block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #aebbea; }
+.c-row b { display: block; font-size: 15px; word-break: break-word; }
+
+.card-shot { margin: 0; }
+.card-shot a { display: block; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(0, 0, 0, .45); border: 3px solid rgba(255, 255, 255, .15); transition: transform .3s ease; }
+.card-shot a:hover { transform: scale(1.015) rotate(-.4deg); }
+.card-shot img { width: 100%; height: auto; }
+.card-shot figcaption { margin-top: 10px; text-align: center; font-size: 11.5px; letter-spacing: .5px; color: #aebbea; }
+
+/* =========================================================
+   8. GASHUB CALL TO ACTION + FOOTER CREDIT
+   ========================================================= */
+.ab-cta { padding: 48px 16px; background: var(--blue-soft); }
+.ab-cta p { margin: 10px 0 22px; font-size: 14.5px; color: var(--muted); }
+.ab-cta h2 { color: var(--blue-dark); }
+.cta-actions { display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto; }
+.cta-btn {
+    min-height: 48px; display: flex; align-items: center; justify-content: center; padding: 0 24px;
+    border-radius: 11px; font-size: 14px; font-weight: 700; transition: transform .2s ease, opacity .2s ease;
+}
+.cta-btn:hover { transform: translateY(-2px); opacity: .93; }
+.cta-btn.yellow { background: var(--yellow); color: var(--ink); }
+.cta-btn.ghost { border: 1.5px solid var(--blue); color: var(--blue); background: var(--white); }
+
+.footer-credit {
+    position: relative; z-index: 1; max-width: 1100px; margin: 18px auto 0; padding: 10px 12px 10px 10px;
+    display: flex; align-items: center; gap: 10px; width: fit-content;
+    border-radius: 30px; background: rgba(255, 255, 255, .07); border: 1px solid #2a3150;
+    font-size: 12px; color: #a9b1cc;
+}
+.footer-credit strong { color: var(--vx-gold); }
+.fc-logo { width: 28px; height: 28px; padding: 4px; border-radius: 50%; background: #fff; display: flex; }
+.fc-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+/* =========================================================
+   9. BIGGER SCREENS
+   ========================================================= */
+@media (min-width: 600px) {
+    .card-grid.two, .collab-grid, .built-list { grid-template-columns: repeat(2, 1fr); }
+    .card-grid.three { grid-template-columns: repeat(2, 1fr); }
+    .sv-grid { grid-template-columns: repeat(3, 1fr); }
+    .cta-actions { flex-direction: row; max-width: none; justify-content: center; }
+    .cta-btn { min-width: 190px; }
+}
+
+@media (min-width: 768px) {
+    .ab-hero { padding: 80px 30px 90px; }
+    .ab-hero .page-watermark { width: 140px; right: 40px; bottom: 30px; }
+    .ab-hero p { font-size: 17px; }
+    .ab-sec { padding: 64px 24px; }
+    .ab-sec.flush { padding-left: 0; padding-right: 0; }
+    .ab-band { padding: 0 24px; }
+    .ab-band .ab-sec { padding-top: 64px; padding-bottom: 64px; }
+    .ab-text p { font-size: 16px; }
+    .story-grid { grid-template-columns: 1.5fr .7fr; gap: 60px; align-items: center; }
+    .story-date { padding: 40px; min-height: 320px; justify-content: center; }
+    .story-date strong { font-size: 90px; }
+    .collab { padding: 80px 24px; }
+    .logo-tile { width: 190px; height: 160px; padding: 20px; }
+    .collab-x { width: 52px; height: 52px; font-size: 32px; }
+    .collab-lead { font-size: 17px; }
+    .vx-head-logo { width: 110px; height: 110px; padding: 18px; }
+    .contact-band { padding: 72px 24px; }
+    .contact-grid { grid-template-columns: 1fr 1.1fr; gap: 56px; }
+    .ab-cta { padding: 80px 24px; }
+    .vx-tile { width: 170px; height: 170px; padding: 20px; }
+    .vx-mark { width: 150px; height: 150px; }
+}
+
+@media (min-width: 1000px) {
+    .card-grid.three { grid-template-columns: repeat(3, 1fr); }
+    .sv-grid { grid-template-columns: repeat(5, 1fr); }
+    .sv-card { padding: 20px 16px; }
+    .sv-card h4 { font-size: 13.5px; }
+    .built-list { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ---- small fixes ---- */
+.ab-chip { position: relative; z-index: 2; }
+@media (max-width: 420px) {
+    .vx-tag { font-size: 9.5px; letter-spacing: 1.2px; white-space: nowrap; }
+}

@@ -1,0 +1,83 @@
+/* GasHub: Withdraw Points page. Uses the tokens from customer-profile.css; dark mode comes from gashub-theme.css */
+/* the hidden attribute must always win over the display rules below (grid / flex), or hidden parts flash on refresh */
+.wd-wrap [hidden], .wd-toast[hidden] { display: none !important; }
+.wd-wrap { max-width: 560px; margin: 0 auto; padding: 18px 16px 28px; }
+.wd-title { font-size: 22px; font-weight: 800; color: var(--blue-dark); }
+.wd-sub { margin: 2px 0 14px; color: var(--muted); font-size: 13.5px; }
+.wd-card { background: var(--white); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+.wd-card h2 { font-size: 16px; font-weight: 800; color: var(--blue-dark); margin-bottom: 12px; }
+.wd-label { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+
+.wd-state { text-align: center; padding: 28px 16px; }
+.wd-state h2 { margin-bottom: 6px; }
+.wd-state p { color: var(--muted); margin-bottom: 14px; }
+.wd-spin { width: 34px; height: 34px; margin: 0 auto 12px; border-radius: 50%; border: 4px solid var(--blue-soft); border-top-color: var(--blue); animation: wdSpin .9s linear infinite; }
+@keyframes wdSpin { to { transform: rotate(360deg); } }
+
+.wd-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 22px; border: 0; border-radius: 14px; background: var(--blue); color: #fff; font-weight: 800; font-size: 15px; }
+.wd-btn:disabled { opacity: .55; cursor: not-allowed; }
+.wd-send { width: 100%; margin-top: 6px; }
+
+.wd-balance { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; background: linear-gradient(135deg, var(--blue), #3f6df0); border: 0; color: #fff; }
+.wd-balance .wd-label { color: rgba(255, 255, 255, .8); }
+.wd-balance strong { display: block; font-size: 28px; font-weight: 800; line-height: 1.2; }
+.wd-bal-worth { text-align: right; }
+.wd-rate { grid-column: 1 / -1; margin-top: 4px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .25); font-size: 13px; color: rgba(255, 255, 255, .92); }
+
+.wd-notice { margin-bottom: 14px; padding: 12px 14px; border-radius: 12px; background: #fff7e0; border: 1px solid #ffe08a; color: #7a5b00; font-size: 13.5px; }
+
+.wd-who { display: grid; gap: 10px; margin-bottom: 14px; padding: 12px; border-radius: 12px; background: var(--bg); border: 1px dashed var(--line); }
+.wd-who b { display: block; font-size: 14.5px; overflow-wrap: anywhere; }
+.wd-hint { font-size: 12px; color: var(--muted); }
+.wd-hint a { color: var(--blue); font-weight: 700; }
+.wd-center { text-align: center; margin-top: 10px; }
+
+.wd-field { display: block; margin-bottom: 14px; }
+.wd-field > span { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
+.wd-field input { width: 100%; min-height: 48px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--white); font-size: 16px; }
+.wd-field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(31, 79, 216, .15); }
+.wd-field.bad input { border-color: var(--red); }
+.wd-amount { display: flex; gap: 8px; }
+.wd-all { flex: none; padding: 0 16px; border: 0; border-radius: 12px; background: var(--blue-soft); color: var(--blue); font-weight: 800; }
+.wd-err { display: block; min-height: 0; margin-top: 4px; font-size: 12.5px; color: var(--red); }
+.wd-err:empty { display: none; }
+
+.wd-preview { display: grid; gap: 8px; margin-bottom: 12px; padding: 12px 14px; border-radius: 12px; background: var(--blue-soft); color: var(--blue-dark); font-size: 14px; }
+.wd-preview b { font-size: 15px; }
+
+.wd-item { padding: 12px 0; border-top: 1px solid var(--line); }
+.wd-item:first-child { border-top: 0; padding-top: 0; }
+.wd-row { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.wd-row b { font-size: 15px; }
+.wd-meta { margin-top: 2px; font-size: 12.5px; color: var(--muted); }
+.wd-pill { flex: none; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; }
+.wd-pill.pending { background: #fff3cd; color: #8a6500; }
+.wd-pill.approved { background: #dbe8ff; color: #1f4fd8; }
+.wd-pill.paid { background: #d9f5e5; color: #167143; }
+.wd-pill.rejected { background: #fde2e2; color: #b02323; }
+.wd-reason { margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: #fde2e2; color: #8e1d1d; font-size: 12.5px; }
+.wd-empty { color: var(--muted); text-align: center; padding: 8px 0; }
+
+.wd-toast { position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); z-index: 2300; max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 14px; background: #10233f; color: #fff; font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+.wd-toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (min-width: 900px) { .wd-wrap { padding-top: 28px; } }
+
+/* countdown shown while withdrawals are closed */
+.wd-countdown{text-align:center}
+.wd-cd-msg{margin:0 0 14px;font-weight:700;font-size:16px}
+.wd-cd-clock{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:360px;margin:0 auto}
+.wd-cd-clock div{background:rgba(31,79,216,.08);border-radius:12px;padding:12px 4px}
+.wd-cd-clock b{display:block;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.wd-cd-clock span{display:block;margin-top:4px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;opacity:.7}
+
+/* official GasHub coin in the balance card and the closed card */
+.wd-balance .coin { display: grid; margin: 0 0 6px; }
+.wd-closed .coin { display: grid; margin: 0 auto 10px; }
+.wd-closed { text-align: center; }
+.wd-closed h2 { margin-bottom: 8px; }
+.wd-closed p { margin: 0 0 14px; }
+
+.wd-preview > div { display: flex; justify-content: space-between; align-items: center; }
+.wd-fee-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.wd-fee-row:last-child { border-bottom: 0; }
+.wd-fee-row b { white-space: nowrap; margin-left: 12px; }

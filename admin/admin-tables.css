@@ -1,0 +1,222 @@
+/* =========================================================
+   GASHUB ADMIN - TABLES
+========================================================= */
+
+.admin-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+}
+
+.admin-table thead th {
+    padding: 13px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 750;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.admin-table tbody td {
+    padding: 15px 16px;
+    border-bottom: 1px solid #f0f1f3;
+    color: #374151;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table tbody tr:hover {
+    background: #fafafa;
+}
+
+/* =========================================================
+   TABLE TEXT
+========================================================= */
+
+.table-primary-text {
+    display: block;
+    color: #111827;
+    font-weight: 700;
+}
+
+.table-secondary-text {
+    display: block;
+    margin-top: 3px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.table-muted {
+    color: #9ca3af;
+}
+
+.table-price {
+    color: #111827;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.table-code {
+    color: #4b5563;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+/* =========================================================
+   EMPTY TABLE
+========================================================= */
+
+.table-empty {
+    padding: 45px 20px !important;
+    color: #9ca3af !important;
+    text-align: center;
+}
+
+.table-empty strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.table-empty span {
+    display: block;
+    font-size: 12px;
+}
+
+/* =========================================================
+   TABLE LOADING
+========================================================= */
+
+.table-loading {
+    padding: 40px 20px !important;
+    color: #6b7280 !important;
+    text-align: center;
+}
+
+.table-loading::before {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 9px;
+    vertical-align: middle;
+    border: 2px solid #e5e7eb;
+    border-top-color: #7c3aed;
+    border-radius: 50%;
+    animation: tableSpinner 0.8s linear infinite;
+}
+
+@keyframes tableSpinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================================================
+   TABLE IMAGE
+========================================================= */
+
+.table-image {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 7px;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+}
+
+.table-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 7px;
+    background: #f3f4f6;
+    color: #9ca3af;
+    font-size: 11px;
+}
+
+/* =========================================================
+   TABLE PAGINATION
+========================================================= */
+
+.table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 15px 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.pagination-info {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagination-button {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 9px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pagination-button:hover {
+    background: #f9fafb;
+}
+
+.pagination-button.active {
+    border-color: #6d28d9;
+    background: #6d28d9;
+    color: #ffffff;
+}
+
+.pagination-button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 700px) {
+    .table-pagination {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .pagination-buttons {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+}

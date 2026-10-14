@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Settings | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="admin-settings.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+
+    <!-- =========================
+         MOBILE OVERLAY
+    ========================== -->
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="admin-main">
+
+        <div class="dashboard-content">
+
+
+            <!-- =========================
+                 PAGE HEADER
+            ========================== -->
+            <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">&#9776; Menu</button>
+
+            <header class="page-header">
+                <img class="page-header-logo" src="images/logo.png" alt="GasHub">
+                <div class="page-header-text">
+                    <h1>Settings</h1>
+                    <p>Manage your GasHub administration settings.</p>
+                </div>
+                <div class="settings-header-meta"><span class="settings-tag">Admin workspace</span><span id="settingsCurrentAdmin">Loading admin profile…</span></div>
+            </header>
+
+
+            <!-- =========================
+                 MESSAGE
+            ========================== -->
+            <div
+                id="settingsMessage"
+                class="admin-message"
+                style="display: none;"
+            ></div>
+
+
+            <!-- =========================
+                 ADMIN PROFILE (summary + Edit Profile popup)
+            ========================== -->
+            <section class="content-card profile-card" id="profileCard">
+                <div class="profile-summary">
+                    <div class="profile-avatar" id="profileAvatar" aria-hidden="true">A</div>
+                    <div class="profile-info">
+                        <h2 id="profileName">Loading…</h2>
+                        <span class="profile-role" id="profileRole"></span>
+                        <ul class="profile-meta">
+                            <li><span>Email</span><strong id="profileEmail">—</strong></li>
+                            <li><span>Phone</span><strong id="profilePhone">—</strong></li>
+                            <li><span>Username</span><strong id="profileUsername">—</strong></li>
+                        </ul>
+                    </div>
+                    <button type="button" class="primary-button" id="editProfileButton">&#9998; Edit Profile</button>
+                </div>
+            </section>
+
+            <div class="modal" id="profileModal" aria-hidden="true">
+                <div class="modal-backdrop" id="profileModalBackdrop"></div>
+                <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+                    <div class="modal-header">
+                        <div><h2 id="profileModalTitle">Edit Profile</h2></div>
+                        <button type="button" class="modal-close" id="closeProfileModal" aria-label="Close">×</button>
+                    </div>
+                    <div class="modal-body-pad">
+                        <div class="admin-message modal-message" id="profileModalMessage" role="alert"></div>
+                        <form id="adminProfileForm">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="adminFullName">
+                                Full Name
+                            </label>
+
+                            <input
+                                type="text"
+                                id="adminFullName"
+                                name="full_name"
+                                placeholder="Enter full name"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="adminEmail">
+                                Email
+                            </label>
+
+                            <input
+                                type="email"
+                                id="adminEmail"
+                                name="email"
+                                placeholder="Enter email address"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="adminPhone">
+                                Phone
+                            </label>
+
+                            <input
+                                type="text"
+                                id="adminPhone"
+                                name="phone"
+                                placeholder="Enter phone number"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="adminUsername">
+                                Username
+                            </label>
+
+                            <input
+                                type="text"
+                                id="adminUsername"
+                                name="username"
+                                placeholder="Enter username"
+                            >
+
+                        </div>
+
+
+                        
+
+                    </div>
+
+                </form>
+                    </div>
+                    <div class="modal-actions modal-actions-pad">
+                        <button type="button" class="secondary-button" id="cancelProfileButton">Cancel</button>
+                        <button type="submit" class="primary-button" id="saveAdminProfileButton" form="adminProfileForm">Save Profile</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- =========================
+                 CHANGE PASSWORD
+            ========================== -->
+            <section class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h2>Change Password</h2>
+
+                        <p>
+                            Change the password for the currently logged-in administrator.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <form id="changePasswordForm">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="currentPassword">
+                                Current Password
+                            </label>
+
+                            <input
+                                type="password"
+                                id="currentPassword"
+                                name="current_password"
+                                placeholder="Enter current password"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="newPassword">
+                                New Password
+                            </label>
+
+                            <input
+                                type="password"
+                                id="newPassword"
+                                name="new_password"
+                                placeholder="Enter new password"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="confirmPassword">
+                                Confirm New Password
+                            </label>
+
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                name="confirm_password"
+                                placeholder="Confirm new password"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group full-width">
+
+                            <button
+                                type="submit"
+                                class="primary-button"
+                                id="changePasswordButton"
+                            >
+                                Change Password
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+
+            <!-- GASHUB COINS -->
+            <section class="content-card settings-section" id="coinSettings">
+                <div class="card-header"><div><h2>GasHub Coins &amp; Exchange Rate</h2><p>Set the KSh value of one GasHub Coin. The saved rate should be shared by wallet, checkout, and customer-facing calculations.</p></div><span class="settings-tag">KES only</span></div>
+                <form id="coinSettingsForm">
+                    <div class="settings-rate-row">
+                        <div class="form-group"><label for="coinRate">1 GasHub Coin equals (KSh)</label><input type="number" id="coinRate" min="0.01" step="0.01" value="2.00" required><small>Enter the Kenyan shilling value for one coin.</small></div>
+                        <div class="coin-preview"><span>Conversion preview</span><strong id="coinRatePreview">100 coins = KSh 200.00</strong><small id="singleCoinPreview">1 coin = KSh 2.00</small></div>
+                    </div>
+                    <div class="settings-rate-row">
+                        <div class="form-group"><label for="coinMinRedeem">Coins a customer must have before they can spend them</label><input type="number" id="coinMinRedeem" min="1" step="1" value="301" required><small>Customers with fewer coins than this cannot use them for a discount. When they spend coins they must use at least this many.</small></div>
+                        <div class="coin-preview"><span>Minimum to spend</span><strong id="minRedeemPreview">301 coins = KSh 602.00</strong><small>Worth this much at the rate above</small></div>
+                    </div>
+                    <div class="form-actions"><button class="primary-button" id="saveCoinRateButton" type="submit">Save Coin Settings</button><span class="settings-hint">Saving requires the matching backend settings endpoint.</span></div>
+                </form>
+                <div class="settings-history"><h3>Recent Rate History</h3><div class="admin-table-wrapper"><table class="admin-table"><thead><tr><th>Previous rate</th><th>New rate</th><th>Changed by</th><th>Date</th></tr></thead><tbody id="coinRateHistory"><tr><td colspan="4" class="table-empty">Rate history will appear when the backend provides it.</td></tr></tbody></table></div></div>
+            </section>
+
+            <!-- POINTS FOR PURCHASES -->
+            <section class="content-card settings-section" id="purchasePointsSettings">
+                <div class="card-header"><div><h2>GasHub Points for Purchases</h2><p>Control whether customers earn GasHub Points when they pay for an order, and how many. Online payments (M-Pesa or bank, paid to GasHub) and cash payments (paid to the messenger) are managed separately.</p></div><span class="settings-tag">Per order</span></div>
+                <form id="purchasePointsForm">
+                    <div class="settings-option-grid">
+                        <label class="settings-option"><span><strong>Points for online payments</strong><small>M-Pesa and bank payments confirmed by GasHub. Turn off and customers who pay online earn no points.</small></span><input type="checkbox" id="onlinePointsEnabled" checked></label>
+                        <label class="settings-option"><span><strong>Points for cash payments</strong><small>Cash paid on delivery and confirmed by the dealer. Turn off and customers who pay cash earn no points.</small></span><input type="checkbox" id="cashPointsEnabled" checked></label>
+                    </div>
+                    <div class="form-grid" style="margin-top:14px">
+                        <div class="form-group"><label for="onlinePointsAmount">Points per online-paid order</label><input type="number" id="onlinePointsAmount" min="0" step="1" value="50"><small id="onlinePointsHint">Added once when the payment is confirmed.</small></div>
+                        <div class="form-group"><label for="cashPointsAmount">Points per cash-paid order</label><input type="number" id="cashPointsAmount" min="0" step="1" value="50"><small id="cashPointsHint">Added once when the dealer confirms the cash.</small></div>
+                    </div>
+                    <div class="form-actions"><button class="primary-button" id="savePurchasePointsButton" type="submit">Save Purchase Points</button><span class="settings-hint">Applies to orders paid from now on. Points already given are not changed.</span></div>
+                </form>
+            </section>
+
+            <!-- SOCIAL + SUPPORT -->
+            <section class="content-card settings-section" id="socialSettings">
+                <div class="card-header"><div><h2>Social Media &amp; Customer Support</h2><p>Manage the links and contact details customers see on GasHub. A link only shows in the customer profile when it is saved and its "Show this link to customers" box is ticked.</p></div></div>
+                <form id="socialLinksForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="socialFacebook">Facebook URL</label><input type="url" id="socialFacebook" placeholder="https://facebook.com/yourpage"><label class="settings-hint" style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="socialActiveFacebook" checked> Show this link to customers</label></div>
+                        <div class="form-group"><label for="socialInstagram">Instagram URL</label><input type="url" id="socialInstagram" placeholder="https://instagram.com/yourpage"><label class="settings-hint" style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="socialActiveInstagram" checked> Show this link to customers</label></div>
+                        <div class="form-group"><label for="socialTikTok">TikTok URL</label><input type="url" id="socialTikTok" placeholder="https://tiktok.com/@yourpage"><label class="settings-hint" style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="socialActiveTikTok" checked> Show this link to customers</label></div>
+                        <div class="form-group"><label for="socialYouTube">YouTube URL</label><input type="url" id="socialYouTube" placeholder="https://youtube.com/@yourchannel"><label class="settings-hint" style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="socialActiveYouTube" checked> Show this link to customers</label></div>
+                        <div class="form-group"><label for="socialX">X URL</label><input type="url" id="socialX" placeholder="https://x.com/yourpage"><label class="settings-hint" style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="socialActiveX" checked> Show this link to customers</label></div>
+                        <div class="form-group"><label for="socialEmail">Support Email</label><input type="email" id="socialEmail" placeholder="support@gashub.co.ke"></div>
+                        <div class="form-group"><label for="supportWhatsApp">WhatsApp Number (Kenya)</label><input type="tel" id="supportWhatsApp" placeholder="2547XXXXXXXX"><small>Use international format, e.g. 2547XXXXXXXX.</small></div>
+                        <div class="form-group"><label for="supportPhone">Support Phone</label><input type="tel" id="supportPhone" placeholder="+254..."></div>
+                        <div class="form-group"><label for="supportHours">Support Hours</label><input type="text" id="supportHours" placeholder="Mon–Sat, 8:00 AM–6:00 PM"></div>
+                        <div class="form-group"><label for="supportWebsite">Website URL</label><input type="url" id="supportWebsite" placeholder="https://gashub.co.ke"></div>
+                    </div>
+                    <div class="form-actions"><button class="primary-button" id="saveSocialSettingsButton" type="submit">Save Social &amp; Contact Details</button></div>
+                </form>
+            </section>
+
+            <!-- EARN GASHUB POINTS -->
+            <section class="content-card settings-section" id="earnSettings">
+                <div class="card-header"><div><h2>Earn GasHub Points (Invite &amp; Follow)</h2><p>Set how many GasHub points customers can claim for inviting friends and for following your social media pages. The pages themselves are set in the Social Media section above; a page only shows to customers when its link is filled in and its points are above 0.</p></div><span class="settings-tag">Customer rewards</span></div>
+                <form id="earnSettingsForm">
+                    <div class="settings-option-grid">
+                        <label class="settings-option"><span><strong>Enable Earn Points</strong><small>Turn off to hide all invite and follow rewards from customers.</small></span><input type="checkbox" id="earnEnabled" checked></label>
+                    </div>
+                    <div class="form-grid" style="margin-top:14px">
+                        <div class="form-group"><label for="earnReferralPoints">Points per invited friend</label><input type="number" id="earnReferralPoints" min="0" step="1" value="50"><small>Claimed by the customer who invited. Set 0 to turn friend rewards off.</small></div>
+                        <div class="form-group"><label for="earnReferralRequires">A friend counts when they</label><select id="earnReferralRequires"><option value="signup">Download the app and sign up</option><option value="first_order">Sign up and complete a first paid order</option></select><small>Customers only get points after this happens, never just for sharing.</small></div>
+                        <div class="form-group"><label for="earnReferralMax">Most friends rewarded per customer</label><input type="number" id="earnReferralMax" min="0" step="1" value="20"><small>0 means no limit.</small></div>
+                    </div>
+                    <h3 style="margin:18px 0 8px;font-size:15px">Points for following each page (one time per customer)</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="earnFollowFacebook">Facebook</label><input type="number" id="earnFollowFacebook" min="0" step="1" value="10"></div>
+                        <div class="form-group"><label for="earnFollowInstagram">Instagram</label><input type="number" id="earnFollowInstagram" min="0" step="1" value="10"></div>
+                        <div class="form-group"><label for="earnFollowTikTok">TikTok</label><input type="number" id="earnFollowTikTok" min="0" step="1" value="10"></div>
+                        <div class="form-group"><label for="earnFollowYouTube">YouTube</label><input type="number" id="earnFollowYouTube" min="0" step="1" value="10"></div>
+                        <div class="form-group"><label for="earnFollowX">X</label><input type="number" id="earnFollowX" min="0" step="1" value="10"></div>
+                    </div>
+                    <p class="settings-hint" id="earnAccountsHint" style="margin-top:8px"></p>
+                    <div class="form-actions"><button class="primary-button" id="saveEarnButton" type="submit">Save Earn Settings</button></div>
+                </form>
+            </section>
+
+
+            <!-- GASHUB ANDROID APP -->
+            <section class="content-card settings-section" id="appSettings">
+                <div class="card-header"><div><h2>GasHub Mobile App (Google Play)</h2><p>Customers get points for installing the app. The download link appears in their profile by itself as soon as the app is live on the Play Store. Points are added only after the installed app confirms the customer signed in, never for just tapping the link.</p></div><span class="settings-tag" id="appLiveTag">Not live</span></div>
+                <form id="appSettingsForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="appPackageId">App package name</label><input type="text" id="appPackageId" maxlength="150" placeholder="e.g. ke.co.gashub.app"><small>The ID from your Play Console. GasHub checks the Play Store for it and shows the link once the app is published.</small></div>
+                        <div class="form-group"><label for="appPoints">Points for installing the app</label><input type="number" id="appPoints" min="0" step="1" value="50"><small>One time per customer. Set 0 to turn this reward off.</small></div>
+                        <div class="form-group full-width"><label for="appStoreUrl">Play Store link (optional)</label><input type="url" id="appStoreUrl" placeholder="Left empty, the link is built from the package name"></div>
+                        <div class="form-group full-width"><label class="settings-hint" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="appForceLive"> The app is live. Show the link now (skip the automatic Play Store check)</label></div>
+                    </div>
+                    <p class="settings-hint" id="appStatusHint"></p>
+                    <div class="form-actions"><button class="primary-button" id="saveAppButton" type="submit">Save App Settings</button></div>
+                </form>
+            </section>
+            
+            <!-- =========================
+                 SUPER ADMIN AREA (locked): maintenance mode, administrators, super admin password
+            ========================== -->
+            <section class="content-card settings-section super-lock-card" id="superLock">
+                <div class="card-header"><div><h2>&#128274; Super Admin Area</h2><p>Maintenance mode, adding or removing administrators and the super admin password are protected. Enter the super admin password to open them.</p></div><span class="settings-tag">Super admin only</span></div>
+                <form class="super-unlock-form" autocomplete="off">
+                    <div class="form-group">
+                        <label>Super admin password</label>
+                        <input type="password" class="super-unlock-input" placeholder="Enter super admin password" autocomplete="off" required>
+                    </div>
+                    <div class="form-actions"><button class="primary-button" type="submit">Unlock</button></div>
+                </form>
+            </section>
+
+            <div id="superArea" hidden>
+                <div class="super-area-bar"><span>&#128275; Super Admin Area unlocked</span><button type="button" class="table-action-button" id="relockButton">&#128274; Lock now</button></div>
+
+            <!-- PLATFORM CONTROLS -->
+            <section class="content-card settings-section" id="platformSettings">
+                <div class="card-header"><div><h2>Platform Settings</h2><p>Operational controls for the customer experience. Options are saved only when the backend supports them.</p></div></div>
+                <form id="platformSettingsForm">
+                    <div class="settings-option-grid">
+                        <label class="settings-option"><span><strong>Maintenance Mode</strong><small>Switch the system off for customers and dealers during maintenance. Admins can still sign in.</small></span><input type="checkbox" id="maintenanceMode"></label>
+                        <label class="settings-option"><span><strong>Customer Notifications</strong><small>Allow system notifications to customers.</small></span><input type="checkbox" id="customerNotifications" checked></label>
+                        <label class="settings-option"><span><strong>Dealer Availability</strong><small>Allow active dealers to show products to customers.</small></span><input type="checkbox" id="dealerAvailability" checked></label>
+                    </div>
+                    <div class="maintenance-message-box">
+                        <h3>Maintenance message</h3>
+                        <p class="settings-hint">What customers and dealers see while Maintenance Mode is on. Leave a box empty to use the default wording.</p>
+                        <div class="form-grid">
+                            <div class="form-group"><label for="maintenanceTitle">Title</label><input type="text" id="maintenanceTitle" maxlength="80" placeholder="We&rsquo;ll be right back"></div>
+                            <div class="form-group full-width"><label for="maintenanceText">Message</label><textarea id="maintenanceText" rows="3" maxlength="400" placeholder="GasHub is down for scheduled maintenance. Please check again in a little while."></textarea><small>Up to 400 characters. Line breaks are kept.</small></div>
+                        </div>
+                        <div class="maintenance-preview" aria-live="polite">
+                            <img src="/Images/logo.png" alt="GasHub logo">
+                            <strong id="maintenancePreviewTitle">We&rsquo;ll be right back</strong>
+                            <span id="maintenancePreviewText">GasHub is down for scheduled maintenance. Please check again in a little while.</span>
+                        </div>
+                    </div>
+                    <div class="form-actions"><button class="primary-button" id="savePlatformSettingsButton" type="submit">Save Platform Settings</button></div>
+                </form>
+            </section>
+
+            <!-- =========================
+                 ADMIN MANAGEMENT
+            ========================== -->
+            <!-- GASHUB PAYMENT ACCOUNT (super admin area) -->
+            <section class="content-card settings-section" id="paymentAccountSettings">
+                <div class="card-header"><div><h2>GasHub Payment Account (M-Pesa)</h2><p>Customers who choose M-Pesa pay into this account, not to the dealer. Dealers can only confirm cash. An M-Pesa order shows as paid after you confirm the money in the Payments page.</p></div></div>
+                <form id="paymentAccountForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="payAccType">Account type</label><select id="payAccType"><option value="paybill">Paybill</option><option value="till">Till number (Buy Goods)</option><option value="phone">Phone number (Send Money)</option></select></div>
+                        <div class="form-group"><label for="payAccNumber" id="payAccNumberLabel">Paybill number</label><input type="text" id="payAccNumber" inputmode="numeric" maxlength="20" placeholder="e.g. 522522"></div>
+                        <div class="form-group" id="payAccAccountGroup"><label for="payAccAccountNumber">Account number</label><input type="text" id="payAccAccountNumber" maxlength="40" placeholder="e.g. GASHUB"></div>
+                        <div class="form-group"><label for="payAccName">Account name (shown to the customer)</label><input type="text" id="payAccName" maxlength="80" placeholder="e.g. GasHub Kenya Ltd"></div>
+                        <div class="form-group full-width"><label for="payAccInstructions">Extra instructions (optional)</label><textarea id="payAccInstructions" rows="2" maxlength="300" placeholder="e.g. Type the order number as the account number."></textarea></div>
+                    </div>
+                    <div class="coin-preview"><span>What customers will see</span><strong id="payAccPreview">Not set yet</strong><small id="payAccPreviewHint">Until this is saved, customers are told to contact support to pay.</small></div>
+                    <div class="form-actions"><button class="primary-button" id="savePaymentAccountButton" type="submit">Save Payment Account</button></div>
+                </form>
+            </section>
+
+            <section class="content-card" id="adminMgmtSection">
+
+                <div class="card-header">
+
+                    <div>
+                        <h2>Administrator Management</h2>
+
+                        <p>
+                            Manage administrator accounts that can access the GasHub admin panel.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="primary-button"
+                        id="addAdminButton"
+                    >
+                        Add Administrator
+                    </button>
+
+                </div>
+
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Administrator</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="adminsTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="6"
+                                    class="table-loading"
+                                >
+                                    Loading administrators...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- SUPER ADMIN PASSWORD (visible only when unlocked) -->
+            <section class="content-card settings-section" id="superPasswordSection">
+                <div class="card-header"><div><h2>Super Admin Password</h2><p>This password unlocks Administrator Management and Platform Settings (maintenance mode). It is separate from your login password. Change it from the default as soon as possible.</p></div></div>
+                <form id="superPasswordForm" autocomplete="off">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="superCurrentPassword">Current super admin password</label><input type="password" id="superCurrentPassword" autocomplete="off" required></div>
+                        <div class="form-group"><label for="superNewPassword">New super admin password</label><input type="password" id="superNewPassword" minlength="8" autocomplete="new-password" required><small>At least 8 characters.</small></div>
+                        <div class="form-group"><label for="superConfirmPassword">Confirm new password</label><input type="password" id="superConfirmPassword" minlength="8" autocomplete="new-password" required></div>
+                    </div>
+                    <div class="form-actions"><button class="primary-button" id="saveSuperPasswordButton" type="submit">Change Super Admin Password</button></div>
+                </form>
+            </section>
+            </div>
+
+            <!-- =========================
+                 ADMIN MODAL
+            ========================== -->
+            <div
+                class="modal"
+                id="adminModal"
+                aria-hidden="true"
+            >
+
+                <div
+                    class="modal-backdrop"
+                    id="adminModalBackdrop"
+                ></div>
+
+
+                <div
+                    class="modal-dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="adminModalTitle"
+                >
+
+                    <div class="modal-header">
+
+                        <div>
+                            <h2 id="adminModalTitle">
+                                Add Administrator
+                            </h2>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="modal-close"
+                            id="closeAdminModal"
+                            aria-label="Close"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+
+                    <form id="adminForm">
+
+                        <div class="admin-message modal-message" id="adminModalMessage" role="alert"></div>
+
+                        <input
+                            type="hidden"
+                            id="adminId"
+                        >
+
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="adminName">
+                                    Full Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="adminName"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="adminFormEmail">
+                                    Email
+                                </label>
+
+                                <input
+                                    type="email"
+                                    id="adminFormEmail"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="adminFormPhone">
+                                    Phone
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="adminFormPhone"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="adminFormUsername">
+                                    Username
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="adminFormUsername"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="adminFormRole">
+                                    Role
+                                </label>
+
+                                <select
+                                    id="adminFormRole"
+                                    required
+                                >
+                                    <option value="admin">
+                                        Admin
+                                    </option>
+
+                                    <option value="super_admin">
+                                        Super Admin
+                                    </option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="adminFormStatus">
+                                    Status
+                                </label>
+
+                                <select
+                                    id="adminFormStatus"
+                                    required
+                                >
+                                    <option value="active">
+                                        Active
+                                    </option>
+
+                                    <option value="inactive">
+                                        Inactive
+                                    </option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group full-width">
+
+                                <label for="adminFormPassword">
+                                    Password
+                                </label>
+
+                                <input
+                                    type="password"
+                                    id="adminFormPassword"
+                                    placeholder="Enter password"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="modal-actions">
+
+                            <button
+                                type="button"
+                                class="secondary-button"
+                                id="cancelAdminButton"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="primary-button"
+                                id="saveAdminButton"
+                            >
+                                Save Administrator
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================
+         SCRIPTS
+    ========================== -->
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-settings.js"></script>
+
+</body>
+</html>

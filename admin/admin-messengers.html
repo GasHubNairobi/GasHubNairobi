@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messengers | GasHub Admin</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="admin-complaints.css">
+    <link rel="stylesheet" href="admin-shared.css">
+    <link rel="stylesheet" href="admin-sidebar.css">
+    <link rel="stylesheet" href="admin-messengers.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+<body>
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">☰</button>
+                <div>
+                    <h2>Messengers</h2>
+                    <p>Every messenger's allocated orders, the dealer they worked with, payment mode and time taken.</p>
+                </div>
+            </div>
+            <div class="admin-user-area">
+                <div class="admin-user-info">
+                    <strong id="adminUserName">Administrator</strong>
+                    <span id="adminUserRole">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="admin-content">
+            <div class="admin-message" id="msgrMessage" role="status" hidden></div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Messengers</span><strong class="stat-value" id="statMessengers">0</strong></div><div class="stat-icon">➤</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Orders allocated</span><strong class="stat-value" id="statOrders">0</strong></div><div class="stat-icon">▤</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Delivered</span><strong class="stat-value" id="statDelivered">0</strong></div><div class="stat-icon">✓</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Average time taken</span><strong class="stat-value" id="statAvg">-</strong></div><div class="stat-icon">◷</div></div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Filter</h3>
+                        <p>Pick a messenger, a dealer or a date range (by the day the order was allocated).</p>
+                    </div>
+                </div>
+                <div class="msgr-filters">
+                    <label>Messenger<select id="fMessenger"><option value="">All messengers</option></select></label>
+                    <label>Dealer<select id="fDealer"><option value="">All dealers</option></select></label>
+                    <label>From<input type="date" id="fFrom"></label>
+                    <label>To<input type="date" id="fTo"></label>
+                    <label>Search<input type="search" id="fSearch" placeholder="Order no, customer, messenger..." autocomplete="off"></label>
+                    <div class="msgr-filter-actions">
+                        <button type="button" class="btn btn-primary" id="btnApply">Apply</button>
+                        <button type="button" class="btn btn-secondary" id="btnReset">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div><h3>Messenger summary</h3><p>One row per messenger for the filter above.</p></div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead><tr>
+                            <th>Messenger</th><th>Phone</th><th>Email</th><th>Dealer</th>
+                            <th>Orders</th><th>Delivered</th><th>Open</th><th>Avg time taken</th><th></th>
+                        </tr></thead>
+                        <tbody id="summaryBody"><tr><td colspan="9" class="table-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div><h3>Allocated orders</h3><p id="detailNote">Every order given to a messenger.</p></div>
+                    <div class="table-tools"><button type="button" class="btn btn-secondary" id="btnCsv">Download CSV</button></div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead><tr>
+                            <th>Order no.</th><th>Messenger</th><th>Dealer</th><th>Customer</th>
+                            <th>Payment mode</th><th>Allocated</th><th>Started</th><th>Delivered</th><th>Time taken</th><th>Status</th>
+                        </tr></thead>
+                        <tbody id="detailBody"><tr><td colspan="10" class="table-loading">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="admin-sidebar.js"></script>
+    <script src="admin-main.js"></script>
+    <script src="admin-messengers.js"></script>
+</body>
+</html>

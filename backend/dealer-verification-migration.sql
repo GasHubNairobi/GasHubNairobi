@@ -1,0 +1,4 @@
+ALTER TABLE dealers
+    ADD COLUMN IF NOT EXISTS is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS verification_started_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS verification_expires_at TIMESTAMPTZ;

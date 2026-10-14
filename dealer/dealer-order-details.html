@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>Order Details | GAS HUB Dealer Portal</title>
+
+<link rel="stylesheet" href="dealer-main.css">
+<link rel="stylesheet" href="dealer-orders.css">
+
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+>
+```
+
+    <link rel="stylesheet" href="dealer-logout.css">
+    <script src="dealer-cache-guard.js"></script>
+    <script src="gashub-dialog.js"></script>
+    <link rel="stylesheet" href="dealer-header.css">
+    <link rel="stylesheet" href="dealer-mobile.css">
+</head>
+
+<body>
+
+<div class="dealer-app">
+
+```
+<!-- =====================================================
+     SIDEBAR
+     ===================================================== -->
+
+<aside class="dealer-sidebar" id="dealerSidebar">
+
+    <div class="dealer-sidebar-brand">
+        <a href="dealer-dashboard.html" class="dealer-brand-link">
+
+            <div class="dealer-brand-logo">
+                <i class="fa-solid fa-fire-flame-simple"></i>
+            </div>
+
+            <div class="dealer-brand-text">
+                <span class="dealer-brand-name">GAS HUB</span>
+                <span class="dealer-brand-role">Dealer Portal</span>
+            </div>
+
+        </a>
+    </div>
+
+    <nav class="dealer-sidebar-nav">
+
+        <div class="dealer-nav-label">MAIN MENU</div>
+
+        <ul class="dealer-nav-list">
+
+            <li>
+                <a href="dealer-dashboard.html" class="dealer-nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="dealer-products.html" class="dealer-nav-item">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Products</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="dealer-orders.html" class="dealer-nav-item active">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Orders</span>
+                    <span class="dealer-nav-badge" id="ordersBadge">0</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="dealer-messengers.html" class="dealer-nav-item">
+                    <i class="fa-solid fa-motorcycle"></i>
+                    <span>Messengers</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="dealer-profile.html" class="dealer-nav-item">
+                    <i class="fa-solid fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="dealer-settings.html" class="dealer-nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+
+        </ul>
+
+    </nav>
+
+    <div class="dealer-sidebar-footer">
+
+        <div class="dealer-system-status">
+            <span class="dealer-status-dot"></span>
+            <span>System Online</span>
+        </div>
+
+        <button
+            type="button"
+            class="dealer-nav-item dealer-logout-button"
+            data-dealer-logout
+        >
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- =====================================================
+     MOBILE OVERLAY
+     ===================================================== -->
+
+<div
+    class="dealer-sidebar-overlay"
+    id="dealerSidebarOverlay"
+></div>
+
+
+<!-- =====================================================
+     MAIN CONTENT
+     ===================================================== -->
+
+<main class="dealer-main">
+
+    <!-- HEADER -->
+
+    <header class="dealer-header">
+
+        <div class="dealer-header-left">
+
+            <button
+                type="button"
+                class="dealer-mobile-menu"
+                id="dealerMobileMenu"
+                aria-label="Open navigation"
+                aria-controls="dealerSidebar"
+                aria-expanded="false"
+            >
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="dealer-page-heading">
+                <h1>Order Details</h1>
+            </div>
+
+        </div>
+
+
+        <div class="dealer-header-right">
+
+            <button
+                type="button"
+                class="dealer-header-button"
+                id="dealerNotificationButton"
+                aria-label="Notifications"
+            >
+                <i class="fa-regular fa-bell"></i>
+                <span
+                    class="dealer-notification-badge"
+                    id="notificationBadge"
+                ></span>
+            </button>
+
+
+            <a
+                href="dealer-profile.html"
+                class="dealer-header-profile"
+            >
+
+                <div class="dealer-avatar" id="dealerHeaderAvatar" data-dealer-avatar><span id="dealerAvatarInitial">D</span></div>
+
+                <span class="dealer-header-profile-info"><span class="gh-name-row"><strong id="dealerHeaderName">Dealer</strong><span class="tiktok-verified-badge" id="sidebarVerifiedBadge" title="Verified EPRA Dealer"></span></span><span class="user-stats"><span class="user-stat"><i class="fa-solid fa-users fa-xs" aria-hidden="true"></i> <strong id="sidebarFollowersCount">0</strong> followers</span><span class="user-stat"><i class="fa-solid fa-star fa-xs text-warning" aria-hidden="true"></i> <strong id="sidebarReviewsCount">0.0 (0)</strong></span></span></span>
+
+                <i class="fa-solid fa-chevron-down dealer-profile-chevron"></i>
+
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- =================================================
+         CONTENT
+         ================================================= -->
+
+    <section class="dealer-content dealer-order-details-page">
+
+        <!-- BACK LINK -->
+
+        <div class="dealer-order-back">
+
+            <a
+                href="dealer-orders.html"
+                class="dealer-order-back-link"
+            >
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back to Orders</span>
+            </a>
+
+        </div>
+
+
+        <!-- PAGE HEADER -->
+
+        <div class="dealer-order-details-heading">
+
+            <div class="dealer-order-details-heading-main">
+
+                <div class="dealer-order-number-wrapper">
+
+                    <span class="dealer-order-label">
+                        Order
+                    </span>
+
+                    <h2
+                        class="dealer-order-number"
+                        id="orderNumber"
+                    >
+                        —
+                    </h2>
+
+                </div>
+
+                <span
+                    class="dealer-order-status-badge"
+                    id="orderStatusBadge"
+                >
+                    —
+                </span>
+
+            </div>
+
+
+            <div class="dealer-order-details-actions">
+
+                <button
+                    type="button"
+                    class="dealer-button dealer-button-danger"
+                    id="rejectOrderButton"
+                    hidden
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>Reject</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="dealer-button dealer-button-secondary"
+                    id="approveOrderButton"
+                    hidden
+                >
+                    <i class="fa-solid fa-check"></i>
+                    <span>Approve</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="dealer-button dealer-button-primary"
+                    id="completeOrderButton"
+                    hidden
+                >
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Complete</span>
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- MESSAGE -->
+
+        <div
+            class="dealer-order-message"
+            id="orderMessage"
+            role="alert"
+            aria-live="polite"
+        ></div>
+
+
+        <!-- =================================================
+             ORDER OVERVIEW
+             ================================================= -->
+
+        <div class="dealer-order-details-grid">
+
+            <!-- CUSTOMER -->
+
+            <div class="dealer-card dealer-order-detail-card">
+
+                <div class="dealer-card-header">
+
+                    <div class="dealer-order-card-heading">
+
+                        <div class="dealer-order-card-icon">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="dealer-card-title">
+                                Customer Information
+                            </h3>
+
+                            <p class="dealer-card-subtitle">
+                                Customer details for this order
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-order-info-list">
+
+                        <div class="dealer-order-info-row">
+
+                            <span class="dealer-order-info-label">
+                                Customer Name
+                            </span>
+
+                            <strong
+                                class="dealer-order-info-value"
+                                id="customerName"
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="dealer-order-info-row">
+
+                            <span class="dealer-order-info-label">
+                                Phone Number
+                            </span>
+
+                            <strong
+                                class="dealer-order-info-value"
+                                id="customerPhone"
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div
+                            class="dealer-order-info-row"
+                            id="customerEmailRow"
+                        >
+
+                            <span class="dealer-order-info-label">
+                                Email Address
+                            </span>
+
+                            <strong
+                                class="dealer-order-info-value"
+                                id="customerEmail"
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ORDER INFORMATION -->
+
+            <div class="dealer-card dealer-order-detail-card">
+
+                <div class="dealer-card-header">
+
+                    <div class="dealer-order-card-heading">
+
+                        <div class="dealer-order-card-icon">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="dealer-card-title">
+                                Order Information
+                            </h3>
+
+                            <p class="dealer-card-subtitle">
+                                Order date and payment details
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-order-info-list">
+
+                        <div class="dealer-order-info-row">
+
+                            <span class="dealer-order-info-label">
+                                Order Date
+                            </span>
+
+                            <strong
+                                class="dealer-order-info-value"
+                                id="orderDate"
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="dealer-order-info-row">
+
+                            <span class="dealer-order-info-label">
+                                Payment Status
+                            </span>
+
+                            <span
+                                class="dealer-payment-status-badge"
+                                id="paymentStatus"
+                            >
+                                —
+                            </span>
+
+                        </div>
+
+
+                        <div class="dealer-order-info-row">
+
+                            <span class="dealer-order-info-label">
+                                Order Status
+                            </span>
+
+                            <span
+                                class="dealer-order-status-small"
+                                id="orderStatus"
+                            >
+                                —
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- DELIVERY -->
+
+            <div class="dealer-card dealer-order-detail-card">
+
+                <div class="dealer-card-header">
+
+                    <div class="dealer-order-card-heading">
+
+                        <div class="dealer-order-card-icon">
+                            <i class="fa-solid fa-truck"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="dealer-card-title">
+                                Delivery Information
+                            </h3>
+
+                            <p class="dealer-card-subtitle">
+                                How the customer will receive the order
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-order-info-list">
+
+                        <div class="dealer-order-info-row">
+
+                            <span class="dealer-order-info-label">
+                                Fulfilment Method
+                            </span>
+
+                            <strong
+                                class="dealer-order-info-value"
+                                id="fulfilmentMethod"
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div
+                            class="dealer-order-info-row"
+                            id="deliveryLocationRow"
+                        >
+
+                            <span class="dealer-order-info-label">
+                                Delivery Location
+                            </span>
+
+                            <strong
+                                class="dealer-order-info-value"
+                                id="deliveryLocation"
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ORDER TOTAL -->
+
+            <div class="dealer-card dealer-order-detail-card">
+
+                <div class="dealer-card-header">
+
+                    <div class="dealer-order-card-heading">
+
+                        <div class="dealer-order-card-icon">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="dealer-card-title">
+                                Order Summary
+                            </h3>
+
+                            <p class="dealer-card-subtitle">
+                                Total value of this order
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-order-total-box">
+
+                        <span>Total Amount</span>
+
+                        <strong id="orderTotal">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             PRODUCT / ORDER ITEMS
+             ================================================= -->
+
+        <div class="dealer-card dealer-order-items-card">
+
+            <div class="dealer-card-header">
+
+                <div>
+
+                    <h3 class="dealer-card-title">
+                        Ordered Product
+                    </h3>
+
+                    <p class="dealer-card-subtitle">
+                        Product and quantity requested by the customer
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="dealer-card-body">
+
+                <div class="dealer-order-product">
+
+                    <div
+                        class="dealer-order-product-image"
+                        id="orderProductImage"
+                    >
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+
+
+                    <div class="dealer-order-product-content">
+
+                        <h4
+                            class="dealer-order-product-name"
+                            id="orderProductName"
+                        >
+                            —
+                        </h4>
+
+                        <div class="dealer-order-product-meta">
+
+                            <span>
+                                <strong>Gas Brand:</strong>
+                                <span id="orderProductBrand">—</span>
+                            </span>
+
+                            <span>
+                                <strong>Size:</strong>
+                                <span id="orderProductSize">—</span>
+                            </span>
+
+                            <span>
+                                <strong>Type:</strong>
+                                <span id="orderProductType">—</span>
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="dealer-order-product-quantity">
+
+                        <span>Quantity</span>
+
+                        <strong id="orderProductQuantity">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="dealer-order-product-price">
+
+                        <span>Amount</span>
+
+                        <strong id="orderProductAmount">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CUSTOMER MESSAGE
+             ================================================= -->
+
+        <div
+            class="dealer-card dealer-order-message-card"
+            id="customerMessageCard"
+            hidden
+        >
+
+            <div class="dealer-card-header">
+
+                <div class="dealer-order-card-heading">
+
+                    <div class="dealer-order-card-icon">
+                        <i class="fa-solid fa-message"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="dealer-card-title">
+                            Customer Message
+                        </h3>
+
+                        <p class="dealer-card-subtitle">
+                            Additional information provided with the order
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="dealer-card-body">
+
+                <p
+                    class="dealer-customer-message"
+                    id="customerMessage"
+                ></p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             STATUS TIMELINE
+             ================================================= -->
+
+        <div class="dealer-card dealer-order-timeline-card">
+
+            <div class="dealer-card-header">
+
+                <div>
+
+                    <h3 class="dealer-card-title">
+                        Order Progress
+                    </h3>
+
+                    <p class="dealer-card-subtitle">
+                        Current progress of the order
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="dealer-card-body">
+
+                <div
+                    class="dealer-order-timeline"
+                    id="orderTimeline"
+                >
+
+                    <div class="dealer-order-timeline-item">
+
+                        <div class="dealer-order-timeline-marker">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </div>
+
+                        <div class="dealer-order-timeline-content">
+
+                            <strong>Order Received</strong>
+
+                            <span id="timelineReceived">
+                                —
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="dealer-order-timeline-item">
+
+                        <div class="dealer-order-timeline-marker">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+
+                        <div class="dealer-order-timeline-content">
+
+                            <strong>Approved</strong>
+
+                            <span id="timelineApproved">
+                                —
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="dealer-order-timeline-item">
+
+                        <div class="dealer-order-timeline-marker">
+                            <i class="fa-solid fa-truck"></i>
+                        </div>
+
+                        <div class="dealer-order-timeline-content">
+
+                            <strong>Fulfilment</strong>
+
+                            <span id="timelineFulfilment">
+                                —
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="dealer-order-timeline-item">
+
+                        <div class="dealer-order-timeline-marker">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+
+                        <div class="dealer-order-timeline-content">
+
+                            <strong>Completed</strong>
+
+                            <span id="timelineCompleted">
+                                —
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LOADING / EMPTY STATE -->
+
+        <div
+            class="dealer-order-details-state"
+            id="orderDetailsState"
+            hidden
+        >
+
+            <div class="dealer-order-details-state-icon">
+                <i class="fa-solid fa-receipt"></i>
+            </div>
+
+            <h3 id="orderStateTitle">
+                Order Information
+            </h3>
+
+            <p id="orderStateText">
+                Order details will appear here once an order is selected.
+            </p>
+
+            <a
+                href="dealer-orders.html"
+                class="dealer-button dealer-button-secondary"
+            >
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back to Orders</span>
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         MOBILE NAV
+         ================================================= -->
+
+    <nav class="dealer-mobile-nav">
+
+        <a
+            href="dealer-dashboard.html"
+            class="dealer-mobile-nav-item"
+        >
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a
+            href="dealer-products.html"
+            class="dealer-mobile-nav-item"
+        >
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Products</span>
+        </a>
+
+        <a
+            href="dealer-orders.html"
+            class="dealer-mobile-nav-item active"
+        >
+            <i class="fa-solid fa-receipt"></i>
+            <span>Orders</span>
+        </a>
+
+        <a
+            href="dealer-profile.html"
+            class="dealer-mobile-nav-item"
+        >
+            <i class="fa-solid fa-user"></i>
+            <span>Profile</span>
+        </a>
+
+    </nav>
+
+</main>
+```
+
+</div>
+
+<!-- =====================================================
+     SCRIPTS
+     ===================================================== -->
+
+<script src="gashub-core.js"></script>
+    <script src="dealer-logout.js"></script>
+<script src="dealer-main.js"></script>
+
+<script src="dealer-order.js"></script>
+
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="dealer-mobile.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- light / dark / system theme (chosen on the Profile page): script first, stylesheet last -->
+    <script src="gashub-theme.js"></script>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="GasHub Customer AI Assistant"
+    >
+
+    <meta name="theme-color" content="#0d6b3f">
+
+    <link rel="icon" type="image/png" href="/Images/favicon.png">
+
+    <link rel="stylesheet" href="customer-main.css">
+
+    <title>Customer AI | GasHub</title>
+    <link rel="stylesheet" href="gashub-theme.css">
+    <style>
+        /* GasHub flame logo replaces the yellow "AI" badges */
+        .small-ai-avatar,.floating-ai-robot,.ai-popup-avatar,.ai-chat-card .message.ai-message .message-avatar{background:#fff !important;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        .gha-fab{display:none !important}
+        .ai-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+        .ai-links a{padding:5px 12px;border-radius:14px;background:#1f4fd8;color:#fff;font-size:13px;font-weight:700;text-decoration:none}
+        .message-content p{white-space:pre-line}
+        .ai-flame{width:62%;height:auto;max-height:78%;object-fit:contain;display:block}
+    </style>
+    <script src="gashub-ban-guard.js"></script>
+</head>
+
+<body>
+
+    <!-- Watermark -->
+    <img
+        src="/Images/watermark.png"
+        alt=""
+        class="page-watermark"
+    >
+
+    <!-- HEADER -->
+    <header class="customer-header">
+
+        <div class="header-left">
+
+            <button
+                type="button"
+                class="menu-button"
+                id="menuButton"
+                aria-label="Open menu"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <a href="customer-home.html" class="brand">
+                <img
+                    src="/Images/logo.png"
+                    alt="GasHub"
+                    class="brand-logo"
+                >
+            </a>
+
+        </div>
+
+        <div class="header-actions">
+
+            <a
+                href="customer-orders.html"
+                class="header-action"
+            >
+                Orders
+            </a>
+
+            <a
+                href="customer-profile.html"
+                class="customer-avatar"
+            >
+                Customer
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- MOBILE MENU OVERLAY -->
+    <div
+        class="mobile-menu-overlay"
+        id="mobileMenuOverlay"
+    ></div>
+
+
+    <!-- MOBILE SIDE MENU -->
+    <aside
+        class="mobile-menu"
+        id="mobileMenu"
+    >
+
+        <div class="mobile-menu-header">
+
+            <img
+                src="/Images/logo.png"
+                alt="GasHub"
+            >
+
+            <button
+                type="button"
+                id="closeMenu"
+                aria-label="Close menu"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <nav class="mobile-menu-links">
+
+            <a href="customer-home.html">
+                Home
+            </a>
+
+            <a href="customer-product.html">
+                Gas & Cylinders
+            </a>
+
+            <a href="customer-dealer.html">
+                Find a Dealer
+            </a>
+
+            <a href="customer-orders.html">
+                My Orders
+            </a>
+
+            <a href="customer-ai.html" class="active">
+                Customer AI
+            </a>
+
+            <a href="customer-about.html">
+                About GasHub
+            </a>
+
+            <a href="customer-profile.html">
+                My Profile
+            </a>
+
+            <a href="#">
+                Help & Support
+            </a>
+
+            <a href="#">
+                Settings
+            </a>
+
+            <a href="customer-login.html?logged_out=1" id="logoutLink">
+                Logout
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- AI PAGE -->
+    <main class="customer-ai-page">
+
+        <!-- AI HERO -->
+        <section class="ai-hero">
+
+            <div class="ai-robot">
+
+                <div class="robot-head">
+
+                    <div class="robot-eye"></div>
+                    <div class="robot-eye"></div>
+
+                </div>
+
+                <div class="robot-body"></div>
+
+            </div>
+
+            <div class="ai-hero-content">
+
+                <p class="ai-label">
+                    GASHUB CUSTOMER ASSISTANT
+                </p>
+
+                <h1>
+                    How can I help you?
+                </h1>
+
+                <p>
+                    Ask me anything about GasHub, gas products,
+                    dealers, orders, payments or deliveries.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- CHAT AREA -->
+        <section class="ai-chat-section">
+
+            <div class="ai-chat-card">
+
+                <div class="chat-header">
+
+                    <div class="chat-header-left">
+
+                        <div class="small-ai-avatar"><img src="images/gashub-flame.png" alt="GasHub" class="ai-flame"></div>
+
+                        <div>
+                            <h2>GasHub AI</h2>
+
+                            <span class="ai-status">
+                                Online
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MESSAGES -->
+                <div
+                    class="chat-messages"
+                    id="chatMessages"
+                >
+
+                    <div class="message ai-message">
+
+                        <div class="message-avatar"><img src="images/gashub-flame.png" alt="GasHub" class="ai-flame"></div>
+
+                        <div class="message-content">
+
+                            <p>
+                                Hello! I'm the GasHub Customer AI.
+                                I can help you with questions about
+                                gas, cylinders, dealers, orders,
+                                payments and deliveries.
+                            </p>
+
+                            <span class="message-time">
+                                Now
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SUGGESTED QUESTIONS -->
+                <div class="suggested-section">
+
+                    <p>
+                        Popular questions
+                    </p>
+
+                    <div class="suggested-questions">
+
+                        <button
+                            type="button"
+                            class="suggested-question"
+                            data-question="Cheapest 13kg gas"
+                        >
+                            Cheapest 13kg gas
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggested-question"
+                            data-question="Show my last order"
+                        >
+                            Show my last order
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggested-question"
+                            data-question="How do I find a gas dealer?"
+                        >
+                            How do I find a gas dealer?
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggested-question"
+                            data-question="How do I pay for my order?"
+                        >
+                            How do I pay?
+                        </button>
+
+                        <button
+                            type="button"
+                            class="suggested-question"
+                            data-question="How does delivery work?"
+                        >
+                            How does delivery work?
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CHAT INPUT -->
+                <div class="chat-input-area">
+
+                    <textarea
+                        id="chatInput"
+                        rows="1"
+                        placeholder="Ask GasHub AI a question..."
+                        aria-label="Ask GasHub AI"
+                    ></textarea>
+
+                    <button
+                        type="button"
+                        id="sendMessage"
+                        class="send-button"
+                    >
+                        Send
+                    </button>
+
+                </div>
+
+                <p class="ai-disclaimer">
+                    GasHub AI provides general assistance.
+                    For specific orders or account issues,
+                    contact the GasHub support team.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FLOATING AI BUTTON -->
+    <button
+        type="button"
+        class="floating-ai-button"
+        id="floatingAIButton"
+        aria-label="Open GasHub AI"
+    >
+        <span class="floating-ai-robot"><img src="images/gashub-flame.png" alt="GasHub" class="ai-flame"></span>
+
+        <span class="floating-ai-text">
+            Ask GasHub AI
+        </span>
+
+    </button>
+
+
+    <!-- MOBILE BOTTOM NAV -->
+    <!-- AI POPUP -->
+    <div
+        class="ai-popup"
+        id="aiPopup"
+        aria-hidden="true"
+    >
+
+        <div class="ai-popup-card">
+
+            <button
+                type="button"
+                class="ai-popup-close"
+                id="closeAIPopup"
+                aria-label="Close AI"
+            >
+                ×
+            </button>
+
+            <div class="ai-popup-avatar"><img src="images/gashub-flame.png" alt="GasHub" class="ai-flame"></div>
+
+            <h3>
+                Hi, I'm GasHub AI
+            </h3>
+
+            <p>
+                I can help you find information about gas,
+                dealers, orders, payments and deliveries.
+            </p>
+
+            <button
+                type="button"
+                class="ai-popup-start"
+                id="startAIChat"
+            >
+                Chat with GasHub AI
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script src="customer-logout.js"></script>
+    <script src="customer-photo.js"></script>
+    <script>
+        (function () {
+            var l = document.getElementById("logoutLink");
+            if (l) l.addEventListener("click", function (e) { e.preventDefault(); if (window.gasHubAskLogout) window.gasHubAskLogout(); else window.gasHubLogout(); });
+        })();
+    </script>
+    <script src="customer-main.js"></script>
+
+    <script>
+
+        /*
+         * GAS HUB CUSTOMER AI
+         *
+         * This is the basic local version.
+         * Later this section can be connected to
+         * a real AI API/backend.
+         */
+
+        const chatMessages =
+            document.getElementById("chatMessages");
+
+        const chatInput =
+            document.getElementById("chatInput");
+
+        const sendMessage =
+            document.getElementById("sendMessage");
+
+        const suggestedQuestions =
+            document.querySelectorAll(".suggested-question");
+
+        const floatingAIButton =
+            document.getElementById("floatingAIButton");
+
+        const aiPopup =
+            document.getElementById("aiPopup");
+
+        const closeAIPopup =
+            document.getElementById("closeAIPopup");
+
+        const startAIChat =
+            document.getElementById("startAIChat");
+
+
+        /*
+         * OPEN AI POPUP
+         */
+        floatingAIButton.addEventListener(
+            "click",
+            function () {
+
+                aiPopup.classList.add("show");
+
+                aiPopup.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+
+            }
+        );
+
+
+        /*
+         * CLOSE AI POPUP
+         */
+        closeAIPopup.addEventListener(
+            "click",
+            function () {
+
+                aiPopup.classList.remove("show");
+
+                aiPopup.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+            }
+        );
+
+
+        /*
+         * START CHAT
+         */
+        startAIChat.addEventListener(
+            "click",
+            function () {
+
+                aiPopup.classList.remove("show");
+
+                aiPopup.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+                chatInput.focus();
+
+                document.querySelector(
+                    ".ai-chat-section"
+                ).scrollIntoView({
+                    behavior: "smooth"
+                });
+
+            }
+        );
+
+
+        /*
+         * CLICK OUTSIDE POPUP
+         */
+        aiPopup.addEventListener(
+            "click",
+            function (event) {
+
+                if (event.target === aiPopup) {
+
+                    aiPopup.classList.remove("show");
+
+                    aiPopup.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                }
+
+            }
+        );
+
+
+        /*
+         * ADD MESSAGE TO CHAT
+         */
+        function addMessage(
+            message,
+            type,
+            links
+        ) {
+
+            const messageWrapper =
+                document.createElement("div");
+
+            messageWrapper.className =
+                `message ${type}-message`;
+
+            const avatar =
+                document.createElement("div");
+
+            avatar.className =
+                "message-avatar";
+
+            if (type === "ai") { avatar.innerHTML = '<img src="images/gashub-flame.png" alt="GasHub" class="ai-flame">'; } else { avatar.textContent = "You"; }
+
+
+            const content =
+                document.createElement("div");
+
+            content.className =
+                "message-content";
+
+
+            const paragraph =
+                document.createElement("p");
+
+            paragraph.textContent =
+                message;
+
+
+            const time =
+                document.createElement("span");
+
+            time.className =
+                "message-time";
+
+            time.textContent =
+                "Now";
+
+
+            content.appendChild(paragraph);
+
+            if (links && links.length) {
+                if (typeof links[0] === "string") { links = [links]; }
+                const box = document.createElement("div");
+                box.className = "ai-links";
+                links.forEach(function (l) {
+                    const a = document.createElement("a");
+                    a.href = l[1];
+                    a.textContent = l[0];
+                    box.appendChild(a);
+                });
+                content.appendChild(box);
+            }
+
+            content.appendChild(time);
+
+            messageWrapper.appendChild(avatar);
+            messageWrapper.appendChild(content);
+
+            chatMessages.appendChild(
+                messageWrapper
+            );
+
+            chatMessages.scrollTop =
+                chatMessages.scrollHeight;
+
+        }
+
+
+        /*
+         * GET BASIC GAS HUB ANSWER
+         */
+        function getAIResponse(question) {
+
+            const text =
+                question.toLowerCase().trim();
+
+
+            if (
+                text.includes("order") ||
+                text.includes("buy") ||
+                text.includes("purchase")
+            ) {
+
+                return (
+                    "To order gas, browse the available "
+                    + "gas products, select the product or "
+                    + "cylinder you want, choose your preferred "
+                    + "dealer where applicable, and continue "
+                    + "to checkout. You can then provide your "
+                    + "delivery details and complete the order."
+                );
+
+            }
+
+
+            if (
+                text.includes("dealer") ||
+                text.includes("seller")
+            ) {
+
+                return (
+                    "You can use the Find a Dealer section "
+                    + "to view available GasHub dealers. "
+                    + "You can open a dealer profile to see "
+                    + "their available products and other "
+                    + "relevant information."
+                );
+
+            }
+
+
+            if (
+                text.includes("pay") ||
+                text.includes("payment") ||
+                text.includes("mpesa")
+            ) {
+
+                return (
+                    "GasHub can provide payment instructions "
+                    + "during checkout. Select your preferred "
+                    + "available payment method and follow "
+                    + "the instructions shown before confirming "
+                    + "your order."
+                );
+
+            }
+
+
+            if (
+                text.includes("delivery") ||
+                text.includes("deliver")
+            ) {
+
+                return (
+                    "Delivery depends on the selected dealer, "
+                    + "your location and the available delivery "
+                    + "options. Enter your correct delivery "
+                    + "details during checkout so the order "
+                    + "can be processed correctly."
+                );
+
+            }
+
+
+            if (
+                text.includes("cylinder") ||
+                text.includes("6kg") ||
+                text.includes("13kg") ||
+                text.includes("50kg")
+            ) {
+
+                return (
+                    "GasHub can help customers find different "
+                    + "gas and cylinder options. Open the "
+                    + "Gas & Cylinders section to see the "
+                    + "available products and their details."
+                );
+
+            }
+
+
+            if (
+                text.includes("price") ||
+                text.includes("cost") ||
+                text.includes("how much")
+            ) {
+
+                return (
+                    "Gas prices can vary depending on the "
+                    + "product, cylinder size and dealer. "
+                    + "Open the product listing to view the "
+                    + "current price before placing an order."
+                );
+
+            }
+
+
+            if (
+                text.includes("account") ||
+                text.includes("register") ||
+                text.includes("sign up")
+            ) {
+
+                return (
+                    "You can create a GasHub customer account "
+                    + "from the registration page. Enter your "
+                    + "required details and follow the registration "
+                    + "steps to create your account."
+                );
+
+            }
+
+
+            if (
+                text.includes("login") ||
+                text.includes("log in") ||
+                text.includes("sign in")
+            ) {
+
+                return (
+                    "If you already have a GasHub account, "
+                    + "open the customer login page and enter "
+                    + "your registered account details."
+                );
+
+            }
+
+
+            if (
+                text.includes("cancel") ||
+                text.includes("cancellation")
+            ) {
+
+                return (
+                    "If you need to cancel an order, open your "
+                    + "order details and check the available "
+                    + "order actions. If cancellation is not "
+                    + "available, contact GasHub support for "
+                    + "assistance."
+                );
+
+            }
+
+
+            if (
+                text.includes("hello") ||
+                text.includes("hi") ||
+                text.includes("hey")
+            ) {
+
+                return (
+                    "Hello! I'm GasHub AI. How can I help "
+                    + "you today?"
+                );
+
+            }
+
+
+            if (
+                text.includes("what is gashub") ||
+                text.includes("about gashub")
+            ) {
+
+                return (
+                    "GasHub is a gas marketplace designed to "
+                    + "help customers find gas products and "
+                    + "connect with dealers. GasHub was "
+                    + "introduced on 26 January 2026."
+                );
+
+            }
+
+
+            return (
+                "I'm here to help with GasHub questions. "
+                + "You can ask me about ordering gas, "
+                + "cylinders, dealers, prices, payments, "
+                + "deliveries, registration or your orders. "
+                + "For a question I cannot answer, please "
+                + "contact GasHub support."
+            );
+
+        }
+
+
+        /*
+         * SEND MESSAGE
+         */
+        function handleSendMessage() {
+
+            const question =
+                chatInput.value.trim();
+
+
+            if (!question) {
+                return;
+            }
+
+
+            addMessage(
+                question,
+                "user"
+            );
+
+
+            chatInput.value = "";
+
+
+            /*
+             * Small AI thinking delay
+             */
+            const thinking =
+                document.createElement("div");
+
+            thinking.className =
+                "message ai-message thinking-message";
+
+            thinking.innerHTML = `
+                <div class="message-avatar"><img src="images/gashub-flame.png" alt="GasHub" class="ai-flame"></div>
+
+                <div class="message-content">
+                    <p>Thinking...</p>
+                </div>
+            `;
+
+            chatMessages.appendChild(thinking);
+
+            chatMessages.scrollTop =
+                chatMessages.scrollHeight;
+
+
+            const started = Date.now();
+
+            const engine = window.GasHubAssistant && window.GasHubAssistant.ask
+                ? window.GasHubAssistant.ask(question)
+                : Promise.resolve([getAIResponse(question)]);
+
+            engine.then(function (result) {
+
+                setTimeout(
+                    function () {
+
+                        thinking.remove();
+
+                        addMessage(
+                            result[0],
+                            "ai",
+                            result[1]
+                        );
+
+                    },
+                    Math.max(0, 500 - (Date.now() - started))
+                );
+
+            });
+
+        }
+
+
+        /*
+         * SEND BUTTON
+         */
+        sendMessage.addEventListener(
+            "click",
+            handleSendMessage
+        );
+
+
+        /*
+         * ENTER TO SEND
+         */
+        chatInput.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+
+                    event.preventDefault();
+
+                    handleSendMessage();
+
+                }
+
+            }
+        );
+
+
+        /*
+         * SUGGESTED QUESTIONS
+         */
+        suggestedQuestions.forEach(
+            function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        const question =
+                            button.dataset.question;
+
+                        chatInput.value =
+                            question;
+
+                        handleSendMessage();
+
+                    }
+                );
+
+            }
+        );
+
+    </script>
+
+    <script src="gashub-assistant.js" defer></script>
+    <script src="customer-review-popup.js" defer></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+</body>
+</html>

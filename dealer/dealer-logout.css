@@ -1,0 +1,5 @@
+
+/* ---- dealer log out button (added by dealer-logout.js) ---- */
+.dealer-logout-button{display:flex;align-items:center;gap:10px;width:100%;margin-top:12px;padding:11px 14px;border:1px solid rgba(220,53,69,.35);border-radius:12px;background:transparent;color:#d9304a;font:inherit;font-weight:700;cursor:pointer;text-align:left}
+.dealer-logout-button:hover,.dealer-logout-button:focus-visible{background:rgba(220,53,69,.1);outline:none}
+.dealer-logout-button.header-logout{width:auto;margin:0 0 0 12px;padding:8px 12px}

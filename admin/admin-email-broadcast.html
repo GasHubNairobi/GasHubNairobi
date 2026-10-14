@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Email Broadcast | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <link rel="stylesheet" href="admin-customers.css">
+    <link rel="stylesheet" href="admin-messaging.css">
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body data-msg-page="email">
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">☰</button>
+                <div>
+                    <h2>Email Broadcast</h2>
+                    <p>Send a custom email to all active customers at once.</p>
+                </div>
+            </div>
+
+            <div class="admin-user-area">
+                <div class="admin-user-info">
+                    <strong id="adminUserName">Administrator</strong>
+                    <span id="adminUserRole">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="admin-content">
+
+            <div class="admin-message" id="msgFlash" role="alert"></div>
+            <div class="msg-banner" id="msgBanner" role="status"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Active customers</span>
+                        <strong class="stat-value" id="statActive">0</strong>
+                    </div>
+                    <div class="stat-icon">♙</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Will receive this email</span>
+                        <strong class="stat-value" id="statReach">0</strong>
+                    </div>
+                    <div class="stat-icon">✉</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Email status</span>
+                        <strong class="stat-value" id="statReady">...</strong>
+                    </div>
+                    <div class="stat-icon">✓</div>
+                </div>
+            </div>
+
+            <div class="msg-progress" id="msgProgress">
+                <strong>Sending...</strong>
+                <div class="msg-progress-bar"><span class="bar"></span></div>
+                <p></p>
+            </div>
+
+            <div class="msg-grid">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div>
+                            <h3>Write your email</h3>
+                            <p>Sent to every active customer, using the email address they gave GasHub.</p>
+                        </div>
+                    </div>
+                    <div class="msg-body">
+                        <div class="msg-field">
+                            <label for="msgSubject">Subject</label>
+                            <input type="text" id="msgSubject" maxlength="150" placeholder="e.g. Cooking gas offer this weekend" autocomplete="off">
+                        </div>
+                        <div class="msg-field">
+                            <label for="msgBody">Message</label>
+                            <textarea id="msgBody" maxlength="5000" placeholder="Hello {name},&#10;&#10;Write your message here..."></textarea>
+                            <div class="msg-counter" id="msgCounter"></div>
+                            <div class="msg-chips"><button type="button" class="msg-chip" data-token="{name}">{name}</button></div>
+                        </div>
+                        <div class="msg-actions">
+                            <button type="button" class="secondary-button" id="testBtn" disabled>Send test to me</button>
+                            <button type="button" class="primary-button" id="sendBtn" disabled>Send to all customers</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header"><div><h3>Good to know</h3></div></div>
+                    <div class="msg-body">
+                        <ul class="msg-side-list">
+                            <li><span>Who gets it</span><strong>Active customers only</strong></li>
+                            <li><span>Suspended or inactive</span><strong>Skipped</strong></li>
+                            <li><span>Duplicate or invalid emails</span><strong>Skipped</strong></li>
+                        </ul>
+                        <div class="msg-note">Use <b>Send to me</b> first to see how the email looks in your own inbox. Large lists are sent in the background, so you can leave this page while it runs.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Sent messages</h3>
+                        <p>The last 50 email broadcasts.</p>
+                    </div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Sent</th>
+                                <th>Message</th>
+                                <th>Customers</th>
+                                <th>Delivered</th>
+                                <th>Failed</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr><td colspan="6" class="table-loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <div class="modal" id="confirmModal" aria-hidden="true">
+        <div class="modal-backdrop" id="confirmBackdrop"></div>
+        <div class="modal-dialog msg-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+            <div class="modal-header">
+                <div>
+                    <h2 id="confirmTitle">Send to all customers?</h2>
+                    <p>Please check the message once more.</p>
+                </div>
+                <button type="button" class="modal-close" id="confirmClose" aria-label="Close">×</button>
+            </div>
+            <p class="msg-confirm-text" id="confirmText"></p>
+            <div class="msg-confirm-preview" id="confirmPreview"></div>
+            <div class="modal-actions">
+                <button type="button" class="secondary-button" id="confirmCancel">Cancel</button>
+                <button type="button" class="primary-button" id="confirmSend">Yes, send now</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-messaging.js"></script>
+
+</body>
+</html>

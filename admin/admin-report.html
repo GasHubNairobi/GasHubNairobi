@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Reports | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="admin-report.css">
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+
+    <!-- =========================
+         MOBILE OVERLAY
+    ========================== -->
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+    <main class="admin-main">
+
+        <div class="dashboard-content">
+
+
+            <!-- =========================
+                 PAGE HEADER
+            ========================== -->
+            <header class="page-header">
+
+                <div>
+                    <h1>Reports</h1>
+
+                    <p>
+                        View business reports and performance summaries.
+                    </p>
+                </div>
+
+            </header>
+
+
+            <!-- =========================
+                 MESSAGE
+            ========================== -->
+            <div
+                id="reportMessage"
+                class="admin-message"
+                style="display: none;"
+            ></div>
+
+
+            <!-- =========================
+                 REPORT FILTERS
+            ========================== -->
+            <section class="content-card">
+
+                <div class="card-header">
+                    <div>
+                        <h2>Report Period</h2>
+
+                        <p>
+                            Select the period you want to review.
+                        </p>
+                    </div>
+                </div>
+
+
+                <form id="reportFilterForm">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="reportStartDate">
+                                Start Date
+                            </label>
+
+                            <input
+                                type="date"
+                                id="reportStartDate"
+                                name="start_date"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="reportEndDate">
+                                End Date
+                            </label>
+
+                            <input
+                                type="date"
+                                id="reportEndDate"
+                                name="end_date"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="reportType">
+                                Report Type
+                            </label>
+
+                            <select
+                                id="reportType"
+                                name="report_type"
+                            >
+                                <option value="overview">
+                                    Overview
+                                </option>
+
+                                <option value="orders">
+                                    Orders
+                                </option>
+
+                                <option value="payments">
+                                    Payments
+                                </option>
+
+                                <option value="customers">
+                                    Customers
+                                </option>
+
+                                <option value="products">
+                                    Products
+                                </option>
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>&nbsp;</label>
+
+                            <button
+                                type="submit"
+                                class="primary-button"
+                                id="generateReportButton"
+                            >
+                                Generate Report
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+
+            <!-- =========================
+                 REPORT SUMMARY
+            ========================== -->
+            <section class="dashboard-stats report-stats">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        #
+                    </div>
+
+                    <div class="stat-content">
+
+                        <div class="stat-label">
+                            Total Orders
+                        </div>
+
+                        <div
+                            class="stat-value"
+                            id="reportTotalOrders"
+                        >
+                            0
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        KSh
+                    </div>
+
+                    <div class="stat-content">
+
+                        <div class="stat-label">
+                            Total Sales
+                        </div>
+
+                        <div
+                            class="stat-value"
+                            id="reportTotalSales"
+                        >
+                            KSh 0
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        ₵
+                    </div>
+
+                    <div class="stat-content">
+
+                        <div class="stat-label">
+                            Total Payments
+                        </div>
+
+                        <div
+                            class="stat-value"
+                            id="reportTotalPayments"
+                        >
+                            KSh 0
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        ♙
+                    </div>
+
+                    <div class="stat-content">
+
+                        <div class="stat-label">
+                            New Customers
+                        </div>
+
+                        <div
+                            class="stat-value"
+                            id="reportNewCustomers"
+                        >
+                            0
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 ORDER SUMMARY
+            ========================== -->
+            <section class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h2>Order Summary</h2>
+
+                        <p>
+                            Order performance for the selected period.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Orders</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="reportOrdersTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="3"
+                                    class="table-empty"
+                                >
+                                    Generate a report to view order data.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 PAYMENT SUMMARY
+            ========================== -->
+            <section class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h2>Payment Summary</h2>
+
+                        <p>
+                            Payment performance for the selected period.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Payments</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="reportPaymentsTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="3"
+                                    class="table-empty"
+                                >
+                                    Generate a report to view payment data.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 TOP PRODUCTS
+            ========================== -->
+            <section class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h2>Product Performance</h2>
+
+                        <p>
+                            Product sales for the selected period.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Orders</th>
+                                <th>Quantity</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="reportProductsTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="4"
+                                    class="table-empty"
+                                >
+                                    Generate a report to view product data.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 CUSTOMER SUMMARY
+            ========================== -->
+            <section class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h2>Customer Summary</h2>
+
+                        <p>
+                            Customer activity for the selected period.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="reportCustomersTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="2"
+                                    class="table-empty"
+                                >
+                                    Generate a report to view customer data.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================
+         SCRIPTS
+    ========================== -->
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-report.js"></script>
+
+</body>
+</html>

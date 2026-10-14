@@ -1,0 +1,952 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- light / dark / system theme (chosen on the Profile page): script first, stylesheet last -->
+    <script src="gashub-theme.js"></script>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="GasHub Customer Checkout"
+    >
+
+    <meta name="theme-color" content="#0d6b3f">
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="/Images/favicon.png"
+    >
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+
+    <link
+        rel="stylesheet"
+        href="customer-checkout.css"
+    >
+
+    <title>Checkout | GasHub</title>
+    <link rel="stylesheet" href="gashub-theme.css">
+    <script src="gashub-ban-guard.js"></script>
+</head>
+
+<body>
+
+    <!-- Page Watermark -->
+    <img
+        src="/Images/watermark.png"
+        alt=""
+        class="page-watermark"
+    >
+
+
+    <!-- HEADER -->
+    <header class="checkout-header">
+
+        <div class="checkout-header-inner">
+
+            <a
+                href="customer-home.html"
+                class="checkout-logo"
+            >
+                <img
+                    src="/Images/logo.png"
+                    alt="GasHub"
+                >
+            </a>
+
+            <div class="checkout-header-title">
+                <span>Secure Checkout</span>
+            </div>
+
+            <a
+                href="customer-product.html"
+                class="back-to-shop"
+            >
+                Back to Products
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN CHECKOUT -->
+    <main class="checkout-page">
+
+        <div class="checkout-container">
+
+            <!-- PAY MODE: opened from the "your order is confirmed" SMS / email (?orderId=...&pay=1).
+                 The order already exists, so only payment is shown (see customer-checkout-pay.js). -->
+            <div id="payView" hidden>
+                <div class="checkout-intro">
+                    <div>
+                        <p class="checkout-label">ORDER CHECKOUT</p>
+                        <h1>Your order is confirmed</h1>
+                        <p id="pvIntro">Your dealer confirmed your order. Choose how to pay.</p>
+                    </div>
+                    <a href="customer-orders.html" class="continue-shopping">My Orders</a>
+                </div>
+                <div class="checkout-grid">
+                    <section class="checkout-main">
+                        <div class="checkout-card">
+                            <div class="checkout-card-header">
+                                <div>
+                                    <p class="card-step">PAYMENT</p>
+                                    <h2 id="pvTitle">Choose how to pay</h2>
+                                    <p>Use your GasHub Coins, then pay by Cash on delivery, M-Pesa or Bank.</p>
+                                </div>
+                            </div>
+                            <div id="pvBox"><p class="pv-note">Loading your order...</p></div>
+                        </div>
+                    </section>
+                    <aside class="checkout-sidebar">
+                        <div class="order-summary-card" id="pvSummary"></div>
+                    </aside>
+                </div>
+            </div>
+            <div class="pv-success" id="pvSuccess" role="status" aria-live="polite" hidden>
+                <div class="pv-success-box">
+                    <div class="pv-tick"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+                    <h2 id="pvSuccessTitle">Payment successful</h2>
+                    <p id="pvSuccessText">Thank you!</p>
+                    <small>Opening your order...</small>
+                </div>
+            </div>
+
+            <!-- PAGE INTRO -->
+            <div class="checkout-intro">
+
+                <div>
+
+                    <p class="checkout-label">
+                        ORDER CHECKOUT
+                    </p>
+
+                    <h1>
+                        Complete your order
+                    </h1>
+
+                    <p>
+                        Review your order, provide your delivery
+                        details and select your preferred payment
+                        method.
+                    </p>
+
+                </div>
+
+                <a
+                    href="customer-product.html"
+                    class="continue-shopping"
+                >
+                    Continue Shopping
+                </a>
+
+            </div>
+
+
+            <!-- CHECKOUT GRID -->
+            <div class="checkout-grid">
+
+
+                <!-- LEFT SIDE -->
+                <section class="checkout-main">
+
+
+                    <!-- CUSTOMER INFORMATION -->
+                    <div class="checkout-card">
+
+                        <div class="checkout-card-header">
+
+                            <div>
+
+                                <p class="card-step">
+                                    STEP 01
+                                </p>
+
+                                <h2>
+                                    Customer Information
+                                </h2>
+
+                                <p>
+                                    Enter the details we can use
+                                    to contact you about your order.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div id="infoSummary" class="saved-info" hidden>
+<div class="saved-rows">
+<div><span>Name</span><strong id="sumName"></strong></div>
+<div><span>Phone</span><strong id="sumPhone"></strong></div>
+<div><span>Email</span><strong id="sumEmail"></strong></div>
+</div>
+<div class="saved-foot"><span class="saved-tag">Taken from your profile</span>
+<span class="saved-actions"><button type="button" class="change-btn" id="infoChange">Change</button></span></div>
+</div>
+<div id="infoFields">
+<div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="customerName">
+                                    Full Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="customerName"
+                                    name="customerName"
+                                    placeholder="Enter your full name"
+                                    autocomplete="name"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="customerPhone">
+                                    Phone Number
+                                </label>
+
+                                <input
+                                    type="tel"
+                                    id="customerPhone"
+                                    name="customerPhone"
+                                    placeholder="e.g. 0712 345 678"
+                                    autocomplete="tel"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group full-width">
+
+                                <label for="customerEmail">
+                                    Email Address
+                                </label>
+
+                                <input
+                                    type="email"
+                                    id="customerEmail"
+                                    name="customerEmail"
+                                    placeholder="Enter your email address"
+                                    autocomplete="email"
+                                >
+
+                            </div>
+
+                        </div>
+</div>
+<label class="save-check" id="infoSaveWrap"><input type="checkbox" id="saveInfo" checked> Save these details to my profile</label>
+
+
+                    </div>
+
+
+                    <!-- DELIVERY INFORMATION -->
+                                        <!-- DELIVERY OPTION -->
+                    <div class="checkout-card">
+
+                        <div class="checkout-card-header">
+
+                            <div>
+
+                                <p class="card-step">
+                                    STEP 02
+                                </p>
+
+                                <h2>
+                                    Delivery Option
+                                </h2>
+
+                                <p>
+                                    Choose how you would like to
+                                    receive your order.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="option-list">
+
+                            <label class="checkout-option selected">
+
+                                <input
+                                    type="radio"
+                                    name="deliveryOption"
+                                    value="delivery"
+                                    checked
+                                >
+
+                                <div class="option-content">
+
+                                    <strong>
+                                        Home Delivery
+                                    </strong>
+
+                                    <span>
+                                        Have your order delivered to your
+                                        pinned location. You only add the house or building details.
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+
+                            <label class="checkout-option">
+
+                                <input
+                                    type="radio"
+                                    name="deliveryOption"
+                                    value="pickup"
+                                >
+
+                                <div class="option-content">
+
+                                    <strong>
+                                        Dealer Pickup
+                                    </strong>
+
+                                    <span>
+                                        Pick up your order from the selected
+                                        dealer. No location or address needed.
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+<div class="checkout-card" id="deliveryCard">
+
+                        <div class="checkout-card-header">
+
+                            <div>
+
+                                <p class="card-step">
+                                    STEP 03
+                                </p>
+
+                                <h2>
+                                    Delivery Details
+                                </h2>
+
+                                <p>
+                                    We use the location you pinned. Add the house,
+                                    building or directions so the rider finds you.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pin-bar empty" id="pinBar">
+<span class="pin-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a6.5 6.5 0 0 0-6.5 6.5c0 4.6 6.5 12.5 6.5 12.5S18.5 13.6 18.5 9A6.5 6.5 0 0 0 12 2.5z" fill="currentColor"/><circle cx="12" cy="9" r="2.4" fill="#fff"/></svg></span>
+<span class="pin-text"><span class="pin-label">Delivery location</span><strong id="pinName">No location pinned yet</strong></span>
+<button type="button" class="change-btn alt" id="repinBtn">Pin location</button>
+</div>
+<div id="deliverySummary" class="saved-info" hidden>
+<div class="saved-rows">
+<div><span>Area</span><strong id="sumArea"></strong></div>
+<div><span>Address</span><strong id="sumAddress"></strong></div>
+</div>
+<div class="saved-foot"><span class="saved-tag">Taken from your profile</span>
+<span class="saved-actions"><button type="button" class="change-btn" id="deliveryChange">Change</button></span></div>
+</div>
+<div id="deliveryFields">
+<div class="form-grid">
+
+                            <div class="form-group" id="countyGroup">
+
+                                <label for="county">
+                                    County
+                                </label>
+
+                                <select
+                                    id="county"
+                                    name="county"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Select county
+                                    </option>
+
+                                    <option value="Nairobi">
+                                        Nairobi
+                                    </option>
+
+                                    <option value="Kiambu">
+                                        Kiambu
+                                    </option>
+
+                                    <option value="Machakos">
+                                        Machakos
+                                    </option>
+
+                                    <option value="Kajiado">
+                                        Kajiado
+                                    </option>
+
+                                    <option value="Murang'a">
+                                        Murang'a
+                                    </option>
+
+                                    <option value="Other">
+                                        Other
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group" id="townGroup">
+
+                                <label for="town">
+                                    Town / Area
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="town"
+                                    name="town"
+                                    placeholder="e.g. Rongai"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group full-width">
+
+                                <label for="deliveryAddress">
+                                    Delivery Details
+                                </label>
+
+                                <textarea
+                                    id="deliveryAddress"
+                                    name="deliveryAddress"
+                                    rows="3"
+                                    placeholder="House / building / floor, street and directions"
+                                    required
+                                ></textarea>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="deliveryLandmark">
+                                    Nearby Landmark
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="deliveryLandmark"
+                                    name="deliveryLandmark"
+                                    placeholder="e.g. Near the main stage"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="deliveryNotes">
+                                    Delivery Notes
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="deliveryNotes"
+                                    name="deliveryNotes"
+                                    placeholder="Optional instructions"
+                                >
+
+                            </div>
+
+                        </div>
+</div>
+<label class="save-check" id="deliverySaveWrap"><input type="checkbox" id="saveDelivery" checked> Save this address to my profile</label>
+
+
+                    </div>
+
+
+                    <!-- GASHUB COINS: no longer used at checkout. Customers use them on the order page, in the payment stage, after the dealer confirms. (Kept hidden so the checkout script keeps working.) -->
+                    <div class="checkout-card points-card" hidden style="display:none" aria-hidden="true">
+<div class="points-box" id="pointsBox" hidden>
+<div class="points-head"><span class="points-title">Use my GasHub Coins</span><span id="pointsBalanceChip"></span></div>
+<p class="points-rate" id="pointsRate"></p>
+<p class="points-locked" id="pointsLocked" hidden></p>
+<label class="points-toggle" id="pointsToggleWrap" hidden>
+<input type="checkbox" id="usePoints"><span class="points-switch"></span>
+<span class="points-toggle-text" id="pointsToggleText"></span>
+</label>
+<div class="points-slider" id="pointsSliderWrap" hidden>
+<input type="range" id="pointsSlider" min="0" max="0" step="1" value="0">
+<div class="points-slider-row"><span id="pointsSliderMin">0</span><strong id="pointsSliderNow"></strong><span id="pointsSliderMax">0</span></div>
+</div>
+</div>
+
+
+                    </div>
+
+
+                    <!-- PAYMENT: chosen AFTER the dealer confirms the order -->
+                    <div class="checkout-card" id="payLaterCard">
+                        <div class="checkout-card-header">
+                            <div>
+                                <p class="card-step">STEP 04</p>
+                                <h2>Payment</h2>
+                                <p>No payment is needed now.</p>
+                            </div>
+                        </div>
+                        <div class="payment-info" style="line-height:1.6">
+                            <strong>Pay after your dealer confirms</strong>
+                            <p style="margin:6px 0 0">Place your order first. When the dealer confirms it, we send you an SMS and an email.
+                            You then choose how to pay on your order page: <b>Cash on delivery</b>, <b>M-Pesa</b> or <b>Bank</b>.</p>
+                            <p style="margin:6px 0 0;font-size:12px;opacity:.8">You can also use your GasHub Coins for a discount there. Coins work on online payments (M-Pesa or Bank).</p>
+                        </div>
+                    </div>
+
+                    <!-- PAYMENT METHOD (old step: kept hidden so the page scripts keep working; the method is chosen after confirmation) -->
+                    <div class="checkout-card" style="display:none" aria-hidden="true">
+
+                        <div class="checkout-card-header">
+
+                            <div>
+
+                                <p class="card-step">
+                                    STEP 04
+                                </p>
+
+                                <h2>
+                                    Payment Method
+                                </h2>
+
+                                <p>
+                                    Select your preferred payment
+                                    method.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="payment-options">
+
+
+                            <label class="payment-option selected">
+
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="mpesa"
+                                    checked
+                                >
+
+                                <div class="payment-option-content">
+
+                                    <strong>
+                                        M-Pesa
+                                    </strong>
+
+                                    <span>
+                                        Pay securely using M-Pesa.
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+
+                            <label class="payment-option">
+
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="cash"
+                                >
+
+                                <div class="payment-option-content">
+
+                                    <strong>
+                                        Cash on Delivery
+                                    </strong>
+
+                                    <span>
+                                        Pay when your order is delivered,
+                                        where available.
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+
+                            <label class="payment-option">
+
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="bank"
+                                >
+
+                                <div class="payment-option-content">
+
+                                    <strong>
+                                        Bank Payment
+                                    </strong>
+
+                                    <span>
+                                        Receive bank payment instructions
+                                        after placing your order.
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+                        </div>
+
+
+                        <!-- M-PESA DETAILS -->
+                        <div
+                            class="payment-details"
+                            id="mpesaDetails"
+                        >
+
+                            <div class="payment-info">
+<div class="mpesa-head"><span class="mpesa-badge">M</span><div><strong>M-Pesa payment</strong>
+<p>After you place your order, you pay to GasHub's M-Pesa account and send us the M-Pesa code. Enter the number you will pay from.</p></div></div>
+<label class="mpesa-label" for="mpesaPhone">M-Pesa number</label>
+<div class="mpesa-input"><span class="mpesa-prefix">+254</span>
+<input type="tel" id="mpesaPhone" inputmode="numeric" autocomplete="tel-national" placeholder="712 345 678"></div>
+<div class="mpesa-hint" id="mpesaHint">Use a Safaricom number, e.g. 0712 345 678.</div>
+<label class="mpesa-same"><input type="checkbox" id="mpesaSame" checked> Same as my phone number</label>
+</div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ORDER NOTES -->
+                    <div class="checkout-card">
+
+                        <div class="checkout-card-header">
+
+                            <div>
+
+                                <p class="card-step">
+                                    STEP 05
+                                </p>
+
+                                <h2>
+                                    Additional Information
+                                </h2>
+
+                                <p>
+                                    Add any information that may
+                                    help us process your order.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="orderNotes">
+                                Order Notes
+                            </label>
+
+                            <textarea
+                                id="orderNotes"
+                                name="orderNotes"
+                                rows="4"
+                                placeholder="Enter any additional instructions or information..."
+                            ></textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CHECKOUT MESSAGE -->
+                    <div
+                        class="checkout-message"
+                        id="checkoutMessage"
+                        aria-live="polite"
+                    ></div>
+
+
+                    <!-- PLACE ORDER -->
+                    <button
+                        type="button"
+                        class="place-order-button"
+                        id="placeOrderButton"
+                    >
+                        Place Order
+                    </button>
+
+
+                    <p class="secure-note">
+                        Your order details will be securely
+                        submitted to GasHub for processing.
+                    </p>
+
+                </section>
+
+
+                <!-- RIGHT SIDE ORDER SUMMARY -->
+                <aside class="checkout-sidebar">
+
+                    <div class="order-summary-card">
+
+                        <div class="summary-header">
+
+                            <div>
+
+                                <p class="summary-label">
+                                    YOUR ORDER
+                                </p>
+
+                                <h2>
+                                    Order Summary
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SELECTED PRODUCT -->
+                        <div
+                            class="selected-product"
+                            id="selectedProduct"
+                        >
+
+                            <div class="product-image">
+
+                                <img
+                                    src="/Images/logo.png"
+                                    alt="GasHub Product"
+                                    id="productImage"
+                                >
+
+                            </div>
+
+                            <div class="product-info">
+
+                                <h3 id="productName">
+                                    Gas Product
+                                </h3>
+
+                                <p id="productDetails">
+                                    Selected gas product
+                                </p>
+
+                                <div class="product-price-row">
+
+                                    <span>
+                                        Quantity
+                                    </span>
+
+                                    <strong id="productQuantity">
+                                        1
+                                    </strong>
+
+                                </div>
+
+                                <div class="product-price-row">
+
+                                    <span>
+                                        Price
+                                    </span>
+
+                                    <strong id="productPrice">
+                                        KSh 0
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DEALER -->
+                        <div class="summary-section">
+
+                            <span class="summary-title">
+                                Dealer
+                            </span>
+
+                            <strong id="dealerName">
+                                Selected dealer
+                            </strong>
+
+                        </div>
+
+
+                        <!-- PRICE BREAKDOWN -->
+                        <div class="summary-breakdown">
+
+                            <div class="summary-row">
+
+                                <span>
+                                    Product
+                                </span>
+
+                                <strong id="summaryProductPrice">
+                                    KSh 0
+                                </strong>
+
+                            </div>
+
+
+                            <div class="summary-row">
+
+                                <span>
+                                    Delivery
+                                </span>
+
+                                <strong id="summaryDelivery">
+                                    KSh 0
+                                </strong>
+
+                            </div>
+
+
+                            <div class="summary-row discount-row" id="discountRow" hidden>
+<span>Points discount</span>
+<strong id="summaryDiscount">- KSh 0</strong>
+</div>
+
+<div class="summary-row total-row">
+
+                                <span>
+                                    Total
+                                </span>
+
+                                <strong id="summaryTotal">
+                                    KSh 0
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+
+
+<!-- SUMMARY ACTIONS -->
+                        <div class="summary-actions">
+
+                            <a
+                                href="customer-product.html"
+                                class="edit-order"
+                            >
+                                Edit Order
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- MOBILE BOTTOM NAV -->
+    <!-- PAYMENT PROMPT MODAL -->
+    <div class="pay-modal" id="payModal" hidden>
+        <div class="pay-backdrop"></div>
+        <div class="pay-sheet" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="payTitle" data-state="sending">
+            <div class="pay-icon" id="payIcon"></div>
+            <h2 id="payTitle"></h2>
+            <p class="pay-text" id="payText"></p>
+            <div class="pay-amount" id="payAmount"></div>
+            <div class="pay-phone" id="payPhone"></div>
+            <div class="pay-steps" id="paySteps" hidden>
+                <div class="pay-step"><i>1</i> Check your phone for the M-Pesa prompt</div>
+                <div class="pay-step"><i>2</i> Enter your M-Pesa PIN</div>
+                <div class="pay-step"><i>3</i> Wait here for the confirmation</div>
+            </div>
+            <div class="pay-timer" id="payTimer"></div>
+            <div class="pay-reward" id="payReward" hidden></div>
+            <div class="pay-actions">
+                <button type="button" class="pay-btn primary" id="payRetry" hidden>Send prompt again</button>
+                <button type="button" class="pay-btn primary" id="payDone" hidden>View my order</button>
+                <button type="button" class="pay-btn ghost" id="payChange" hidden>Use a different number</button>
+                <button type="button" class="pay-btn ghost" id="payLater" hidden>I'll pay later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIN LOCATION MODAL -->
+    <div class="loc-modal" id="locModal" hidden>
+        <div class="pay-backdrop" id="locBackdrop"></div>
+        <div class="loc-sheet" role="dialog" aria-modal="true" aria-labelledby="locTitle">
+            <button type="button" class="loc-close" id="locClose" aria-label="Close">&times;</button>
+            <h2 id="locTitle">Pin your delivery location</h2>
+            <p class="loc-help">Tap the map to drop a pin, drag it to adjust, or use your current location.</p>
+            <button type="button" class="pay-btn ghost" id="locCurrent">Use my current location</button>
+            <div class="loc-map-box">
+                <div id="locMap"></div>
+                <div class="loc-map-msg" id="locMapMsg" hidden></div>
+            </div>
+            <div class="loc-status" id="locStatus">No location selected.</div>
+            <button type="button" class="pay-btn primary" id="locConfirm" disabled>Confirm location</button>
+        </div>
+    </div>
+
+    <script src="customer-rewards.js"></script>
+    <script>
+        /* pay mode (?orderId=...&pay=1) shows only the payment for an order the dealer already confirmed */
+        (function () {
+            var q = new URLSearchParams(location.search), pay = !!(q.get("orderId") && q.get("pay"));
+            if (pay) document.body.classList.add("pay-mode");
+            document.write('<script src="' + (pay ? "customer-checkout-pay.js" : "customer-checkout.js") + '"><\/script>');
+        })();
+    </script>
+    <script src="customer-selection-tracker.js" defer></script>
+
+    <script src="customer-review-popup.js" defer></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="gashub-assistant.js" defer></script>
+</body>
+</html>
+

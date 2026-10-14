@@ -1,0 +1,295 @@
+/* GasHub dark theme. Load this AFTER the page's own stylesheet:
+   <link rel="stylesheet" href="gashub-theme.css">
+   It only does something when gashub-theme.js has set data-theme="dark" on <html>. */
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b1020;
+    --white: #151c35;        /* cards, header, sheets */
+    --line: #27304f;
+    --ink: #e8ecfa;          /* main text */
+    --muted: #9aa3c4;
+    --blue-soft: #1b2750;
+    --blue-dark: #a9c1ff;    /* headings and prices */
+    --blue: #3f6df0;
+    --shadow: 0 4px 16px rgba(0, 0, 0, .45);
+}
+
+[data-theme="dark"] body { background: var(--bg); color: var(--ink); }
+
+/* big blue areas stay dark blue (not light) */
+[data-theme="dark"] .home-hero,
+[data-theme="dark"] .page-hero,
+[data-theme="dark"] .profile-hero { background: linear-gradient(135deg, #0d1a4d, #1b3fa8 70%); }
+[data-theme="dark"] .about-home { background: #0d1a4d; }
+[data-theme="dark"] .customer-footer { background: #070b18; }
+[data-theme="dark"] .chat-head, [data-theme="dark"] .chat-top { background: #1b3fa8; }
+
+/* text that sits on yellow stays dark */
+[data-theme="dark"] .hero-btn.primary,
+[data-theme="dark"] .customer-search-form button,
+[data-theme="dark"] .btn-yellow,
+[data-theme="dark"] .btn.yellow,
+[data-theme="dark"] .view-all-btn,
+[data-theme="dark"] .about-link,
+[data-theme="dark"] .step-number,
+[data-theme="dark"] .cform button,
+[data-theme="dark"] .chat-form button,
+[data-theme="dark"] .msg a,
+[data-theme="dark"] .chat-avatar,
+[data-theme="dark"] .products-empty button,
+[data-theme="dark"] .order-main,
+[data-theme="dark"] .cart-btn,
+[data-theme="dark"] .pbadge.mine,
+[data-theme="dark"] .social:hover { color: #141b34; }
+[data-theme="dark"] .fab svg, [data-theme="dark"] .chat-head svg { fill: #141b34; }
+
+/* hard-coded greys in the page stylesheets */
+[data-theme="dark"] .customer-navigation a,
+[data-theme="dark"] .mobile-menu-footer a,
+[data-theme="dark"] .chip,
+[data-theme="dark"] .fav-filter,
+[data-theme="dark"] .location-btn { color: var(--ink); }
+[data-theme="dark"] .customer-navigation a.active,
+[data-theme="dark"] .customer-navigation a:hover { background: var(--blue-soft); color: #9db8ff; }
+[data-theme="dark"] .mobile-bottom-nav a { color: #8a93b5; }
+[data-theme="dark"] .mobile-bottom-nav a.active { color: #9db8ff; }
+[data-theme="dark"] .fav-btn, [data-theme="dark"] .modal-close { background: rgba(21, 28, 53, .95); }
+[data-theme="dark"] .fav-filter[aria-pressed="true"] { background: #3a1620; }
+[data-theme="dark"] .bubble.sys { background: #3a3210; border-color: #5a4d16; color: #f1dc86; }
+[data-theme="dark"] .chat-warn { background: #3a1620; border-color: #6a2630; }
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea { background: var(--white); color: var(--ink); }
+[data-theme="dark"] .search-box input, [data-theme="dark"] .customer-search-form input { background: transparent; }
+[data-theme="dark"] .search-box, [data-theme="dark"] .customer-search-form { background: var(--white); }
+[data-theme="dark"] .customer-search-form input::placeholder { color: #7f88a8; }
+[data-theme="dark"] .about-card { background: #fff; }
+
+/* map tiles */
+[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9); }
+
+/* ---------- profile page: hard-coded light colours that need a dark version ---------- */
+[data-theme="dark"] .notice { background: #3a3210; border-color: #5a4d16; color: #f1dc86; }
+[data-theme="dark"] .form-message.success { background: #12301f; color: #7fe0a8; }
+[data-theme="dark"] .form-message.error { background: #3a1620; color: #ff9fa0; }
+[data-theme="dark"] .switch i { background: #3a4468; }
+[data-theme="dark"] .toast { background: #e8ecfa; color: #141b34; }
+[data-theme="dark"] .edit-btn { color: #9db8ff; border-color: #6f93ff; }
+[data-theme="dark"] .edit-btn[aria-expanded="true"] { background: var(--blue); color: #fff; border-color: var(--blue); }
+[data-theme="dark"] .link-btn, [data-theme="dark"] .loc-line a, [data-theme="dark"] .empty a, [data-theme="dark"] .foot-note a { color: #9db8ff; }
+[data-theme="dark"] .lock-wrap input { background: #0f1630; color: #8d97bb; }
+[data-theme="dark"] .lock-wrap svg { stroke: #8d97bb; }
+[data-theme="dark"] .map-msg { background: #1b2750; color: var(--muted); }
+[data-theme="dark"] .lock-note { background: #1b2750; color: #c7d6ff; }
+[data-theme="dark"] .code-chip { border-color: #6f93ff; }
+[data-theme="dark"] .btn.done, [data-theme="dark"] .btn.done:disabled { color: #6fe0a0; }
+[data-theme="dark"] .friend span.ready { color: #6fe0a0; }
+[data-theme="dark"] .friend span.claimed { color: #9db8ff; }
+[data-theme="dark"] .row-val, [data-theme="dark"] .count { color: #9db8ff; }
+[data-theme="dark"] .mrm { background: rgba(21, 28, 53, .95); }
+[data-theme="dark"] .sheet-x, [data-theme="dark"] #closeMenuBtn, [data-theme="dark"] .location-modal-close { background: #232c4d; color: var(--ink); }
+[data-theme="dark"] .seg { background: #0f1630; }
+[data-theme="dark"] .seg button { color: #9aa3c4; }
+[data-theme="dark"] .seg button.active { color: #fff; }
+[data-theme="dark"] .customer-navigation a { color: var(--ink); }
+[data-theme="dark"] .msg.bot, [data-theme="dark"] .chips button { background: var(--white); color: var(--ink); }
+[data-theme="dark"] .chips button { color: #9db8ff; border-color: #6f93ff; }
+[data-theme="dark"] .check { color: var(--ink); }
+
+/* ================= PRODUCT CARDS + PRODUCT POP-UP in dark mode =================
+   The card stylesheets paint these white / pale blue with "body ..." selectors, so they are repeated here
+   with ":root[data-theme=dark] body" to win. Brand stays blue + yellow; surfaces turn dark navy. */
+:root[data-theme="dark"] body .gcard,
+:root[data-theme="dark"] body .pcard { background: #151c35; border-color: #2a3560; box-shadow: 0 2px 10px rgba(0, 0, 0, .35); }
+:root[data-theme="dark"] body .gphoto,
+:root[data-theme="dark"] body .pphoto,
+:root[data-theme="dark"] body .m-photo { background: linear-gradient(145deg, #1d2750 0%, #131b3a 100%); border-color: #2a3560; }
+:root[data-theme="dark"] body .gphoto img.ph,
+:root[data-theme="dark"] body .pphoto img.ph,
+:root[data-theme="dark"] body .m-photo img.ph { opacity: .55; filter: brightness(1.6) saturate(.8); }
+:root[data-theme="dark"] body .gname,
+:root[data-theme="dark"] body .pname,
+:root[data-theme="dark"] body .grating,
+:root[data-theme="dark"] body .rating,
+:root[data-theme="dark"] body .gmeta-i.dist,
+:root[data-theme="dark"] body .pmeta-i.dist { color: #eef1ff; }
+:root[data-theme="dark"] body .gtype,
+:root[data-theme="dark"] body .gbrand,
+:root[data-theme="dark"] body .pbrand,
+:root[data-theme="dark"] body .gmeta,
+:root[data-theme="dark"] body .pmeta,
+:root[data-theme="dark"] body .gstat,
+:root[data-theme="dark"] body .product-views { color: #a3acd0; }
+:root[data-theme="dark"] body .gprice,
+:root[data-theme="dark"] body .pprice,
+:root[data-theme="dark"] body .m-price { color: #ffd54a; }              /* yellow price pops on dark */
+:root[data-theme="dark"] body .glink,
+:root[data-theme="dark"] body .dealer-link,
+:root[data-theme="dark"] body .setloc { color: #8fb0ff; }
+:root[data-theme="dark"] body .gweight,
+:root[data-theme="dark"] body .product-specs .spec-weight { background: #3a3210; border-color: #5a4d16; color: #ffd54a; }
+:root[data-theme="dark"] body .product-specs > span { background: #1b2447; border-color: #2a3560; color: #eef1ff; }
+:root[data-theme="dark"] body .product-specs .spec-label { color: #a3acd0; }
+:root[data-theme="dark"] body .gfav,
+:root[data-theme="dark"] body .fav-btn,
+:root[data-theme="dark"] body .modal-close { background: rgba(21, 28, 53, .92); color: #eef1ff; box-shadow: 0 1px 4px rgba(0, 0, 0, .5); }
+:root[data-theme="dark"] body .gbadge.mine { color: #141b34; }
+:root[data-theme="dark"] body .gview,
+:root[data-theme="dark"] body .view-btn { background: #3f6df0; color: #fff; }
+:root[data-theme="dark"] body .gcart,
+:root[data-theme="dark"] body .cart-btn,
+:root[data-theme="dark"] body .order-main { background: #ffc20e; color: #141b34; }
+:root[data-theme="dark"] body .gcart:disabled,
+:root[data-theme="dark"] body .cart-btn:disabled,
+:root[data-theme="dark"] body .order-main:disabled { background: #2a3254; color: #6f7899; }
+:root[data-theme="dark"] body .stars { background: linear-gradient(90deg, #f5a800 var(--r, 0%), #3a4468 var(--r, 0%)); }
+
+/* product pop-up (the sheet that opens when you tap a product) */
+:root[data-theme="dark"] body .modal-card { background: #151c35; color: #e8ecfa; }
+:root[data-theme="dark"] body .m-content h2,
+:root[data-theme="dark"] body .detail-row strong { color: #eef1ff; }
+:root[data-theme="dark"] body .m-type,
+:root[data-theme="dark"] body .m-brand,
+:root[data-theme="dark"] body .m-desc,
+:root[data-theme="dark"] body .detail-row span { color: #a3acd0; }
+:root[data-theme="dark"] body .m-desc-title { color: #a9c1ff; }
+:root[data-theme="dark"] body .m-details,
+:root[data-theme="dark"] body .detail-row { border-color: #2a3560; }
+:root[data-theme="dark"] body .chat-box { border-color: #2a3560; }
+:root[data-theme="dark"] body .chat-msgs { background: #0f1630; }
+:root[data-theme="dark"] body .bubble.dealer { background: #1b2447; border-color: #2a3560; color: #e8ecfa; }
+:root[data-theme="dark"] body .chat-chips,
+:root[data-theme="dark"] body .chat-form,
+:root[data-theme="dark"] body .chat-rule { background: #151c35; }
+
+/* dealer cards */
+:root[data-theme="dark"] body .dealer-grid .dcard:active { background: #1b2447; }
+:root[data-theme="dark"] body .dealer-grid .pill { background: #232c4d; color: #a3acd0; }
+:root[data-theme="dark"] body .dealer-grid .pill.ok { background: #12301f; color: #6fe0a0; }
+:root[data-theme="dark"] body .dealer-grid .pill.bad { background: #3a1620; color: #ff9fa0; }
+:root[data-theme="dark"] body .dealer-grid .dname,
+:root[data-theme="dark"] body .dealer-grid .mi.dist { color: #eef1ff; }
+
+
+/* ================= CHECKOUT + ORDER DETAILS in dark mode =================
+   These two pages use their own green palette (--dark, --text, --light, --border, --primary...) which the
+   blue variables above never touched, so headings / labels / prices stayed dark-on-dark.
+   Here the green palette gets dark values. --on-primary stays white (text on green buttons) and
+   --primary-text is the lighter green used when green is TEXT on a dark card. */
+:root[data-theme="dark"] {
+    --light: #0f1630;          /* inset panels, field prefixes */
+    --border: #2a3560;
+    --dark: #eef1ff;           /* headings, names, amounts */
+    --text: #c9d0ea;           /* body text */
+    --primary: #14804f;        /* green buttons / selected borders (white text sits on it) */
+    --primary-dark: #0e6b41;
+    --primary-light: #11301f;  /* selected card / info tint */
+    --primary-text: #6fe0a0;   /* green text on dark */
+    --on-primary: #ffffff;
+    --success: #4fd68e;
+    --danger: #ff8f8f;
+}
+
+/* placeholders + inputs */
+:root[data-theme="dark"] .form-group input::placeholder,
+:root[data-theme="dark"] .form-group textarea::placeholder,
+:root[data-theme="dark"] .pv-form input::placeholder { color: #7f88a8; }
+:root[data-theme="dark"] .form-group input,
+:root[data-theme="dark"] .form-group select,
+:root[data-theme="dark"] .form-group textarea,
+:root[data-theme="dark"] .pv-form input { background: #0f1630; color: var(--dark); border-color: var(--border); }
+:root[data-theme="dark"] .form-group input:focus,
+:root[data-theme="dark"] .form-group select:focus,
+:root[data-theme="dark"] .form-group textarea:focus { border-color: var(--primary-text); box-shadow: 0 0 0 3px rgba(111, 224, 160, .15); }
+
+/* selectable cards (payment option etc.) */
+:root[data-theme="dark"] .payment-option { border-color: var(--border); }
+:root[data-theme="dark"] .payment-option:hover { border-color: #4a6a5a; }
+
+/* messages */
+:root[data-theme="dark"] .checkout-message.success { background: #12301f; border-color: #1f5236; color: #7fe0a8; }
+:root[data-theme="dark"] .checkout-message.error { background: #3a1620; border-color: #6a2630; color: #ff9fa0; }
+:root[data-theme="dark"] .checkout-message.info { background: var(--primary-light); border-color: #1f5236; color: var(--primary-text); }
+
+/* help panel on green: light text on dark green */
+:root[data-theme="dark"] .checkout-help > p:not(.help-label) { color: rgba(255, 255, 255, .85); }
+:root[data-theme="dark"] .checkout-help h3 { color: #fff; }
+:root[data-theme="dark"] .help-link { background: #eef1ff; color: #0b1020; }
+
+/* bottom navigation bar (was hard-coded white) */
+:root[data-theme="dark"] .mobile-bottom-nav { background: rgba(15, 22, 48, .98); border-top-color: var(--border); box-shadow: 0 -5px 20px rgba(0, 0, 0, .4); }
+
+/* GasHub points box + earn strip + pay reward: cream with brown text -> dark amber with gold text */
+:root[data-theme="dark"] .points-box,
+:root[data-theme="dark"] .earn-strip,
+:root[data-theme="dark"] .pay-reward { background: linear-gradient(135deg, #2f2810, #272110); border-color: #5a4d16; }
+:root[data-theme="dark"] .points-title,
+:root[data-theme="dark"] .earn-strip,
+:root[data-theme="dark"] .pay-reward { color: #ffd54a; }
+:root[data-theme="dark"] .points-rate { color: #e3cf86; }
+:root[data-theme="dark"] .points-locked { background: rgba(255, 255, 255, .07); color: #f1dc86; }
+:root[data-theme="dark"] .points-switch { background: #3a4468; }
+:root[data-theme="dark"] .pay-reward b,
+:root[data-theme="dark"] .pay-reward strong { color: #ffe27a; }
+:root[data-theme="dark"] .points-slider-row span { color: #e3cf86; }
+:root[data-theme="dark"] .points-slider-row strong { color: #ffd54a; }
+/* the little "points" chip injected by customer-rewards.js (cream badge) */
+:root[data-theme="dark"] .gpts { background: #3a3210; border-color: #5a4d16; color: #ffd54a; }
+
+/* pin / location bar */
+:root[data-theme="dark"] .pin-bar { background: #2f2810; border-color: #5a4d16; }
+:root[data-theme="dark"] .pin-bar.empty { background: var(--light); border-color: var(--border); }
+
+/* saved address footer + secondary buttons */
+:root[data-theme="dark"] .saved-foot { border-top-color: #1f5236; }
+:root[data-theme="dark"] .change-btn.alt { background: var(--white); border-color: var(--primary-text); color: var(--primary-text); }
+:root[data-theme="dark"] .pv-btn.pv-alt { background: var(--white); border-color: var(--primary-text); color: var(--primary-text); }
+
+/* payment pop-up (sheet) */
+:root[data-theme="dark"] .pay-backdrop { background: rgba(3, 6, 16, .75); }
+:root[data-theme="dark"] .pay-sheet[data-state="success"] .pay-icon { background: #12301f; color: var(--success); }
+:root[data-theme="dark"] .pay-sheet[data-state="failed"] .pay-icon { background: #3a1620; color: var(--danger); }
+:root[data-theme="dark"] .pv-banner { background: #1b2750; color: #b8caff; }
+:root[data-theme="dark"] .pv-fail { background: #3a1620; color: #ffb0b0; }
+:root[data-theme="dark"] .pv-success { background: rgba(3, 6, 16, .75); }
+:root[data-theme="dark"] .pv-tick { background: #1f9d62; }
+:root[data-theme="dark"] .pv-disc small,
+:root[data-theme="dark"] .pv-method span,
+:root[data-theme="dark"] .pv-note { color: var(--muted); }
+
+/* order-details page: cancel button + state icon */
+:root[data-theme="dark"] .cancel-button { background: #2a1219; border-color: #6a2630; color: #ff9fa0; }
+:root[data-theme="dark"] .cancel-button:hover { background: #3a1620; }
+:root[data-theme="dark"] .state-symbol { background: #3a1620; }
+
+/* "Pay now" prompt injected by customer-pay-prompt.js (was a fixed white card) */
+:root[data-theme="dark"] .ghpp-box { background: #151c35; color: #e8ecfa; }
+:root[data-theme="dark"] .ghpp-x { color: #9aa3c4; }
+:root[data-theme="dark"] .ghpp-amt { background: #0f1630; color: #e8ecfa; }
+:root[data-theme="dark"] .ghpp-close { background: #151c35; color: #e8ecfa; border-color: #2a3560; }
+
+
+/* ================= buttons / banners that mix brand colours with the flipping --ink / --blue-dark ================= */
+/* yellow buttons: text must stay dark */
+:root[data-theme="dark"] .btn.y,
+:root[data-theme="dark"] .dealers-empty button,
+:root[data-theme="dark"] .join-link,
+:root[data-theme="dark"] .sp-cart,
+:root[data-theme="dark"] .rv-submit,
+:root[data-theme="dark"] .cta-btn.yellow,
+:root[data-theme="dark"] .gbadge.mine { color: #141b34; }
+/* dark-blue banner / pill backgrounds must stay dark blue (--blue-dark turns light in dark mode) */
+:root[data-theme="dark"] .join-card,
+:root[data-theme="dark"] .ab-band.dark { background: #16286e; color: #fff; }
+:root[data-theme="dark"] .join-card h2 { color: #fff; }
+:root[data-theme="dark"] .join-card p { color: #cfd8ff; }
+:root[data-theme="dark"] .gbadge.pick { background: #2a4fc4; color: #fff; }
+:root[data-theme="dark"] .login-button:active,
+:root[data-theme="dark"] .view-btn:active,
+:root[data-theme="dark"] .gview:active { background: #2a4fc4; color: #fff; }
+
+/* reward toast + pending points chip (customer-rewards.js) */
+:root[data-theme="dark"] .gh-toast { background: #151c35; border-color: #2a3560; }
+:root[data-theme="dark"] .gh-t-txt { color: #a3acd0; }
+:root[data-theme="dark"] .gh-t-txt b { color: #eef1ff; }
+:root[data-theme="dark"] .gh-t-x { background: #232c4d; color: #c9d0ea; }
+:root[data-theme="dark"] .gpts.pending { background: #1b2447; border-color: #3a4468; color: #a3acd0; }

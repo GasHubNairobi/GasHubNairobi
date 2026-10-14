@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1f4fd8">
+    <meta name="color-scheme" content="light dark">
+    <title>Withdraw GasHub Coins | GasHub</title>
+    <link rel="icon" type="image/png" href="Images/favicon.png">
+    <!-- theme script first, so the page never flashes the wrong colours -->
+    <script src="gashub-theme.js"></script>
+    <link rel="stylesheet" href="customer-profile.css">
+    <link rel="stylesheet" href="customer-withdraw.css">
+    <link rel="stylesheet" href="gashub-theme.css">
+    <script src="gashub-ban-guard.js"></script>
+</head>
+<body>
+    <script src="customer-nav.js" data-active="withdraw" data-sidebar="true" data-tabs="true"></script>
+
+    <!-- HEADER -->
+    <header class="customer-header">
+        <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+        <a href="customer-home.html" class="customer-logo"><img src="Images/logo.png" alt="GasHub"></a>
+        <a href="customer-home.html" class="location-btn" aria-label="Change delivery location">
+            <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+            <span id="customerLocation">Select location</span>
+        </a>
+        <a href="customer-orders.html" class="notification-link" aria-label="My orders">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </a>
+    </header>
+
+    <main class="wd-wrap">
+        <h1 class="wd-title">Withdraw GasHub Coins</h1>
+        <p class="wd-sub" id="wdSub" hidden>Turn your GasHub Coins into money, sent to your M-Pesa.</p>
+
+        <!-- loading / not signed in / error -->
+        <section class="wd-card wd-state" id="wdLoading"><div class="wd-spin"></div><p>Loading your GasHub Coins...</p></section>
+        <section class="wd-card wd-state" id="wdGuest" hidden>
+            <h2>Sign in to withdraw</h2>
+            <p>Your GasHub Coins belong to your GasHub account.</p>
+            <a class="wd-btn" href="customer-login.html?next=customer-withdraw.html">Sign in</a>
+        </section>
+        <section class="wd-card wd-state" id="wdError" hidden>
+            <h2>Could not load</h2>
+            <p id="wdErrorText">Please check your connection and try again.</p>
+            <button type="button" class="wd-btn" id="wdRetry">Try again</button>
+        </section>
+
+        <div id="wdContent" hidden>
+            <!-- balance + rate -->
+            <section class="wd-card wd-balance" id="wdBalanceCard">
+                <div class="wd-bal-main">
+                    <span class="coin sm" aria-hidden="true"><span class="face"><img src="images/logo.png" alt="" onerror="this.onerror=null;this.src='Images/logo.png'"></span></span>
+                    <span class="wd-label">Your GasHub Coins</span>
+                    <strong id="wdPoints">0</strong>
+                </div>
+                <div class="wd-bal-worth">
+                    <span class="wd-label">Worth</span>
+                    <strong id="wdWorth">KSh 0</strong>
+                </div>
+            </section>
+
+            <!-- shown when the admin has closed withdrawals and set a time they open again -->
+            <section class="wd-card wd-countdown" id="wdCountdown" hidden>
+                <p class="wd-cd-msg">Withdrawals will be available in</p>
+                <div class="wd-cd-clock" id="wdCdClock" role="timer" aria-live="off">
+                    <div><b id="wdCdD">0</b><span>days</span></div>
+                    <div><b id="wdCdH">00</b><span>hours</span></div>
+                    <div><b id="wdCdM">00</b><span>minutes</span></div>
+                    <div><b id="wdCdS">00</b><span>seconds</span></div>
+                </div>
+            </section>
+
+            <!-- withdrawals closed and no reopening time set -->
+            <section class="wd-card wd-state wd-closed" id="wdClosed" hidden>
+                <span class="coin xl" aria-hidden="true"><span class="face"><img src="images/logo.png" alt="" onerror="this.onerror=null;this.src='Images/logo.png'"></span></span>
+                <h2>Withdrawals are unavailable at the moment</h2>
+                <p id="wdClosedText">Please check back later.</p>
+                <button type="button" class="wd-btn" id="wdNotify">Notify me when they are back</button>
+                <p class="wd-hint" id="wdNotifyDone" hidden>You are on the list. We will email and text you as soon as withdrawals are back.</p>
+            </section>
+
+            <p class="wd-notice" id="wdNotice" hidden></p>
+
+            <!-- shown when the admin has scheduled the day and time the money is sent -->
+            <p class="wd-notice wd-payday" id="wdPayday" hidden></p>
+
+            <!-- the form -->
+            <section class="wd-card" id="wdFormCard">
+                <h2>Request a withdrawal</h2>
+
+                <div class="wd-who">
+                    <div><span class="wd-label">Name</span><b id="wdName">—</b></div>
+                    <div><span class="wd-label">Email</span><b id="wdEmail">—</b></div>
+                    <p class="wd-hint">Taken from your profile. <a href="customer-profile.html">Change in profile</a></p>
+                </div>
+
+                <form id="wdForm" novalidate>
+                    <label class="wd-field">
+                        <span>M-Pesa number to receive the money</span>
+                        <input type="tel" id="wdPhone" inputmode="numeric" autocomplete="tel" placeholder="0712345678" maxlength="16">
+                        <small class="wd-err" id="wdPhoneErr" role="alert"></small>
+                    </label>
+
+                    <label class="wd-field">
+                        <span>Amount to withdraw (KSh)</span>
+                        <div class="wd-amount">
+                            <input type="number" id="wdAmount" inputmode="numeric" min="1" step="1" placeholder="0">
+                            <button type="button" class="wd-all" id="wdAll">All</button>
+                        </div>
+                        <small class="wd-hint" id="wdMaxHint" hidden></small>
+                        <small class="wd-err" id="wdAmountErr" role="alert"></small>
+                    </label>
+
+                    <div class="wd-preview" id="wdPreview" hidden>
+                        <div><span>Transaction charge</span><b id="wdPrevFee">KSh 0</b></div>
+                        <div><span>You will receive</span><b id="wdPrevNet">KSh 0</b></div>
+                    </div>
+
+                    <button type="submit" class="wd-btn wd-send" id="wdSend">Send withdrawal request</button>
+                    <p class="wd-hint wd-center">Your GasHub Coins are held as soon as you send, and we email and text you the details. If the request is rejected the coins come back.</p>
+                </form>
+            </section>
+
+            <!-- the charges set by GasHub -->
+            <section class="wd-card" id="wdFeesCard" hidden>
+                <h2>Withdrawal charges</h2>
+                <p class="wd-hint" style="margin:0 0 10px" id="wdFeesIntro"></p>
+                <div id="wdFees"></div>
+            </section>
+
+            <!-- history -->
+            <section class="wd-card" id="wdHistoryCard">
+                <h2>My withdrawal records</h2>
+                <div id="wdHistory"></div>
+            </section>
+        </div>
+    </main>
+
+    <div class="wd-toast" id="wdToast" role="status" aria-live="polite"></div>
+
+    <script src="customer-logout.js"></script>
+    <script src="customer-photo.js"></script>
+    <script src="customer-withdraw.js"></script>
+    <script src="customer-review-popup.js" defer></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="gashub-assistant.js" defer></script>
+    <script src="customer-pay-prompt.js" defer></script>
+</body>
+</html>

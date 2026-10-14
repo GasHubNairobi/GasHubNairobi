@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Complaints | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="admin-complaints.css">
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+
+            <div class="topbar-left">
+
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    id="mobileMenuButton"
+                    aria-label="Open menu"
+                >
+                    ☰
+                </button>
+
+                <div>
+                    <h2>Complaints</h2>
+
+                    <p>
+                        View and manage customer complaints.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="admin-user-area">
+
+                <div class="admin-user-info">
+                    <strong id="adminUserName">
+                        Administrator
+                    </strong>
+
+                    <span id="adminUserRole">
+                        Admin
+                    </span>
+                </div>
+
+            </div>
+
+        </header>
+
+        <section class="admin-content">
+
+            <!-- =================================================
+                 MESSAGE
+            ================================================== -->
+            <div
+                class="admin-message"
+                id="complaintsMessage"
+                role="alert"
+            ></div>
+
+            <!-- =================================================
+                 STATISTICS
+            ================================================== -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">
+                            Total Complaints
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="totalComplaints"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">!</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">
+                            Pending
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="pendingComplaints"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">◷</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">
+                            In Progress
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="inProgressComplaints"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">↻</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">
+                            Resolved
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="resolvedComplaints"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">✓</div>
+
+                </div>
+
+            </div>
+
+            <!-- =================================================
+                 COMPLAINTS TABLE
+            ================================================== -->
+            <div class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>All Complaints</h3>
+
+                        <p>
+                            Review complaints submitted by customers.
+                        </p>
+                    </div>
+
+                    <div class="table-tools">
+
+                        <div class="search-box">
+                            <input
+                                type="search"
+                                id="complaintSearch"
+                                placeholder="Search complaints..."
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <select id="complaintStatusFilter">
+
+                            <option value="">
+                                All Statuses
+                            </option>
+
+                            <option value="pending">
+                                Pending
+                            </option>
+
+                            <option value="in_progress">
+                                In Progress
+                            </option>
+
+                            <option value="resolved">
+                                Resolved
+                            </option>
+
+                            <option value="rejected">
+                                Rejected
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Complaint</th>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="complaintsTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="6"
+                                    class="table-loading"
+                                >
+                                    Loading complaints...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+                <div class="table-pagination">
+
+                    <div
+                        class="pagination-info"
+                        id="complaintsPaginationInfo"
+                    >
+                        Showing 0 complaints
+                    </div>
+
+                    <div
+                        class="pagination-buttons"
+                        id="complaintsPaginationButtons"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- =====================================================
+         COMPLAINT DETAILS MODAL
+    ====================================================== -->
+    <div
+        class="modal"
+        id="complaintDetailsModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-backdrop"
+            id="complaintModalBackdrop"
+        ></div>
+
+        <div
+            class="modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="complaintModalTitle"
+        >
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="complaintModalTitle">
+                        Complaint Details
+                    </h2>
+
+                    <p id="complaintModalSubtitle">
+                        View complaint information.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="closeComplaintModal"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div id="complaintDetailsBody">
+                <div class="table-loading">
+                    Loading complaint details...
+                </div>
+            </div>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="closeComplaintButton"
+                >
+                    Close
+                </button>
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="updateComplaintButton"
+                >
+                    Update Status
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         STATUS MODAL
+    ====================================================== -->
+    <div
+        class="modal"
+        id="complaintStatusModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-backdrop"
+            id="complaintStatusBackdrop"
+        ></div>
+
+        <div
+            class="modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="complaintStatusTitle"
+        >
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="complaintStatusTitle">
+                        Update Complaint Status
+                    </h2>
+
+                    <p>
+                        Select the new status for this complaint.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="closeComplaintStatusModal"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="complaintStatusForm">
+
+                <input
+                    type="hidden"
+                    id="statusComplaintId"
+                >
+
+                <div class="form-group">
+
+                    <label for="newComplaintStatus">
+                        Status
+                    </label>
+
+                    <select
+                        id="newComplaintStatus"
+                        required
+                    >
+                        <option value="pending">
+                            Pending
+                        </option>
+
+                        <option value="in_progress">
+                            In Progress
+                        </option>
+
+                        <option value="resolved">
+                            Resolved
+                        </option>
+
+                        <option value="rejected">
+                            Rejected
+                        </option>
+                    </select>
+
+                </div>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        id="cancelComplaintStatusButton"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="saveComplaintStatusButton"
+                    >
+                        Save Status
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-complaints.js"></script>
+
+</body>
+</html>

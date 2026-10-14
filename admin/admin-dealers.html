@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101d36">
+  <meta name="description" content="GasHub Administrator Portal - Dealer Directory and Partner Management">
+  <title>Dealers Management | GasHub Admin Console</title>
+  
+  <!-- Favicon from images directory -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="admin-dealers.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+<body>
+  <!-- Watermark Background Layer -->
+  <div class="watermark-layer" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <!-- Sidebar Navigation -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <!-- Mobile Navigation Backdrop -->
+
+    <!-- Main Content Area -->
+    <main class="main-area">
+      <!-- Top Bar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu" id="mobileMenuButton" type="button" aria-label="Open Navigation">☰</button>
+          <div class="breadcrumb">
+            <a href="admin-dashboard.html">Console</a>
+            <span class="crumb-separator">/</span>
+            <span>Partners</span>
+            <span class="crumb-separator">/</span>
+            <strong>Dealers Directory</strong>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="system-pill" title="Backend database status">
+            <span></span> Live Operations
+          </div>
+          <div class="topbar-avatar" id="adminTopAvatar">A</div>
+        </div>
+      </header>
+
+      <!-- Page Content Body -->
+      <section class="page-content">
+        <!-- Page Title & Primary Actions -->
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">PARTNER MANAGEMENT & VERIFICATION</div>
+            <h1>Dealer Directory <span class="heading-spark" aria-hidden="true">✳</span></h1>
+            <p>Monitor verified dealers, audit storefront performance, approve applications, and enforce marketplace decisions across Kenya.</p>
+          </div>
+          <div class="heading-actions">
+            <span class="updated-label">
+              <span class="updated-dot" aria-hidden="true"></span> Real-time data
+            </span>
+            <button class="button button-primary" id="openAddDealer" type="button">
+              + Add Dealer
+            </button>
+            <button class="button button-light" id="refreshDealers" type="button">
+              <span class="refresh-icon" aria-hidden="true">↻</span> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- System Notification Message -->
+        <div class="admin-message" id="dealersMessage" role="status" aria-live="polite"></div>
+
+        <!-- Live Statistics Summary Cards -->
+        <section class="stats-grid" aria-label="Dealer Overview Metrics">
+          <article class="stat-card stat-card-total">
+            <div class="stat-topline">
+              <span class="stat-label">Total Dealers</span>
+              <span class="stat-symbol">♙</span>
+            </div>
+            <div class="stat-number" id="totalDealers">0</div>
+            <div class="stat-foot">
+              <span class="stat-foot-dot" aria-hidden="true"></span> Registered on GasHub
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-topline">
+              <span class="stat-label">Active Stores</span>
+              <span class="stat-symbol symbol-green">✓</span>
+            </div>
+            <div class="stat-number" id="activeDealers">0</div>
+            <div class="stat-foot">
+              <span class="mini-status green" aria-hidden="true"></span> Taking customer orders
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-topline">
+              <span class="stat-label">Disabled / Pending</span>
+              <span class="stat-symbol symbol-amber">Ⅱ</span>
+            </div>
+            <div class="stat-number" id="inactiveDealers">0</div>
+            <div class="stat-foot">
+              <span class="mini-status amber" aria-hidden="true"></span> Visibility paused
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-topline">
+              <span class="stat-label">Active Products</span>
+              <span class="stat-symbol symbol-violet">▦</span>
+            </div>
+            <div class="stat-number" id="dealerProducts">0</div>
+            <div class="stat-foot">
+              <span class="stat-foot-dot violet-dot" aria-hidden="true"></span> Listed across dealers
+            </div>
+          </article>
+        </section>
+
+        <!-- Applications Review Section (Pending approvals) -->
+        <section class="applications-card" id="dealerApplicationsPanel" aria-labelledby="dealerApplicationsTitle">
+          <div class="applications-header">
+            <div>
+              <div class="eyebrow">APPLICATION INBOX</div>
+              <h2 id="dealerApplicationsTitle">
+                Requests to Become a Dealer 
+                <span id="applicationPendingCount" class="application-count">0 pending</span>
+              </h2>
+              <p>Review new business submissions before generating credentials. Approved applicants receive on-boarding access.</p>
+            </div>
+            <button class="button button-light" id="refreshApplications" type="button">↻ Refresh requests</button>
+          </div>
+
+          <div class="admin-message" id="applicationsMessage" role="status" aria-live="polite"></div>
+
+          <div class="application-review-layout">
+            <div class="application-list-column">
+              <div class="application-list-toolbar">
+                <strong>Submissions</strong>
+                <label class="filter-field">
+                  <span class="sr-only">Filter applications</span>
+                  <select id="applicationStatusFilter">
+                    <option value="pending">Pending first</option>
+                    <option value="all">All requests</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Declined</option>
+                    <option value="ignored">Ignored</option>
+                  </select>
+                </label>
+              </div>
+              <div id="applicationList" class="application-list">
+                <div class="empty-request">Loading applications…</div>
+              </div>
+            </div>
+
+            <div id="applicationDetail" class="application-detail">
+              <div class="empty-request">Select an application to view business credentials and mapped GPS location.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Main Dealers Directory Table -->
+        <section class="directory-card" aria-labelledby="dealersDirectoryHeading">
+          <div class="directory-header">
+            <div class="directory-title">
+              <div class="title-icon">▤</div>
+              <div>
+                <h2 id="dealersDirectoryHeading">All Registered Dealers</h2>
+                <p>Search, filter, view profiles, toggle availability, verify partner seals, or remove accounts.</p>
+              </div>
+            </div>
+
+            <div class="directory-tools">
+              <label class="search-field">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" id="dealerSearch" placeholder="Search name, code, phone, county…" autocomplete="off" aria-label="Search dealers">
+              </label>
+
+              <label class="filter-field">
+                <span class="sr-only">Filter by status</span>
+                <select id="dealerStatusFilter">
+                  <option value="">All Statuses</option>
+                  <option value="active">Active Only</option>
+                  <option value="inactive">Disabled Only</option>
+                  <option value="suspended">Suspended Only</option>
+                  <option value="verified">Verified Badge</option>
+                  <option value="unverified">Unverified</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="table-meta">
+            <span>
+              <span class="table-meta-dot" aria-hidden="true"></span> Partner Accounts
+            </span>
+            <span id="dealerCountLabel">0 records</span>
+          </div>
+
+          <div class="table-scroll">
+            <table class="dealer-table">
+              <thead>
+                <tr>
+                  <th>DEALER & STORE</th>
+                  <th>CONTACT</th>
+                  <th>LOCATION</th>
+                  <th>PRODUCTS</th>
+                  <th>STATUS</th>
+                  <th>ACTIONS & DECISIONS</th>
+                </tr>
+              </thead>
+              <tbody id="dealersTableBody">
+                <tr>
+                  <td colspan="6" class="table-loading">
+                    <span class="loader"></span> Loading real dealers…
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <footer class="table-footer">
+            <div class="pagination-info" id="dealersPaginationInfo">Showing 0 dealers</div>
+            <div class="pagination-buttons" id="dealersPaginationButtons"></div>
+          </footer>
+        </section>
+
+        <!-- Page Footer -->
+        <footer class="page-footer">
+          <span>© <span id="currentYear">2026</span> GasHub Administration Panel</span>
+          <span><span class="footer-lock">🔒</span> All dealer records are encrypted and protected</span>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Add New Dealer Login -->
+  <section class="dealer-modal" id="addDealerModal" hidden aria-labelledby="addDealerTitle" role="dialog" aria-modal="true">
+    <div class="dealer-modal-backdrop" data-close-dealer-modal></div>
+    <div class="dealer-modal-card">
+      <div class="dealer-modal-heading">
+        <div>
+          <div class="eyebrow">PARTNER ACCESS</div>
+          <h2 id="addDealerTitle">Create Dealer Account</h2>
+          <p>Generate one-time initial login credentials for the dealer.</p>
+        </div>
+        <button type="button" class="dealer-modal-close" id="closeAddDealer" aria-label="Close modal">×</button>
+      </div>
+
+      <div id="addDealerMessage" class="admin-message" role="status" aria-live="polite"></div>
+
+      <form id="addDealerForm" class="dealer-form-grid">
+        <label>
+          Login username *
+          <input name="username" required minlength="3" maxlength="40" pattern="[A-Za-z0-9._-]+" autocomplete="off" placeholder="e.g. nairobi_gas_depot">
+          <small>3–40 characters: letters, numbers, dots, underscores or hyphens.</small>
+        </label>
+
+        <label>
+          One-time initial password *
+          <input name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="Minimum 8 characters">
+          <small>Temporary password. The dealer must finish onboarding and choose a permanent password upon first login.</small>
+        </label>
+
+        <div class="dealer-form-actions">
+          <button class="button button-light" type="button" id="cancelAddDealer">Cancel</button>
+          <button class="button button-primary" type="submit" id="submitAddDealer">Create Login</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Modal: Dealer Verification Decision -->
+  <section class="dealer-modal" id="verifyDealerModal" hidden aria-labelledby="verifyDealerTitle" role="dialog" aria-modal="true">
+    <div class="dealer-modal-backdrop" data-close-verify-modal></div>
+    <div class="dealer-modal-card">
+      <div class="dealer-modal-heading">
+        <div>
+          <div class="eyebrow">TRUST & BADGE MANAGEMENT</div>
+          <h2 id="verifyDealerTitle">Dealer Verification</h2>
+          <p id="verifyModalSubtitle">Manage verification status and seal expiry date.</p>
+        </div>
+        <button type="button" class="dealer-modal-close" id="closeVerifyModal" aria-label="Close modal">×</button>
+      </div>
+
+      <div id="verifyModalMessage" class="admin-message" role="status" aria-live="polite"></div>
+
+      <form id="verifyDealerForm" class="dealer-form-grid">
+        <input type="hidden" id="verifyDealerId" name="dealerId">
+
+        <label>
+          Verification Decision *
+          <select id="verifyDecisionSelect" name="decision" required>
+            <option value="grant">Grant Verified Seal</option>
+            <option value="revoke">Revoke / Remove Verified Seal</option>
+          </select>
+          <small>Verified dealers receive the official blue seal displayed to buyers across GasHub.</small>
+        </label>
+
+        <div id="verifyDurationContainer">
+          <label>
+            Validity Duration *
+            <select id="verifyDurationSelect">
+              <option value="30">30 Days (1 Month)</option>
+              <option value="90">90 Days (3 Months)</option>
+              <option value="180">180 Days (6 Months)</option>
+              <option value="365" selected>365 Days (1 Year)</option>
+              <option value="custom">Custom Date</option>
+            </select>
+          </label>
+
+          <label id="verifyCustomDateWrapper" style="display: none; margin-top: 10px;">
+            Custom Expiration Date *
+            <input type="date" id="verifyCustomExpiryDate">
+            <small>Must be a future date.</small>
+          </label>
+        </div>
+
+        <div class="dealer-form-actions">
+          <button class="button button-light" type="button" id="cancelVerifyModal">Cancel</button>
+          <button class="button button-primary" type="submit" id="submitVerifyModal">Save Decision</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Core Scripts -->
+  <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+  <script src="admin-dealers.js"></script>
+  <script src="admin-dealer-applications-panel.js"></script>
+</body>
+</html>

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+```
+<title>Settings | GAS HUB Dealer</title>
+
+<link rel="stylesheet" href="dealer-main.css">
+<link rel="stylesheet" href="dealer-settings.css">
+
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+>
+```
+
+    <link rel="stylesheet" href="dealer-logout.css">
+    <script src="dealer-cache-guard.js"></script>
+    <script src="gashub-dialog.js"></script>
+    <link rel="stylesheet" href="dealer-header.css">
+    <link rel="stylesheet" href="dealer-mobile.css">
+</head>
+
+<body>
+
+<div class="dealer-app">
+
+```
+<!-- =====================================================
+     SIDEBAR
+     ===================================================== -->
+
+<aside class="dealer-sidebar" id="dealerSidebar">
+
+    <div class="dealer-sidebar-brand">
+        <a
+            href="dealer-dashboard.html"
+            class="dealer-brand-link"
+        >
+            <div class="dealer-brand-logo">
+                <i class="fa-solid fa-fire-flame-curved"></i>
+            </div>
+
+            <div class="dealer-brand-text">
+                <span class="dealer-brand-name">
+                    GAS HUB
+                </span>
+
+                <span class="dealer-brand-role">
+                    Dealer Portal
+                </span>
+            </div>
+        </a>
+    </div>
+
+
+    <nav class="dealer-sidebar-nav">
+
+        <div class="dealer-nav-label">
+            MAIN MENU
+        </div>
+
+        <ul class="dealer-nav-list">
+
+            <li>
+                <a
+                    href="dealer-dashboard.html"
+                    class="dealer-nav-item"
+                    data-page="dashboard"
+                >
+                    <i class="fa-solid fa-grid-2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li>
+                <a
+                    href="dealer-products.html"
+                    class="dealer-nav-item"
+                    data-page="products"
+                >
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Products</span>
+                </a>
+            </li>
+
+            <li>
+                <a
+                    href="dealer-orders.html"
+                    class="dealer-nav-item"
+                    data-page="orders"
+                >
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Orders</span>
+
+                    <span
+                        class="dealer-nav-badge"
+                        data-orders-badge
+                        hidden
+                    >
+                        0
+                    </span>
+                </a>
+            </li>
+
+            <li>
+                <a href="dealer-messengers.html" class="dealer-nav-item">
+                    <i class="fa-solid fa-motorcycle"></i>
+                    <span>Messengers</span>
+                </a>
+            </li>
+
+            <li>
+                <a
+                    href="dealer-profile.html"
+                    class="dealer-nav-item"
+                    data-page="profile"
+                >
+                    <i class="fa-solid fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+
+            <li>
+                <a
+                    href="dealer-settings.html"
+                    class="dealer-nav-item"
+                    data-page="settings"
+                >
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+
+        </ul>
+
+    </nav>
+
+
+    <div class="dealer-sidebar-footer">
+
+        <div class="dealer-system-status">
+            <span class="dealer-status-dot"></span>
+
+            <span>
+                System Online
+            </span>
+        </div>
+
+
+        <button
+            type="button"
+            class="dealer-nav-item dealer-logout-button"
+            data-dealer-logout
+        >
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- =====================================================
+     MOBILE OVERLAY
+     ===================================================== -->
+
+<div
+    class="dealer-sidebar-overlay"
+    id="dealerSidebarOverlay"
+></div>
+
+
+<!-- =====================================================
+     MAIN AREA
+     ===================================================== -->
+
+<main class="dealer-main">
+
+    <!-- =================================================
+         HEADER
+         ================================================= -->
+
+    <header class="dealer-header">
+
+        <div class="dealer-header-left">
+
+            <button
+                type="button"
+                class="dealer-mobile-menu"
+                id="dealerMobileMenu"
+                aria-label="Open navigation"
+                aria-controls="dealerSidebar"
+                aria-expanded="false"
+            >
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+
+            <div class="dealer-page-heading">
+                <h1>
+                    Settings
+                </h1>
+
+                <p>
+                    Manage your dealer account and preferences.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="dealer-header-right">
+
+            <button
+                type="button"
+                class="dealer-header-button"
+                data-dealer-notifications
+                aria-label="Notifications"
+            >
+                <i class="fa-regular fa-bell"></i>
+
+                <span
+                    class="dealer-notification-badge"
+                    data-notification-badge
+                    hidden
+                >
+                    0
+                </span>
+            </button>
+
+
+            <a
+                href="dealer-profile.html"
+                class="dealer-header-profile"
+            >
+
+                <div class="dealer-avatar" id="dealerHeaderAvatar" data-dealer-avatar><span id="dealerAvatarInitial">D</span></div>
+
+                <div class="dealer-header-profile-info"><span class="gh-name-row"><strong id="dealerHeaderName" data-dealer-contact-name>Dealer</strong><span class="tiktok-verified-badge" id="sidebarVerifiedBadge" title="Verified EPRA Dealer"></span></span><span class="user-stats"><span class="user-stat"><i class="fa-solid fa-users fa-xs" aria-hidden="true"></i> <strong id="sidebarFollowersCount">0</strong> followers</span><span class="user-stat"><i class="fa-solid fa-star fa-xs text-warning" aria-hidden="true"></i> <strong id="sidebarReviewsCount">0.0 (0)</strong></span></span></div>
+
+                <i class="fa-solid fa-chevron-down"></i>
+
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- =================================================
+         CONTENT
+         ================================================= -->
+
+    <section class="dealer-content">
+
+        <!-- Page Intro -->
+
+        <div class="dealer-content-header">
+
+            <div>
+                <span class="dealer-content-eyebrow">
+                    ACCOUNT
+                </span>
+
+                <h2 class="dealer-content-title">
+                    Account Settings
+                </h2>
+
+                <p class="dealer-content-description">
+                    Update your account preferences and security settings.
+                </p>
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             MESSAGE
+             ================================================= -->
+
+        <div
+            id="settingsMessage"
+            class="dealer-settings-message"
+            role="status"
+            aria-live="polite"
+        ></div>
+
+
+        <!-- =================================================
+             SETTINGS LAYOUT
+             ================================================= -->
+
+        <div class="dealer-settings-layout">
+
+
+            <!-- =================================================
+                 ACCOUNT SETTINGS
+                 ================================================= -->
+
+            <section class="dealer-card dealer-settings-card">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h3 class="dealer-card-title">
+                            Account
+                        </h3>
+
+                        <p class="dealer-settings-card-description">
+                            Basic account preferences.
+                        </p>
+                    </div>
+
+                    <div class="dealer-settings-card-icon">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-settings-option">
+
+                        <div class="dealer-settings-option-info">
+
+                            <strong>
+                                Account Notifications
+                            </strong>
+
+                            <span>
+                                Receive notifications about orders and important dealer updates.
+                            </span>
+
+                        </div>
+
+                        <label class="dealer-switch">
+
+                            <input
+                                type="checkbox"
+                                id="orderNotifications"
+                                checked
+                            >
+
+                            <span class="dealer-switch-slider"></span>
+
+                        </label>
+
+                    </div>
+
+
+                    <div class="dealer-settings-divider"></div>
+
+
+                    <div class="dealer-settings-option">
+
+                        <div class="dealer-settings-option-info">
+
+                            <strong>
+                                Order Updates
+                            </strong>
+
+                            <span>
+                                Receive updates when the status of your orders changes.
+                            </span>
+
+                        </div>
+
+                        <label class="dealer-switch">
+
+                            <input
+                                type="checkbox"
+                                id="orderStatusNotifications"
+                                checked
+                            >
+
+                            <span class="dealer-switch-slider"></span>
+
+                        </label>
+
+                    </div>
+
+
+                    <div class="dealer-settings-divider"></div>
+
+
+                    <div class="dealer-settings-option">
+
+                        <div class="dealer-settings-option-info">
+
+                            <strong>
+                                Low Stock Alerts
+                            </strong>
+
+                            <span>
+                                Get notified when your product stock becomes low.
+                            </span>
+
+                        </div>
+
+                        <label class="dealer-switch">
+
+                            <input
+                                type="checkbox"
+                                id="lowStockNotifications"
+                                checked
+                            >
+
+                            <span class="dealer-switch-slider"></span>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 SECURITY
+                 ================================================= -->
+
+            <section class="dealer-card dealer-settings-card">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h3 class="dealer-card-title">
+                            Security
+                        </h3>
+
+                        <p class="dealer-settings-card-description">
+                            Manage your account security.
+                        </p>
+                    </div>
+
+                    <div class="dealer-settings-card-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-settings-security-item">
+
+                        <div class="dealer-settings-security-icon">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+
+                        <div class="dealer-settings-option-info">
+
+                            <strong>
+                                Password
+                            </strong>
+
+                            <span>
+                                Keep your dealer account password secure.
+                            </span>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="dealer-button dealer-button-secondary"
+                            id="changePasswordButton"
+                        >
+                            Change Password
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        class="dealer-settings-password-panel"
+                        id="passwordPanel"
+                        hidden
+                    >
+
+                        <form
+                            id="changePasswordForm"
+                            novalidate
+                        >
+
+                            <div class="dealer-form-group">
+
+                                <label for="currentPassword">
+                                    Current Password
+                                </label>
+
+                                <div class="dealer-password-input">
+
+                                    <input
+                                        type="password"
+                                        id="currentPassword"
+                                        name="currentPassword"
+                                        autocomplete="current-password"
+                                        placeholder="Enter current password"
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="dealer-password-toggle"
+                                        data-password-toggle="currentPassword"
+                                        aria-label="Show password"
+                                    >
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+
+                                </div>
+
+                                <small
+                                    class="dealer-settings-field-error"
+                                    data-error-for="currentPassword"
+                                ></small>
+
+                            </div>
+
+
+                            <div class="dealer-form-group">
+
+                                <label for="newPassword">
+                                    New Password
+                                </label>
+
+                                <div class="dealer-password-input">
+
+                                    <input
+                                        type="password"
+                                        id="newPassword"
+                                        name="newPassword"
+                                        autocomplete="new-password"
+                                        placeholder="Enter new password"
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="dealer-password-toggle"
+                                        data-password-toggle="newPassword"
+                                        aria-label="Show password"
+                                    >
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+
+                                </div>
+
+                                <small
+                                    class="dealer-settings-field-error"
+                                    data-error-for="newPassword"
+                                ></small>
+
+                            </div>
+
+
+                            <div class="dealer-form-group">
+
+                                <label for="confirmNewPassword">
+                                    Confirm New Password
+                                </label>
+
+                                <div class="dealer-password-input">
+
+                                    <input
+                                        type="password"
+                                        id="confirmNewPassword"
+                                        name="confirmNewPassword"
+                                        autocomplete="new-password"
+                                        placeholder="Confirm new password"
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="dealer-password-toggle"
+                                        data-password-toggle="confirmNewPassword"
+                                        aria-label="Show password"
+                                    >
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+
+                                </div>
+
+                                <small
+                                    class="dealer-settings-field-error"
+                                    data-error-for="confirmNewPassword"
+                                ></small>
+
+                            </div>
+
+
+                            <div class="dealer-settings-password-actions">
+
+                                <button
+                                    type="button"
+                                    class="dealer-button dealer-button-secondary"
+                                    id="cancelPasswordChange"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    class="dealer-button dealer-button-primary"
+                                    id="savePasswordButton"
+                                >
+                                    <span class="button-text">
+                                        Update Password
+                                    </span>
+
+                                    <span
+                                        class="button-loader"
+                                        hidden
+                                    >
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                    </span>
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 BUSINESS ACCOUNT
+                 ================================================= -->
+
+            <section class="dealer-card dealer-settings-card">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h3 class="dealer-card-title">
+                            Business Account
+                        </h3>
+
+                        <p class="dealer-settings-card-description">
+                            View your dealer account information.
+                        </p>
+                    </div>
+
+                    <div class="dealer-settings-card-icon">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-settings-account-grid">
+
+                        <div class="dealer-settings-account-item">
+
+                            <span>
+                                Business Name
+                            </span>
+
+                            <strong
+                                data-settings-business-name
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="dealer-settings-account-item">
+
+                            <span>
+                                Account Type
+                            </span>
+
+                            <strong>
+                                Dealer
+                            </strong>
+
+                        </div>
+
+
+                        <div class="dealer-settings-account-item">
+
+                            <span>
+                                Account Status
+                            </span>
+
+                            <strong
+                                class="dealer-settings-status-active"
+                                data-settings-account-status
+                            >
+                                Active
+                            </strong>
+
+                        </div>
+
+
+                        <div class="dealer-settings-account-item">
+
+                            <span>
+                                Dealer ID
+                            </span>
+
+                            <strong
+                                data-settings-dealer-id
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <a
+                        href="dealer-profile.html"
+                        class="dealer-settings-profile-link"
+                    >
+                        <span>
+                            <i class="fa-solid fa-user-pen"></i>
+                            Manage Dealer Profile
+                        </span>
+
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 SESSION / LOGOUT
+                 ================================================= -->
+
+            <section class="dealer-card dealer-settings-card dealer-settings-danger-card">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h3 class="dealer-card-title">
+                            Account Session
+                        </h3>
+
+                        <p class="dealer-settings-card-description">
+                            Sign out of your dealer account on this device.
+                        </p>
+                    </div>
+
+                    <div class="dealer-settings-card-icon danger">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-settings-logout-row">
+
+                        <div class="dealer-settings-option-info">
+
+                            <strong>
+                                Sign Out
+                            </strong>
+
+                            <span>
+                                You will need to sign in again to access the Dealer Portal.
+                            </span>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="dealer-button dealer-button-danger"
+                            data-dealer-logout
+                        >
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            Logout
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 DANGER ZONE
+                 ================================================= -->
+
+            <section class="dealer-card dealer-settings-card dealer-settings-danger-zone">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h3 class="dealer-card-title">
+                            Danger Zone
+                        </h3>
+
+                        <p class="dealer-settings-card-description">
+                            Actions that may affect your dealer account.
+                        </p>
+                    </div>
+
+                    <div class="dealer-settings-card-icon danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-settings-danger-content">
+
+                        <div>
+                            <strong>
+                                Deactivate Dealer Account
+                            </strong>
+
+                            <p>
+                                Account deactivation will be handled by the GAS HUB administration team.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="dealer-button dealer-button-secondary"
+                            id="deactivateAccountButton"
+                        >
+                            Contact Support
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         MOBILE BOTTOM NAV
+         ================================================= -->
+
+    <nav class="dealer-mobile-nav">
+
+        <a
+            href="dealer-dashboard.html"
+            class="dealer-mobile-nav-item"
+            data-mobile-page="dashboard"
+        >
+            <i class="fa-solid fa-grid-2"></i>
+            <span>Home</span>
+        </a>
+
+        <a
+            href="dealer-products.html"
+            class="dealer-mobile-nav-item"
+            data-mobile-page="products"
+        >
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Products</span>
+        </a>
+
+        <a
+            href="dealer-orders.html"
+            class="dealer-mobile-nav-item"
+            data-mobile-page="orders"
+        >
+            <i class="fa-solid fa-receipt"></i>
+            <span>Orders</span>
+        </a>
+
+        <a
+            href="dealer-settings.html"
+            class="dealer-mobile-nav-item"
+            data-mobile-page="settings"
+        >
+            <i class="fa-solid fa-gear"></i>
+            <span>Settings</span>
+        </a>
+
+    </nav>
+
+</main>
+```
+
+</div>
+
+<!-- =========================================================
+     SCRIPTS
+     ========================================================= -->
+
+<script src="gashub-core.js"></script>
+    <script src="dealer-logout.js"></script>
+<script src="dealer-main.js"></script>
+
+<script src="dealer-settings.js"></script>
+
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="dealer-mobile.js" defer></script>
+</body>
+</html>

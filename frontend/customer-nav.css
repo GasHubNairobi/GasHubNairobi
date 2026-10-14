@@ -1,0 +1,48 @@
+/* GasHub shared customer navigation: ONE sidebar + ONE bottom tab bar for every page.
+   Built by customer-nav.js. Classes start with gh- so page stylesheets cannot restyle them. */
+:root { --gh-blue: #1f4fd8; --gh-blue-d: #0f2a7a; --gh-soft: #eaf0ff; --gh-red: #e03131; --gh-yellow: #ffc20e;
+        --gh-bg: #ffffff; --gh-ink: #10233f; --gh-muted: #6b7794; --gh-line: #e3e9f2; --gh-tab-h: 62px; }
+html[data-theme="dark"] { --gh-blue: #3f6df0; --gh-blue-d: #a9c1ff; --gh-soft: #1b2750; --gh-bg: #111d31; --gh-ink: #e8eef9; --gh-muted: #9fb0c8; --gh-line: #26354d; }
+
+/* ---------- SIDEBAR ---------- */
+.gh-scrim { position: fixed; inset: 0; z-index: 2100; background: rgba(10, 18, 50, .5); opacity: 0; visibility: hidden; transition: opacity .2s; }
+.gh-scrim.show { opacity: 1; visibility: visible; }
+.gh-drawer { position: fixed; top: 0; left: 0; bottom: 0; width: min(300px, 84vw); z-index: 2200; background: var(--gh-bg); color: var(--gh-ink);
+    transform: translateX(-105%); transition: transform .25s ease; display: flex; flex-direction: column; overflow-y: auto;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, .15); padding-top: env(safe-area-inset-top, 0); font-family: inherit; }
+.gh-drawer.active { transform: none; }
+.gh-drawer * { box-sizing: border-box; }
+.gh-d-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--gh-line); }
+.gh-d-head img { height: 28px; width: auto; max-width: 110px; object-fit: contain; }
+.gh-d-close { width: 34px; height: 34px; border: 0; border-radius: 10px; background: var(--gh-soft); color: var(--gh-blue); font-size: 22px; line-height: 1; cursor: pointer; }
+.gh-d-user { display: flex; align-items: center; gap: 12px; margin: 14px 14px 6px; padding: 14px; border-radius: 16px; color: #fff;
+    background: linear-gradient(135deg, var(--gh-blue-d), var(--gh-blue)); }
+html[data-theme="dark"] .gh-d-user { background: linear-gradient(135deg, #1b2750, #2d4fb8); }
+.gh-d-avatar { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--gh-yellow); color: #10233f; font-weight: 800; display: grid; place-items: center; font-size: 17px; overflow: hidden; }
+.gh-d-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.gh-d-user strong { display: block; font-size: 14.5px; line-height: 1.25; word-break: break-word; }
+.gh-d-user small { font-size: 12px; opacity: .85; }
+.gh-d-nav { padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.gh-d-nav a, .gh-d-foot a { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; color: var(--gh-ink); text-decoration: none; font-size: 14.5px; font-weight: 600; }
+.gh-d-nav a svg, .gh-d-foot a svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; color: var(--gh-muted); }
+.gh-d-nav a:hover, .gh-d-foot a:hover { background: var(--gh-soft); }
+.gh-d-nav a.active { background: var(--gh-soft); color: var(--gh-blue); box-shadow: inset 4px 0 0 var(--gh-blue); }
+.gh-d-nav a.active svg { color: var(--gh-blue); }
+.gh-d-sep { margin: 6px 22px; height: 1px; background: var(--gh-line); }
+.gh-d-foot { margin-top: auto; padding: 8px 10px calc(14px + env(safe-area-inset-bottom, 0)); border-top: 1px solid var(--gh-line); display: flex; flex-direction: column; gap: 2px; }
+.gh-d-foot a#logoutLink, .gh-d-foot a#logoutLink svg { color: var(--gh-red); }
+.gh-d-ver { text-align: center; font-size: 11px; color: var(--gh-muted); padding-top: 6px; }
+
+/* ---------- BOTTOM TABS (phones and tablets) ---------- */
+.gh-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1100; display: grid; grid-template-columns: repeat(5, 1fr);
+    height: calc(var(--gh-tab-h) + env(safe-area-inset-bottom, 0)); padding-bottom: env(safe-area-inset-bottom, 0);
+    background: var(--gh-bg); border-top: 1px solid var(--gh-line); box-shadow: 0 -4px 18px rgba(16, 35, 63, .06); }
+.gh-tabs a { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    color: var(--gh-muted); text-decoration: none; font-size: 10.5px; font-weight: 600; -webkit-tap-highlight-color: transparent; }
+.gh-tabs a svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.gh-tabs a.active { color: var(--gh-blue); font-weight: 800; }
+.gh-tabs a.active::before { content: ""; position: absolute; top: 0; left: 28%; right: 28%; height: 3px; border-radius: 0 0 4px 4px; background: var(--gh-blue); }
+.gh-tabs a.active svg { stroke-width: 2.4; }
+@media (min-width: 900px) { .gh-tabs { display: none; } body.gh-has-tabs { padding-bottom: 0 !important; } }
+@media (max-width: 899px) { body.gh-has-tabs { padding-bottom: calc(var(--gh-tab-h) + env(safe-area-inset-bottom, 0)); } }
+@media print { .gh-tabs, .gh-drawer, .gh-scrim { display: none !important; } }

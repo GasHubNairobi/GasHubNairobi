@@ -1,0 +1,23 @@
+/* Dealer reviews page */
+.rv-summary{display:flex;gap:28px;align-items:center;flex-wrap:wrap;margin-bottom:18px;padding:20px 22px;background:#fff;border:1px solid #e2e8f0;border-radius:16px}
+.rv-score{display:flex;flex-direction:column;align-items:center;min-width:120px}
+.rv-score strong{font-size:44px;line-height:1;color:#0f172a;font-weight:800}
+.rv-score span{margin-top:4px;font-size:12px;color:#64748b}
+.rv-stars{margin-top:6px;font-size:18px;letter-spacing:2px;color:#f59e0b;white-space:nowrap}
+.rv-stars .off{color:#d6dde6}
+.rv-bars{flex:1;min-width:220px;display:grid;gap:7px}
+.rv-bar{display:grid;grid-template-columns:30px 1fr 34px;align-items:center;gap:10px;font-size:12px;color:#475569}
+.rv-bar .track{height:8px;background:#eef2f6;border-radius:99px;overflow:hidden}
+.rv-bar .fill{display:block;height:100%;background:#f59e0b;border-radius:99px}
+.rv-bar .n{text-align:right;font-variant-numeric:tabular-nums}
+.rv-filter{width:auto;min-width:140px}
+.rv-list{display:grid}
+.rv-item{padding:16px 20px;border-top:1px solid #eef2f6}
+.rv-item:first-child{border-top:0}
+.rv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.rv-who{font-weight:700;color:#0f172a;font-size:14px}
+.rv-meta{font-size:11.5px;color:#64748b;margin-top:2px}
+.rv-item .rv-stars{margin:0;font-size:15px}
+.rv-text{margin:8px 0 0;font-size:13.5px;line-height:1.55;color:#334155;overflow-wrap:anywhere}
+.rv-text.none{color:#94a3b8;font-style:italic}
+.rv-empty{padding:34px 16px;text-align:center;color:#64748b;font-size:14px}

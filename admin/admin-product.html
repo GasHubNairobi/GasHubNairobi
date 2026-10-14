@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Products | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="admin-product.css">
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <!-- =====================================================
+         MOBILE OVERLAY
+    ====================================================== -->
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="admin-main">
+
+        <!-- HEADER -->
+
+        <header class="admin-topbar">
+
+            <div class="topbar-left">
+
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    id="mobileMenuButton"
+                    aria-label="Open menu"
+                >
+                    ☰
+                </button>
+
+                <div>
+                    <h1>Products</h1>
+                    <p>Manage GasHub products and inventory.</p>
+                </div>
+
+            </div>
+
+            <div class="topbar-right">
+
+                <div class="admin-user">
+                    <span class="admin-user-name" id="adminUserName">
+                        Administrator
+                    </span>
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+
+        <section class="dashboard-content">
+
+            <!-- PAGE ACTIONS -->
+
+            <div class="page-header">
+
+                <div>
+                    <h2>Product Management</h2>
+                    <p>
+                        Add, edit and manage the products available
+                        through GasHub.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="addProductButton"
+                >
+                    + Add Product
+                </button>
+
+            </div>
+
+            <!-- MESSAGE -->
+
+            <div
+                class="admin-message"
+                id="productMessage"
+                role="alert"
+            ></div>
+
+            <!-- =================================================
+                 PRODUCT SUMMARY
+            ================================================== -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <span class="stat-label">
+                            Total Products
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="totalProducts"
+                        >
+                            0
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <span class="stat-label">
+                            Available
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="availableProducts"
+                        >
+                            0
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <span class="stat-label">
+                            Out of Stock
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="outOfStockProducts"
+                        >
+                            0
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <span class="stat-label">
+                            Unavailable
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="unavailableProducts"
+                        >
+                            0
+                        </strong>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- =================================================
+                 PRODUCT TABLE
+            ================================================== -->
+
+            <div class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Products</h3>
+                        <p>
+                            All products currently registered
+                            in the system.
+                        </p>
+                    </div>
+
+                    <div class="table-tools">
+
+                        <div class="search-box">
+
+                            <input
+                                type="search"
+                                id="productSearch"
+                                placeholder="Search products..."
+                                autocomplete="off"
+                            >
+
+                        </div>
+
+                        <select id="productStatusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="available">
+                                Available
+                            </option>
+                            <option value="out_of_stock">
+                                Out of Stock
+                            </option>
+                            <option value="unavailable">
+                                Unavailable
+                            </option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="table-container">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Code</th>
+                                <th>Category</th>
+                                <th>Cylinder Size</th>
+                                <th>Price</th>
+                                <th>Dealer</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="productsTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="8"
+                                    class="table-empty"
+                                >
+                                    Loading products...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- =====================================================
+         PRODUCT MODAL
+    ====================================================== -->
+
+    <div
+        class="modal"
+        id="productModal"
+        aria-hidden="true"
+    >
+
+        <div class="modal-backdrop" id="productModalBackdrop"></div>
+
+        <div
+            class="modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="productModalTitle"
+        >
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="productModalTitle">
+                        Add Product
+                    </h2>
+
+                    <p>
+                        Enter the product information below.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="closeProductModal"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="productForm">
+
+                <input
+                    type="hidden"
+                    id="productId"
+                >
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="productName">
+                            Product Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="productName"
+                            name="name"
+                            required
+                            maxlength="150"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productCode">
+                            Product Code
+                        </label>
+
+                        <input
+                            type="text"
+                            id="productCode"
+                            name="product_code"
+                            maxlength="100"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productCategory">
+                            Category
+                        </label>
+
+                        <input
+                            type="text"
+                            id="productCategory"
+                            name="category"
+                            maxlength="100"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cylinderSize">
+                            Cylinder Size
+                        </label>
+
+                        <input
+                            type="text"
+                            id="cylinderSize"
+                            name="cylinder_size"
+                            maxlength="100"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productPrice">
+                            Price (KSh)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="productPrice"
+                            name="price"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productDealer">
+                            Dealer
+                        </label>
+
+                        <select
+                            id="productDealer"
+                            name="dealer_id"
+                        >
+                            <option value="">
+                                Select Dealer
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="productLocation">
+                            Location
+                        </label>
+
+                        <input
+                            type="text"
+                            id="productLocation"
+                            name="location"
+                            maxlength="200"
+                        >
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="productDescription">
+                            Description
+                        </label>
+
+                        <textarea
+                            id="productDescription"
+                            name="description"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productStatus">
+                            Status
+                        </label>
+
+                        <select
+                            id="productStatus"
+                            name="status"
+                        >
+                            <option value="available">
+                                Available
+                            </option>
+
+                            <option value="out_of_stock">
+                                Out of Stock
+                            </option>
+
+                            <option value="unavailable">
+                                Unavailable
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productImage">
+                            Image
+                        </label>
+
+                        <input
+                            type="text"
+                            id="productImage"
+                            name="image"
+                            placeholder="Image path or URL"
+                        >
+                    </div>
+
+                </div>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        id="cancelProductButton"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="saveProductButton"
+                    >
+                        Save Product
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         SCRIPTS
+    ====================================================== -->
+
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-product.js"></script>
+
+</body>
+</html>

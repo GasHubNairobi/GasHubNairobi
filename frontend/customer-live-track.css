@@ -1,0 +1,35 @@
+/* Live tracking (customer-live-track.js): map card + pickup shop card. Uses the order page's colour variables, so dark mode follows the theme. */
+.lt-msg { margin: 8px 0 0; padding: 9px 11px; border-radius: 10px; background: var(--blue-soft); color: var(--blue-dark); font-size: 12px; font-weight: 600; }
+.lt-msg.warn { background: #fff5e0; color: #7a4b00; }
+.lt-msg.done { background: #e6f6ec; color: #0d7a3d; }
+.lt-msg[hidden], .lt-mapwrap[hidden] { display: none; }
+
+.lt-mapwrap { position: relative; margin-top: 10px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--blue-soft); }
+.lt-map { position: relative; z-index: 0; isolation: isolate; width: 100%; height: 320px; background: var(--blue-soft); }
+.lt-map.pk-map { height: 190px; margin-top: 8px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.lt-map .leaflet-control-attribution { font-size: 9px; }
+.lt-icon { background: none !important; border: 0 !important; }
+.lt-icon svg { display: block; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
+
+.lt-recenter { position: absolute; z-index: 500; top: 10px; right: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line); border-radius: 50%; background: var(--white); color: var(--blue); box-shadow: 0 2px 8px rgba(15, 42, 122, .18); cursor: pointer; }
+.lt-recenter:active { transform: scale(.94); }
+
+/* compact bottom panel over the map */
+.lt-panel { position: absolute; z-index: 500; left: 8px; right: 8px; bottom: 8px; padding: 10px 12px; border-radius: 14px; background: var(--white); color: var(--ink);
+    border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(15, 42, 122, .22); }
+.lt-ptop { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--blue-dark); }
+.lt-live { flex: none; width: 10px; height: 10px; border-radius: 50%; background: #12a150; box-shadow: 0 0 0 4px rgba(18, 161, 80, .2); animation: ltPulse 1.6s ease-in-out infinite; }
+.lt-live.off { background: var(--yellow); box-shadow: 0 0 0 4px rgba(255, 194, 14, .25); animation: none; }
+@keyframes ltPulse { 50% { box-shadow: 0 0 0 7px rgba(18, 161, 80, .06); } }
+.lt-stats { display: flex; gap: 6px; margin-top: 8px; }
+.lt-stats > div { flex: 1; min-width: 0; padding: 6px 8px; border-radius: 10px; background: var(--blue-soft); }
+.lt-stats small { display: block; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+.lt-stats strong { display: block; font-size: 14px; color: var(--blue-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lt-note { margin-top: 6px; font-size: 10px; color: var(--muted); }
+
+/* pickup card */
+.pk-name { font-size: 14px; font-weight: 800; color: var(--blue-dark); }
+.pk-addr { margin-top: 2px; font-size: 12px; color: var(--muted); }
+.pk-btn { display: flex; align-items: center; justify-content: center; margin-top: 10px; min-height: 42px; border-radius: 11px; background: var(--blue); color: #fff; font-size: 13px; font-weight: 800; text-decoration: none; }
+@media (min-width: 700px) { .lt-map { height: 380px; } }

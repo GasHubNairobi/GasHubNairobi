@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- light / dark / system theme (chosen on the Profile page): script first, stylesheet last -->
+    <script src="gashub-theme.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1f4fd8">
+    <title>GasHub | Home</title>
+    <script src="customer-loader.js" data-manual></script>
+    <link rel="icon" type="image/png" href="/Images/favicon.png">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="customer-home.css">
+    <style>
+/* GasHub shared dealer styles (blue verified badge, follow, small mobile icons).
+   Load AFTER customer-home.css / customer-dealer.css. */
+
+/* blue verification badge: shown only for dealers the admin verified */
+.vbadge { flex: none; display: inline-flex; width: 15px; height: 15px; vertical-align: middle; }
+.vbadge svg { width: 100%; height: 100%; display: block; }
+.vbadge.lg { width: 18px; height: 18px; }
+
+/* "Following" tag */
+.ftag { display: inline-flex; align-items: center; padding: 0 7px; border-radius: 9px; background: #eaf0ff; color: #1f4fd8; font-size: 10px; font-weight: 700; line-height: 1.7; }
+
+/* follow button in the dealer details */
+.m-follow {
+    display: flex; align-items: center; justify-content: center; gap: 6px; width: calc(100% - 28px); min-height: 38px; margin: 10px 14px 0;
+    border: 1.5px solid #1f4fd8; border-radius: 10px; background: #fff; color: #1f4fd8; font-size: 13px; font-weight: 700;
+}
+.m-follow svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.m-follow.on { background: #eaf0ff; }
+.m-follow small { font-size: 11px; font-weight: 600; opacity: .8; }
+
+/* small icons + tighter cards on phones */
+@media (max-width: 599px) {
+    .dlogo { width: 36px; height: 36px; font-size: 12px; }
+    .dname { font-size: 12.5px; }
+    .vbadge { width: 13px; height: 13px; }
+    .vbadge.lg { width: 16px; height: 16px; }
+    .dview { min-height: 26px; padding: 0 10px; font-size: 10px; border-radius: 7px; }
+    .mi svg { width: 10px; height: 10px; }
+    .dmeta { font-size: 10px; gap: 2px 10px; }
+    .pill { font-size: 9px; }
+    .m-logo { width: 46px; height: 46px; font-size: 15px; }
+    .m-title h2 { font-size: 15px; }
+    .m-facts div { padding: 6px 8px; }
+    .m-follow { min-height: 34px; font-size: 12px; }
+    .m-follow svg { width: 13px; height: 13px; }
+    .sp-ph { height: 54px; }
+    .sp-name { font-size: 11px; min-height: 27px; }
+    .sp-price { font-size: 12px; }
+    .sp-view { min-height: 26px; font-size: 10px; }
+    .sp-cart { width: 28px; min-height: 26px; }
+    .sp-cart svg { width: 13px; height: 13px; }
+}
+
+</style>
+
+    <!-- Extra styles for this page: loading screen + product cards that match customer-product.css.
+         Kept here so customer-home.css stays untouched. -->
+    <style>
+        /* ---------- PRODUCT CARDS (same look as customer-product) ---------- */
+        .gcard { display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+        .belt .gcard { flex: none; width: 158px; }
+        .gphoto { position: relative; height: 92px; background: var(--blue-soft); display: flex; align-items: center; justify-content: center; }
+        .gphoto img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+        .gph-art { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .gph-art svg { height: 72%; width: auto; }
+        .gfav {
+            position: absolute; top: 4px; right: 4px; z-index: 2; width: 27px; height: 27px; border: 0; border-radius: 50%;
+            background: rgba(255, 255, 255, .95); box-shadow: 0 1px 4px rgba(0, 0, 0, .18);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .gfav svg { width: 14px; height: 14px; fill: none; stroke: var(--red); stroke-width: 2; stroke-linejoin: round; transition: transform .15s; }
+        .gfav.on svg { fill: var(--red); }
+        .gfav:active svg { transform: scale(1.25); }
+        .gbadge { position: absolute; top: 5px; left: 5px; max-width: calc(100% - 40px); padding: 1px 7px; border-radius: 10px; color: #fff; font-size: 8px; font-weight: 700; line-height: 1.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gbadge.views { background: var(--blue); }
+        .gbadge.bought { background: var(--red); }
+        .gbadge.mine { background: var(--yellow); color: var(--ink); }
+        .gbadge.pick { background: var(--blue-dark); }
+        .gbadge.out { background: var(--red); }
+        .gbody { display: flex; flex-direction: column; flex: 1; padding: 7px 7px 8px; }
+        .gname { overflow-wrap: anywhere; font-size: 12px; line-height: 1.25; font-weight: 700; min-height: 30px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .gbrand { margin-top: 1px; font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gprice { margin-top: 2px; font-size: 14px; font-weight: 800; color: var(--blue-dark); }
+        .gdealer { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 4px; }
+        .glink { min-width: 0; font-size: 10px; font-weight: 700; color: var(--blue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .glink:hover { text-decoration: underline; }
+        .grating { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 700; color: var(--ink); }
+        .grating b { color: #f5a800; font-size: 11px; line-height: 1; font-weight: 400; }
+        .gmeta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 4px; font-size: 10px; color: var(--muted); }
+        .gmeta-i { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+        .gmeta-i svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .gmeta-i.dist { color: var(--ink); font-weight: 700; }
+        .setloc { padding: 0; border: 0; background: none; font-size: 10px; font-weight: 600; color: var(--blue); text-align: left; text-decoration: underline; }
+        .gstat { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 9px; color: var(--muted); }
+        .gstat i { width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex: none; }
+        .gactions { display: flex; gap: 5px; margin-top: auto; padding-top: 7px; }
+        .gview { flex: 1; min-height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; }
+        .gview:active { background: var(--blue-dark); }
+        .gcart { flex: none; width: 34px; min-height: 32px; border: 0; border-radius: 8px; background: var(--yellow); color: var(--ink); display: flex; align-items: center; justify-content: center; }
+        .gcart:active { background: var(--yellow-dark); }
+        .gcart:disabled { background: #d9deec; color: #8d95b2; cursor: not-allowed; }
+        .gcart svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* ---------- DEALER CARDS (same info as the Find a Dealer page) ---------- */
+        .dcard { gap: 9px; }
+        .dbody h3 { gap: 4px; }
+        .dbody h3 span.dn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dstats { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 9px; margin-top: 3px; font-size: 10.5px; color: var(--muted); }
+        .dst { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+        .dst svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .dst.dist { color: var(--ink); font-weight: 700; }
+        .dst.open { color: var(--green); font-weight: 700; }
+        .dst.shut { color: var(--red); font-weight: 700; }
+        .dealer-note { margin-top: 8px; font-size: 11px; color: var(--muted); }
+        .dealer-note button { padding: 0; border: 0; background: none; color: var(--blue); font-size: 11px; font-weight: 600; text-decoration: underline; }
+
+        @media (min-width: 700px) {
+            .belt .gcard { width: 188px; }
+            .gphoto { height: 130px; }
+            .gbody { padding: 9px 9px 10px; }
+            .gname { font-size: 13px; min-height: 32px; }
+            .gbrand { font-size: 11px; }
+            .gprice { font-size: 16px; }
+            .glink, .grating, .gmeta, .setloc { font-size: 11px; }
+            .gview { min-height: 38px; font-size: 12px; border-radius: 9px; }
+            .gcart { width: 40px; min-height: 38px; border-radius: 9px; }
+            .gfav { top: 6px; right: 6px; width: 32px; height: 32px; }
+            .gfav svg { width: 17px; height: 17px; }
+            .gbadge { font-size: 9px; }
+            .dstats { font-size: 12px; }
+        }
+        @media (max-width: 360px) { .belt .gcard { width: 146px; } .gprice { font-size: 13px; } }
+    
+        /* ---------- PHONE-FRIENDLY SIZES: small cards, small graphics ---------- */
+        @media (max-width: 699px) {
+            .belt { gap: 6px; }
+            .belt .gcard { width: 112px; border-radius: 9px; }
+            .belt .gphoto { height: 58px; }
+            .belt .gphoto img { padding: 4px; }
+            .belt .gph-art svg { height: 78%; }
+            .belt .gbody { padding: 5px 6px 6px; }
+            .belt .gname { font-size: 11px; min-height: 27px; }
+            .belt .gbrand { display: none; }
+            .belt .gprice { font-size: 12.5px; margin-top: 1px; }
+            .belt .gdealer { margin-top: 3px; }
+            .belt .glink, .belt .grating { font-size: 9px; }
+            .belt .grating b { font-size: 10px; }
+            .belt .gmeta { font-size: 9px; margin-top: 3px; gap: 1px 5px; }
+            .belt .gmeta-i svg { width: 9px; height: 9px; }
+            .belt .setloc { font-size: 9px; }
+            .belt .gstat { font-size: 8px; margin-top: 3px; }
+            .belt .gactions { gap: 4px; padding-top: 5px; }
+            .belt .gview { min-height: 26px; font-size: 10px; border-radius: 7px; }
+            .belt .gcart { width: 28px; min-height: 26px; border-radius: 7px; }
+            .belt .gcart svg { width: 13px; height: 13px; }
+            .belt .gfav { width: 21px; height: 21px; top: 3px; right: 3px; }
+            .belt .gfav svg { width: 11px; height: 11px; }
+            .belt .gbadge { top: 3px; left: 3px; padding: 0 5px; font-size: 7px; max-width: calc(100% - 30px); }
+
+            .product-grid { gap: 6px; }
+            .product-grid .gphoto { height: 72px; }
+            .product-grid .gph-art svg { height: 78%; }
+            .product-grid .gprice { font-size: 13px; }
+
+            /* dealers: smaller on phones */
+            .dealer-grid { gap: 6px; }
+            .dcard { padding: 8px 9px; gap: 8px; }
+            .dlogo { width: 34px; height: 34px; font-size: 11px; }
+            .dbody h3 { font-size: 12.5px; }
+            .dbody p { font-size: 11px; }
+            .dstats { font-size: 10px; gap: 1px 8px; }
+            .dst svg { width: 10px; height: 10px; }
+            .dgo { font-size: 17px; }
+        }
+        @media (max-width: 360px) { .belt .gcard { width: 104px; } .product-grid .gphoto { height: 64px; } }
+    </style>
+    <!-- ONE product card + ONE dealer card, shared with the Products and Dealers pages -->
+    <link rel="stylesheet" href="customer-cards.css">
+    <link rel="stylesheet" href="gashub-theme.css">
+    <script src="gashub-ban-guard.js"></script>
+</head>
+<body>
+    <script src="customer-nav.js" data-active="home" data-sidebar="true" data-tabs="true"></script>
+
+    <!-- HEADER -->
+    <header class="customer-header">
+        <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+
+        <a href="customer-home.html" class="customer-logo"><img src="/Images/logo.png" alt="GasHub"></a>
+
+        <button type="button" class="location-btn" id="locationBtn" aria-label="Select delivery location">
+            <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+            <span id="customerLocation">Select location</span>
+        </button>
+
+        <a href="customer-orders.html" class="notification-link" aria-label="Orders and notifications">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            <span id="notificationBadge" class="notification-badge" hidden></span>
+        </a>
+    </header>
+
+    <!-- SIDE MENU -->
+    <main>
+
+        <!-- HERO: on phones only "Welcome" + one row (search left, View products right) -->
+        <section class="home-hero">
+            <img src="/Images/watermark.png" alt="" class="page-watermark" aria-hidden="true">
+            <div class="hero-content">
+                <p class="hero-eyebrow" id="hello">Welcome to GasHub</p>
+                <h1>Need a gas dealer near you?</h1>
+                <p class="hero-text">Find gas and accessories from dealers around your location. Order and track everything in one place.</p>
+
+                <div class="hero-row">
+                    <form id="customerSearchForm" class="customer-search-form">
+                        <input type="search" id="customerSearch" name="search" placeholder="Search gas, cylinders..." autocomplete="off" aria-label="Search products">
+                        <button type="submit">Search</button>
+                    </form>
+                    <a href="customer-product.html" class="hero-btn primary">View products</a>
+                </div>
+
+                <div class="hero-actions">
+                    <a href="customer-dealer.html" class="hero-btn secondary">Find a Dealer</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRENDING BELT -->
+        <section class="home-section">
+            <div class="section-heading">
+                <div>
+                    <h2>Trending</h2>
+                </div>
+                <a href="customer-product.html" class="see-all">View all ›</a>
+            </div>
+            <div class="belt-wrap">
+                <div class="belt" id="popularProducts" aria-label="Trending products"></div>
+            </div>
+        </section>
+
+        <!-- REST OF THE PRODUCTS: closest to the customer first -->
+        <section class="home-section">
+            <div class="section-heading">
+                <div>
+                    <h2>Near me</h2>
+                </div>
+                <a href="customer-product.html" class="see-all">View all ›</a>
+            </div>
+            <div class="product-grid" id="moreProducts"></div>
+            <button type="button" class="more-btn" id="moreBtn" hidden>Show more</button>
+        </section>
+
+        <!-- DEALERS: the 3 closest to the pinned location, or ones the customer follows -->
+        <section class="home-section">
+            <div class="section-heading">
+                <div>
+                    <h2>Dealers</h2>
+                </div>
+                <a href="customer-dealer.html" class="see-all">View all ›</a>
+            </div>
+            <div class="dealer-grid" id="featuredDealers"></div>
+            <p class="dealer-note" id="dealerNote" hidden><button type="button" id="dealerNoteBtn">Pin your location</button> to see the dealers closest to you.</p>
+        </section>
+
+        <!-- HOW IT WORKS -->
+        <section class="home-section">
+            <div class="section-heading"><div><h2>How GasHub works</h2></div></div>
+            <div class="steps-grid">
+                <article class="step-card"><span class="step-number">1</span><h3>Find your gas</h3><p>Browse products and pick what you need.</p></article>
+                <article class="step-card"><span class="step-number">2</span><h3>Place your order</h3><p>Choose a dealer and confirm your pin.</p></article>
+                <article class="step-card"><span class="step-number">3</span><h3>Get your gas</h3><p>The dealer delivers to your location.</p></article>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="customer-footer">
+        <img src="/Images/watermark.png" alt="" class="footer-watermark" aria-hidden="true">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <img src="/Images/logo.png" alt="GasHub">
+                <p>GasHub connects customers with available gas products and dealers, making it easier to find, order and manage your gas needs.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Quick links</h3>
+                <div class="footer-links">
+                    <a href="customer-home.html">Home</a>
+                    <a href="customer-product.html">Products</a>
+                    <a href="customer-dealer.html">Find a Dealer</a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Customer</h3>
+                <div class="footer-links">
+                    <a href="customer-orders.html">My Orders</a>
+                    <a href="customer-profile.html">My Profile</a>
+                    <a href="customer-profile.html">Settings</a>
+                </div>
+            </div>
+
+            <!-- SOCIAL MEDIA: replace the links below with your real accounts -->
+            <div class="footer-column footer-social">
+                <h3>Follow us</h3>
+                <div class="social-links">
+                    <a href="https://www.tiktok.com/@gashub" target="_blank" rel="noopener" aria-label="GasHub on TikTok">
+                        <svg viewBox="0 0 24 24"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5M14 3c.4 2.6 2 4.2 5 4.5"/></svg>TikTok
+                    </a>
+                    <a href="https://www.instagram.com/gashub" target="_blank" rel="noopener" aria-label="GasHub on Instagram">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="f" cx="17.5" cy="6.5" r="1.1"/></svg>Instagram
+                    </a>
+                    <a href="https://www.facebook.com/gashub" target="_blank" rel="noopener" aria-label="GasHub on Facebook">
+                        <svg viewBox="0 0 24 24"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/></svg>Facebook
+                    </a>
+                    <a href="https://x.com/gashub" target="_blank" rel="noopener" aria-label="GasHub on X (Twitter)">
+                        <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>Twitter / X
+                    </a>
+                    <a href="mailto:hello@gashub.co.ke" aria-label="Email GasHub">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Email us
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 GasHub. All rights reserved.</span>
+            <span>Gas marketplace platform</span>
+        </div>
+    </footer>
+
+    <!-- LOCATION MODAL WITH MAP -->
+    <div class="location-modal" id="locationModal" aria-hidden="true">
+        <div class="location-modal-content" role="dialog" aria-label="Select delivery location">
+            <button type="button" class="location-modal-close" id="closeLocationModal" aria-label="Close">×</button>
+            <h2>Delivery location</h2>
+            <p>Use your current location, or tap the map to drop a pin. Drag the pin to adjust it.</p>
+
+            <button type="button" class="btn-blue" id="useCurrentLocationBtn">Use my current location</button>
+
+            <div class="map-box">
+                <div id="locationMap"></div>
+                <div class="map-msg" id="mapMsg" hidden></div>
+            </div>
+            <p class="location-status" id="locationStatus">No location selected.</p>
+
+            <button type="button" class="btn-yellow" id="confirmLocationBtn" disabled>Confirm location</button>
+        </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <!-- Map library (OpenStreetMap tiles). If it fails to load, the rest of the page still works. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <!-- Tracking helper: provides recordView() / recordPurchase() -->
+    <script src="customer-logout.js"></script>
+    <script src="customer-photo.js"></script>
+    <script src="customer-track.js"></script>
+    <!-- Shared dealer data + helpers (also used by customer-dealer.html) -->
+    <script src="customer-dealer-data.js"></script>
+    <!-- Shared product rules + product card (also used by customer-product.html and customer-dealer.html) -->
+    <script src="customer-product-card.js"></script>
+
+    <!-- Everything below is inline on purpose, so it cannot fail to load. -->
+    <script>
+    (function () {
+        "use strict";
+
+        const API_BASE = "/api";
+        const DEALER_PAGE = "customer-dealer.html"; /* opens ?id=<dealer id> */
+        const CHECKOUT_PAGE = "customer-checkout.html";
+        const PRODUCT_PAGE = "customer-product.html";
+        const FAV_KEY = "gasHubFavorites";
+        const LOC_KEY = "gasHubLocation";
+        const FALLBACK_IMG = "/Images/watermark.png";
+
+        const $ = (s, p = document) => p.querySelector(s);
+        const $$ = (s, p = document) => [...p.querySelectorAll(s)];
+        const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        const store = {
+            get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+            set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+        };
+        const on = (sel, ev, fn) => { const el = $(sel); if (el) el.addEventListener(ev, fn); };
+        /* run each part on its own so one failure can never break the others (returns the promise if there is one) */
+        const safe = fn => { try { const r = fn(); return (r && r.catch) ? r.catch(console.error) : r; } catch (e) { console.error(e); } };
+        const fmtK = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(".0", "") + "k" : String(n);
+
+        /* ================= LOADING SCREEN ================= */
+        function hideLoader() { if (window.CustomerLoader) window.CustomerLoader.hide(); }
+
+        /* ================= MENU ================= */
+        const menu = $("#mobileMenu"), scrim = $("#menuOverlay");
+        function openMenu() { menu.classList.add("active"); scrim.classList.add("show"); menu.setAttribute("aria-hidden", "false"); }
+        function closeMenu() { menu.classList.remove("active"); scrim.classList.remove("show"); menu.setAttribute("aria-hidden", "true"); }
+        on("#menuBtn", "click", openMenu);
+        on("#closeMenuBtn", "click", closeMenu);
+        if (scrim) scrim.addEventListener("click", closeMenu);
+
+        /* ================= CUSTOMER ================= */
+        function showCustomer() {
+            let c = null;
+            for (const k of ["customer", "user", "customerData", "currentUser"]) { c = store.get(k); if (c) break; }
+            if (!c) return;
+            const name = c.name || c.full_name || c.fullName || `${c.first_name || ""} ${c.last_name || ""}`.trim() || "Customer";
+            $("#hello").textContent = `Welcome to GasHub, ${name.split(" ")[0]} 👋`;
+            $("#menuCustomerName").textContent = name;
+            $("#avatar").textContent = name[0].toUpperCase();
+        }
+        on("#logoutLink", "click", e => {
+            e.preventDefault();
+            if (window.gasHubAskLogout) window.gasHubAskLogout();
+            else if (confirm("Are you sure you want to log out?")) window.gasHubLogout();
+        });
+        on("#helpLink", "click", e => { e.preventDefault(); closeMenu(); if (window.GasHubAssistant) window.GasHubAssistant.open(); });
+
+        /* ================= SEARCH ================= */
+        on("#customerSearchForm", "submit", e => {
+            e.preventDefault();
+            const q = $("#customerSearch").value.trim();
+            if (!q) { $("#customerSearch").focus(); return; }
+            location.href = `${PRODUCT_PAGE}?search=${encodeURIComponent(q)}`;
+        });
+
+        /* ================= LOCATION + MAP ================= */
+        const modal = $("#locationModal"), locStatus = $("#locationStatus"), confirmBtn = $("#confirmLocationBtn"), mapMsg = $("#mapMsg");
+        const NAIROBI = [-1.2864, 36.8172];
+        let picked = null, map = null, marker = null;
+
+        function setPick(lat, lng, msg) {
+            picked = { latitude: lat, longitude: lng };
+            locStatus.textContent = msg || "Pin placed. Confirm to save.";
+            confirmBtn.disabled = false;
+        }
+        function putMarker(lat, lng) {
+            if (!map) return;
+            if (!marker) {
+                marker = L.marker([lat, lng], {
+                    draggable: true,
+                    icon: L.divIcon({ className: "map-pin", html: "<i></i>", iconSize: [24, 24], iconAnchor: [12, 28] })
+                }).addTo(map);
+                marker.on("dragend", () => { const p = marker.getLatLng(); setPick(p.lat, p.lng, "Pin moved. Confirm to save."); });
+            } else marker.setLatLng([lat, lng]);
+        }
+        function initMap() {
+            if (map) return true;
+            if (!window.L) {
+                mapMsg.hidden = false;
+                mapMsg.textContent = "The map could not load. Check your internet connection. You can still use your current location.";
+                return false;
+            }
+            const s = store.get(LOC_KEY);
+            const c = s ? [s.latitude, s.longitude] : NAIROBI;
+            map = L.map("locationMap", { zoomControl: true }).setView(c, s ? 15 : 12);
+            L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
+            map.on("click", e => { putMarker(e.latlng.lat, e.latlng.lng); setPick(e.latlng.lat, e.latlng.lng); });
+            if (s) putMarker(c[0], c[1]);
+            return true;
+        }
+        function openLoc() {
+            modal.classList.add("active"); modal.setAttribute("aria-hidden", "false");
+            if (initMap()) setTimeout(() => map.invalidateSize(), 150);
+        }
+        function closeLoc() { modal.classList.remove("active"); modal.setAttribute("aria-hidden", "true"); }
+        on("#locationBtn", "click", openLoc);
+        on("#closeLocationModal", "click", closeLoc);
+        on("#dealerNoteBtn", "click", openLoc);
+        if (modal) modal.addEventListener("click", e => { if (e.target === modal) closeLoc(); });
+
+        on("#useCurrentLocationBtn", "click", () => {
+            if (!navigator.geolocation) { locStatus.textContent = "Location is not supported on this device."; return; }
+            locStatus.textContent = "Finding your location...";
+            navigator.geolocation.getCurrentPosition(p => {
+                const lat = p.coords.latitude, lng = p.coords.longitude;
+                if (map) { putMarker(lat, lng); map.setView([lat, lng], 16); }
+                setPick(lat, lng, "Current location found. Confirm to save.");
+            }, err => {
+                locStatus.textContent = err.code === 1
+                    ? "Location is blocked. Allow access in your browser, or tap the map to drop a pin."
+                    : "Couldn't get your location. Tap the map to drop a pin.";
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+        });
+
+        async function placeName(lat, lng) {
+            try {
+                const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 4000);
+                const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&lat=${lat}&lon=${lng}`, { signal: ctl.signal });
+                clearTimeout(t);
+                if (!r.ok) return null;
+                const a = (await r.json()).address || {};
+                return [a.neighbourhood || a.suburb || a.village || a.road, a.city || a.town || a.county].filter(Boolean).slice(0, 2).join(", ") || null;
+            } catch (e) { return null; }
+        }
+        on("#confirmLocationBtn", "click", async () => {
+            if (!picked) return;
+            confirmBtn.disabled = true; confirmBtn.textContent = "Saving...";
+            const label = await placeName(picked.latitude, picked.longitude);
+            store.set(LOC_KEY, { ...picked, label, savedAt: new Date().toISOString() });
+            confirmBtn.textContent = "Confirm location";
+            picked = null;
+            showLocation(); closeLoc();
+            safe(renderAll); /* re-sort the products and refresh distances for the new location */
+            safe(renderDealers); /* and the closest dealers */
+        });
+        function showLocation() {
+            const s = store.get(LOC_KEY);
+            if (s) $("#customerLocation").textContent = s.label || `Pinned (${Number(s.latitude).toFixed(3)}, ${Number(s.longitude).toFixed(3)})`;
+        }
+
+        /* ================= PURCHASE + VIEW HISTORY ================= */
+        async function purchaseCounts() {
+            const counts = {};
+            const add = (id, name, q) => { const k = String(id ?? name); counts[k] = counts[k] || { n: 0, name }; counts[k].n += Number(q) || 1; };
+            try {
+                const t = localStorage.getItem("token") || localStorage.getItem("customerToken") || localStorage.getItem("authToken");
+                const r = await fetch(`${API_BASE}/orders`, { headers: t ? { Authorization: `Bearer ${t}` } : {} });
+                if (r.ok) { const d = await r.json(); (Array.isArray(d) ? d : d.orders || d.data || []).forEach(o => (o.items || o.products || []).forEach(i => add(i.product_id ?? i.id, i.name || i.product_name, i.quantity ?? i.qty))); }
+            } catch (e) { }
+            if (!Object.keys(counts).length) (store.get("gasHubPurchases") || []).forEach(h => add(h.id, h.name, h.qty));
+            return counts;
+        }
+
+        /* ================= PRODUCTS ================= */
+
+        /* Product rules and the product card are shared with the Products page and the dealer page
+           (customer-product-card.js), so a product looks and reads the same everywhere. */
+        const GP = window.GasHubProducts;
+        const { normalize, isAvail, productHref, distanceKm } = GP;
+        const getFavs = GP.getFavs, toggleFav = GP.toggleFav;
+
+        const TAGS = { mine: ["Viewed by you", "mine"], views: ["Most viewed", "views"], bought: ["Most bought", "bought"], pick: ["Featured", "pick"] };
+        const state = { items: [], belt: [], shown: 20, dealers: [], sig: null };
+        const STEP = 20;
+
+        /* tagKey is only the belt's "why is this here" badge (Most viewed, Most bought...). The card itself is identical. */
+        function cardHTML(p, favs, tagKey) {
+            return GP.cardHTML(p, favs, { tag: tagKey ? TAGS[tagKey] : null, viewHref: productHref(p), locButton: true });
+        }
+
+        /* Load live products from the API */
+        async function loadProducts() {
+            let list = [];
+            try {
+                const r = await fetch(`${API_BASE}/products`, { headers: { Accept: "application/json" } });
+                if (!r.ok) throw new Error(`Unable to load products (${r.status})`);
+                const d = await r.json();
+                list = Array.isArray(d) ? d : d.products || d.data || [];
+            } catch (e) {
+                console.error("Products API unavailable:", e);
+            }
+            const items = (Array.isArray(list) ? list : []).map(normalize);
+            await GP.enrichVerified(items);   /* the blue tick follows the dealer's verified status */
+
+            /* nothing changed since the last check: leave the belt running as it is */
+            const sig = JSON.stringify(items.map(p => [p.id, p.availability, p.price, p.dealer, p.image, p.size, p.sold, p.views, p.dealerVerified]));
+            if (sig === state.sig) return;
+            state.sig = sig;
+            state.items = items;
+
+        /* what this customer viewed (array written by customer-track.js, newest first) */
+            const seenList = store.get("gasHubViews");
+            const viewed = Array.isArray(seenList) ? seenList : [];
+            const idOf = v => String(v.id != null ? v.id : v.name);
+
+            /* the belt shows only live products that are in stock right now.
+               Products the customer viewed before are no longer pulled from their history,
+               so a product the dealer ran out of (or removed) disappears straight away. */
+            const inStock = items.filter(isAvail);
+            const mine = viewed.slice(0, 5).map(v => inStock.find(p => p.id === idOf(v))).filter(Boolean);
+            const topViews = inStock.slice().sort((a, b) => GP.viewsOf(b) - GP.viewsOf(a)).filter(p => GP.viewsOf(p) > 0).slice(0, 5);
+            const topBought = inStock.slice().sort((a, b) => GP.soldOf(b) - GP.soldOf(a)).filter(p => GP.soldOf(p) > 0).slice(0, 5);
+
+            const merged = new Map();
+            const add = (p, tag) => { if (!merged.has(p.id)) merged.set(p.id, { p, tags: [] }); const e = merged.get(p.id); if (!e.tags.includes(tag)) e.tags.push(tag); };
+            mine.forEach(p => add(p, "mine"));
+            topViews.forEach(p => add(p, "views"));
+            topBought.forEach(p => add(p, "bought"));
+            if (!merged.size) inStock.slice(0, 8).forEach(p => add(p, "pick"));
+
+
+            /* the belt takes at most half of the products, so "More products" is never empty */
+            state.belt = [...merged.values()].slice(0, Math.max(2, Math.min(14, Math.ceil(items.length / 2))));
+            renderAll();
+        }
+
+        function renderAll() { renderBelt(); renderMore(); }
+
+        function renderBelt() {
+            const belt = $("#popularProducts");
+            if (!belt) return;
+            const favs = getFavs();
+            belt.innerHTML = state.belt.map(({ p, tags }) => cardHTML(p, favs, tags[0])).join("");
+            requestAnimationFrame(() => startBelt(belt));
+        }
+
+        /* the rest of the products, nearest dealer first (unknown distance goes last), then best rated */
+        function renderMore() {
+            const grid = $("#moreProducts"), btn = $("#moreBtn");
+            if (!grid) return;
+            const loc = store.get(LOC_KEY);
+            const rest = GP.rankProducts(state.items).map(p => ({ p, d: distanceKm(p) }));
+
+            const anyDist = rest.some(r => r.d !== null);
+
+            if (!rest.length) {
+                grid.innerHTML = `<div class="empty-note">No products right now.</div>`;
+                btn.hidden = true;
+                return;
+            }
+            const favs = getFavs();
+            grid.innerHTML = rest.slice(0, state.shown).map(({ p }) => cardHTML(p, favs, null)).join("");
+            btn.hidden = rest.length <= state.shown;
+        }
+
+        /* checkout link + view tracking come from the shared helper too */
+        function goToCheckout(p) {
+            if (!isAvail(p)) return;
+            location.href = GP.checkoutUrl(p);
+        }
+        const trackView = GP.trackView;
+
+        /* one click handler for the belt and the grid */
+        function onCardClick(e) {
+            const card = e.target.closest(".gcard");
+            if (!card) return;
+            if (e.target.closest(".setloc")) { openLoc(); return; }
+            const p = state.items.find(x => x.id === card.dataset.id) || (state.belt.find(b => b.p.id === card.dataset.id) || {}).p;
+            if (!p) return;
+            if (e.target.closest(".glink")) { trackView(p); return; }       /* normal link to the dealer profile */
+            const act = e.target.closest("[data-act]");
+            if (!act) return;
+            if (act.dataset.act === "fav") {
+                const on_ = toggleFav(p.id);
+                /* keep every copy of this card (belt clones included) in sync */
+                $$(`.gcard[data-id="${CSS.escape(p.id)}"] .gfav`).forEach(b => { b.classList.toggle("on", on_); b.setAttribute("aria-pressed", on_); });
+            } else if (act.dataset.act === "view") trackView(p);              /* the link then opens the product page */
+            else if (act.dataset.act === "cart") { trackView(p); goToCheckout(p); }
+        }
+        function bindProducts() {
+            const belt = $("#popularProducts"), grid = $("#moreProducts");
+            [belt, grid].forEach(c => {
+                if (!c) return;
+                c.addEventListener("click", onCardClick);
+                GP.watchImages(c);   /* a photo that fails to load is replaced by the gas picture */
+            });
+            on("#moreBtn", "click", () => { state.shown += STEP; renderMore(); });
+        }
+
+        /* Trending belt: moves right to left forever. Pauses while the customer touches or hovers, and they can swipe it by hand. */
+        const B = { token: 0, pos: 0, setW: 0, count: 0, paused: false, hover: false, timer: null, bound: false };
+        function startBelt(belt) {
+            const token = ++B.token;
+            const originals = $$(".gcard", belt);
+            B.count = originals.length;
+            if (originals.length < 2) return;
+            const gap = parseFloat(getComputedStyle(belt).columnGap) || 8;
+            B.setW = originals.reduce((s, c) => s + c.offsetWidth + gap, 0);
+            const sets = Math.max(2, Math.ceil(belt.clientWidth / B.setW) + 1);
+            for (let i = 1; i < sets; i++) {
+                originals.forEach(c => {
+                    const k = c.cloneNode(true);
+                    k.setAttribute("aria-hidden", "true");
+                    $$("a, button", k).forEach(x => { x.tabIndex = -1; });
+                    belt.appendChild(k);
+                });
+            }
+            const measure = () => { const first = belt.children[B.count]; if (first) B.setW = first.offsetLeft - belt.children[0].offsetLeft; };
+
+            if (!B.bound) {
+                B.bound = true;
+                window.addEventListener("resize", measure);
+                const hold = ms => { B.paused = true; clearTimeout(B.timer); B.timer = setTimeout(() => { B.pos = belt.scrollLeft; B.paused = false; }, ms); };
+                ["touchstart", "pointerdown", "wheel"].forEach(ev => belt.addEventListener(ev, () => hold(2500), { passive: true }));
+                belt.addEventListener("touchend", () => hold(1500), { passive: true });
+                belt.addEventListener("mouseenter", () => { B.hover = true; });
+                belt.addEventListener("mouseleave", () => { B.hover = false; B.pos = belt.scrollLeft; });
+            }
+
+            if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            const SPEED = 32; /* pixels per second */
+            B.pos = belt.scrollLeft;
+            let last = performance.now();
+            (function tick(now) {
+                if (token !== B.token) return;   /* belt was rebuilt: stop this loop */
+                const dt = Math.min(now - last, 64); last = now;
+                if (!B.paused && !B.hover && !document.hidden) {
+                    B.pos += SPEED * dt / 1000;
+                    if (B.pos >= B.setW) B.pos -= B.setW;
+                    belt.scrollLeft = B.pos;
+                } else if (belt.scrollLeft >= B.setW) {
+                    belt.scrollLeft -= B.setW; B.pos = belt.scrollLeft;
+                }
+                requestAnimationFrame(tick);
+            })(last);
+        }
+
+        /* ================= DEALERS =================
+           Same dealers and same info as the Find a Dealer page (shared customer-dealer-data.js).
+           Shows 3: dealers the customer follows first, then the closest to the pinned location. */
+        const GD = window.GasHubDealers;
+
+        async function loadDealers() {
+            try { state.dealers = GD ? await GD.load() : []; } catch (e) { state.dealers = []; }
+            renderDealers();
+        }
+
+        /* the dealer card is the Find a Dealer page's card (GasHubDealers.cardHTML), so both pages match */
+        const dealerCardHTML = d => GD.cardHTML(d);
+        const openDealer = id => { location.href = `customer-dealer.html?id=${encodeURIComponent(id)}`; };
+
+        function renderDealers() {
+            const box = $("#featuredDealers");
+            if (!box || !GD) return;
+            const hasLoc = !!GD.getLocation();
+            const top = GD.nearby(state.dealers, 3);
+            const anyFollowed = top.some(d => GD.isFollowing(d.id));
+            box.innerHTML = top.length ? top.map(dealerCardHTML).join("") : `<div class="empty-note">No dealers available right now.</div>`;
+            $("#dealerNote").hidden = hasLoc;
+        }
+
+        /* a dealer card opens that dealer on the Find a Dealer page */
+        (function bindDealers() {
+            const box = $("#featuredDealers");
+            if (!box) return;
+            box.addEventListener("click", e => { const c = e.target.closest(".dcard"); if (c) openDealer(c.dataset.id); });
+            box.addEventListener("keydown", e => {
+                if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("dcard")) { e.preventDefault(); openDealer(e.target.dataset.id); }
+            });
+        })();
+
+        document.addEventListener("keydown", e => { if (e.key === "Escape") { closeMenu(); closeLoc(); } });
+
+        /* ================= START ================= */
+        safe(showCustomer);
+        safe(showLocation);
+        safe(bindProducts);
+
+        /* keep the loading screen for at least a moment so it never just flashes,
+           and never longer than 7 seconds even if the server is slow */
+        const minWait = new Promise(r => setTimeout(r, 1000));
+        Promise.all([safe(loadProducts), safe(loadDealers), minWait]).then(hideLoader, hideLoader);
+
+        /* Keep stock live: check again every 20 seconds and whenever the customer comes back to the tab,
+           so a product the dealer ran out of leaves the belt and the list straight away. */
+        let refreshing = false;
+        async function refreshProducts() {
+            if (refreshing || document.hidden) return;
+            refreshing = true;
+            try { await loadProducts(); } catch (e) { } finally { refreshing = false; }
+        }
+        setInterval(refreshProducts, 20000);
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshProducts(); });
+        window.addEventListener("focus", refreshProducts);
+    })();
+    </script>
+    <script src="customer-pay-prompt.js" defer></script>
+    <script src="customer-review-popup.js" defer></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="gashub-assistant.js" defer></script>
+</body>
+</html>

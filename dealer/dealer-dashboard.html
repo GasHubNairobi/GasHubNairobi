@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#d97706">
+    <meta name="description" content="GasHub Executive Dealer Portal - Complete management of LPG cylinder inventory, orders, sales analytics, and dispatch tracking.">
+
+    <title>Dealer Portal | GasHub Executive Dashboard</title>
+
+    <!-- Official GasHub Favicon from images folder -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6 (Professional Enterprise Icons) -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <!-- GasHub Modern Stylesheets -->
+    <link rel="stylesheet" href="dealer-dashboard.css">
+    <link rel="stylesheet" href="dealer-products.css">
+<link rel="stylesheet" href="dealer-logout.css">
+    <script src="dealer-cache-guard.js"></script>
+    <script src="gashub-dialog.js"></script>
+    <link rel="stylesheet" href="dealer-header.css">
+    <link rel="stylesheet" href="dealer-mobile.css">
+</head>
+
+<body>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div
+        class="dealer-sidebar-overlay"
+        id="dealerSidebarOverlay"
+        aria-hidden="true"
+    ></div>
+
+    <div class="dealer-layout">
+
+        <!-- =====================================================
+             1. REFINED EXECUTIVE SIDEBAR (STREAMLINED AS REQUESTED)
+             ===================================================== -->
+        <aside
+            class="dealer-sidebar"
+            id="dealerSidebar"
+            aria-label="Dealer Navigation"
+        >
+            <!-- Brand Header -->
+            <div class="sidebar-brand">
+                <a href="dealer-dashboard.html" class="brand-link" aria-label="GasHub Home">
+                    <img src="images/logo.png" alt="GasHub Logo" class="brand-logo-img">
+                    <div class="brand-text">
+                        <span class="brand-title">GasHub</span>
+                        <span class="brand-badge">DEALER PRO</span>
+                    </div>
+                </a>
+                <button
+                    type="button"
+                    class="sidebar-close-btn"
+                    id="sidebarCloseBtn"
+                    aria-label="Close navigation"
+                >
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <!-- Only: Dashboard, Orders, Stock, Purchases, Sales, Messages, Profile -->
+            <nav class="sidebar-nav" aria-label="Main navigation">
+                <a
+                    href="dealer-dashboard.html"
+                    class="nav-item active"
+                    aria-current="page"
+                >
+                    <i class="fa-solid fa-chart-pie nav-icon" aria-hidden="true"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="dealer-orders.html" class="nav-item">
+                    <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
+                    <span>Orders</span>
+                    <span class="nav-badge" id="sidebarOrdersBadge">0</span>
+                </a>
+
+                <a href="dealer-messengers.html" class="nav-item">
+                    <i class="fa-solid fa-motorcycle nav-icon" aria-hidden="true"></i>
+                    <span>Messengers</span>
+                </a>
+
+                <a href="dealer-products.html" class="nav-item">
+                    <i class="fa-solid fa-boxes-stacked nav-icon" aria-hidden="true"></i>
+                    <span>Stock</span>
+                    <span class="nav-badge warning" id="sidebarLowStockBadge" hidden>0</span>
+                </a>
+
+                <a href="dealer-purchases.html" class="nav-item">
+                    <i class="fa-solid fa-cart-shopping nav-icon" aria-hidden="true"></i>
+                    <span>Purchases</span>
+                </a>
+
+                <a href="dealer-sales.html" class="nav-item">
+                    <i class="fa-solid fa-arrow-trend-up nav-icon" aria-hidden="true"></i>
+                    <span>Sales</span>
+                </a>
+
+                <a href="dealer-payouts.html" class="nav-item">
+                    <i class="fa-solid fa-money-bill-transfer nav-icon" aria-hidden="true"></i>
+                    <span>Payouts</span>
+                </a>
+
+                <a href="dealer-reviews.html" class="nav-item">
+                    <i class="fa-solid fa-star nav-icon" aria-hidden="true"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="dealer-messages.html" class="nav-item">
+                    <i class="fa-solid fa-comments nav-icon" aria-hidden="true"></i>
+                    <span>Messages</span>
+                    <span class="nav-badge info" id="sidebarMessagesBadge">0</span>
+                </a>
+
+                <a href="dealer-profile.html" class="nav-item">
+                    <i class="fa-solid fa-store nav-icon" aria-hidden="true"></i>
+                    <span>Profile</span>
+                </a>
+            </nav>
+
+            <!-- Sidebar Footer: Profile Followers, Reviews & TikTok Blue Verification Badge -->
+            <div class="sidebar-footer">
+                <div class="outlet-status-card">
+                    <div class="dealer-profile-mini">
+                        <button type="button" class="btn-request-verification" id="btnRequestVerification" title="Request official GasHub blue check badge">
+                            <svg viewBox="0 0 24 24" class="tiktok-badge-svg-sm" aria-hidden="true">
+                                <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                                <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                            </svg>
+                            <span id="verificationBtnText">Request Verification</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- =====================================================
+             2. MAIN APPLICATION CONTENT
+             ===================================================== -->
+        <main class="dealer-main">
+
+            <!-- Top Header Bar -->
+            <header class="dealer-header">
+                <div class="header-left">
+                    <button
+                        type="button"
+                        class="mobile-menu-trigger"
+                        id="dealerMobileMenu"
+                        aria-label="Open navigation menu"
+                        aria-controls="dealerSidebar"
+                        aria-expanded="false"
+                    >
+                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="header-breadcrumb">
+                        <span class="breadcrumb-root">Portal</span>
+                        <i class="fa-solid fa-chevron-right breadcrumb-separator" aria-hidden="true"></i>
+                        <span class="breadcrumb-current">Dashboard</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <!-- Quick Search / Filter Bar -->
+                    <div class="header-search">
+                        <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+                        <input
+                            type="search"
+                            id="globalSearchInput"
+                            placeholder="Search orders, cylinders, customers..."
+                            aria-label="Search dashboard"
+                        >
+                    </div>
+
+                    <!-- Quick Action Button -->
+                    <button type="button" class="btn btn-primary btn-sm header-action-btn" id="quickSaleBtn">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        <span>New Sale</span>
+                    </button>
+
+                    <!-- Notifications -->
+                    <button
+                        type="button"
+                        class="notification-trigger"
+                        id="dealerNotificationButton"
+                        aria-label="Notifications"
+                    >
+                        <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                        <span class="notification-pill" id="notificationBadge" hidden>0</span>
+                    </button>
+
+                    <!-- Profile Pill -->
+                    <a href="dealer-profile.html" class="header-profile-card">
+                        <div class="header-avatar" id="dealerHeaderAvatar">
+                            <span id="dealerAvatarInitial">G</span>
+                        </div>
+                        <div class="header-user-meta">
+                            <span class="gh-name-row"><span class="user-name" id="dealerHeaderName">Dealer</span><span class="tiktok-verified-badge" id="sidebarVerifiedBadge" title="Verified EPRA Dealer"></span></span>
+                            <span class="user-stats"><span class="user-stat"><i class="fa-solid fa-users fa-xs" aria-hidden="true"></i> <strong id="sidebarFollowersCount">0</strong> followers</span><span class="user-stat"><i class="fa-solid fa-star fa-xs text-warning" aria-hidden="true"></i> <strong id="sidebarReviewsCount">0.0 (0)</strong></span></span>
+                        </div>
+                        <i class="fa-solid fa-angle-down profile-dropdown-arrow" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Dashboard Body -->
+            <div class="dealer-dashboard-content">
+
+                <!-- Welcome Header & Operational Triggers -->
+                <section class="dashboard-greeting-bar">
+                    <div class="greeting-text">
+                        <div class="greeting-eyebrow">
+                            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                            SYSTEM OPERATIONAL &bull; LPG DISPATCH ACTIVE
+                        </div>
+                        <h2>Welcome back, <span id="dashboardDealerName">Dealer</span></h2>
+                        <p>Track your real-time cylinder inventory, sales revenue, and customer deliveries.</p>
+                    </div>
+
+                    <!-- Quick Action Chips -->
+                    <div class="greeting-actions">
+                        <a href="dealer-products.html?action=intake" class="btn btn-secondary btn-sm" id="btnStockIntake">
+                            <i class="fa-solid fa-truck-ramp-box" aria-hidden="true"></i>
+                            <span>Stock Intake</span>
+                        </a>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnExportReport">
+                            <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                            <span>Daily Report</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Toast / Notification Banner -->
+                <div
+                    class="dashboard-alert-banner"
+                    id="dashboardMessage"
+                    role="status"
+                    aria-live="polite"
+                    hidden
+                ></div>
+
+                <!-- =====================================================
+                     3. CORE KPI STATS GRID (Professional & Compact)
+                     ===================================================== -->
+                <section class="stats-grid" aria-label="Key performance indicators">
+
+                    <!-- Metric 1: Total Sales -->
+                    <article class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Revenue (Today)</span>
+                            <div class="stat-icon-wrapper revenue">
+                                <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-body">
+                            <h3 class="stat-value" id="totalSales">KSh 0</h3>
+                            <div class="stat-trend positive" id="salesTrendPill">
+                                <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                                <span>+0%</span>
+                                <small>vs yesterday</small>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Metric 2: Cylinder Orders & Refills -->
+                    <article class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Orders</span>
+                            <div class="stat-icon-wrapper orders">
+                                <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-body">
+                            <h3 class="stat-value" id="totalOrders">0</h3>
+                            <div class="stat-breakdown">
+                                <span><strong>0</strong> Refills</span>
+                                <span class="breakdown-dot">&bull;</span>
+                                <span><strong>0</strong> New Sets</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Metric 3: Active Dispatches -->
+                    <article class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Pending Delivery</span>
+                            <div class="stat-icon-wrapper dispatch">
+                                <i class="fa-solid fa-truck-fast" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-body">
+                            <h3 class="stat-value" id="pendingOrders">0</h3>
+                            <div class="stat-status-badge pending">
+                                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                <span>Awaiting Dispatch</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Metric 4: Inventory Health -->
+                    <article class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Active Cylinder Stock</span>
+                            <div class="stat-icon-wrapper stock">
+                                <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="stat-body">
+                            <h3 class="stat-value" id="activeProducts">0</h3>
+                            <div class="stat-breakdown warning">
+                                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                                <span id="lowStockWarningText">0 items low stock</span>
+                            </div>
+                        </div>
+                    </article>
+
+                </section>
+
+                <!-- =====================================================
+                     4. MID SECTION: ANALYTICS & CYLINDER STOCK MATRIX
+                     ===================================================== -->
+                <section class="dashboard-analytics-grid">
+
+                    <!-- Sales Trends Card (Interactive Dynamic SVG Chart) -->
+                    <article class="dealer-card analytics-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-eyebrow">REVENUE PERFORMANCE</span>
+                                <h2>Sales &amp; Refill Run-Rate</h2>
+                            </div>
+
+                            <div class="card-controls">
+                                <label for="salesPeriod" class="visually-hidden">Select sales period</label>
+                                <select id="salesPeriod" class="form-select-sm">
+                                    <option value="7days">Last 7 Days</option>
+                                    <option value="30days" selected>Last 30 Days</option>
+                                    <option value="90days">Last 90 Days</option>
+                                    <option value="year">Full Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Metrics Ribbon -->
+                            <div class="analytics-metrics-ribbon">
+                                <div class="metric-pill">
+                                    <span class="pill-label">Period Revenue</span>
+                                    <strong class="pill-value" id="periodRevenue">KSh 945,000</strong>
+                                </div>
+                                <div class="metric-pill">
+                                    <span class="pill-label">Total Cylinders</span>
+                                    <strong class="pill-value" id="periodOrders">342 Units</strong>
+                                </div>
+                                <div class="metric-pill">
+                                    <span class="pill-label">Completion Rate</span>
+                                    <strong class="pill-value success" id="periodCompletedOrders">98.4%</strong>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic SVG Chart Canvas Container -->
+                            <div class="chart-canvas-wrapper" id="salesChartContainer">
+                                <svg id="dynamicSalesChart" viewBox="0 0 700 240" preserveAspectRatio="none" class="svg-sales-chart" aria-label="Dynamic sales chart representation">
+                                    <defs>
+                                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.32" />
+                                            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="chart-axis-labels" id="chartAxisLabels"></div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- LPG Cylinder Inventory Matrix (Essential Dealer Tool) -->
+                    <article class="dealer-card stock-matrix-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-eyebrow">LIVE INVENTORY</span>
+                                <h2>Cylinder Stock Levels</h2>
+                            </div>
+                            <a href="dealer-products.html" class="card-link-action">
+                                <span>Manage</span>
+                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+
+                        <div class="card-body" id="cylinderStockContainer">
+                            <!-- Dynamically populated from live inventory via dealer-dashboard.js -->
+                            <div style="padding: 20px; text-align: center; color: var(--slate-400); font-size: 13px;">
+                                <i class="fa-solid fa-boxes-stacked" style="font-size: 20px; margin-bottom: 6px; display: block; color: var(--brand-primary);"></i>
+                                <span>Loading live cylinder stock...</span>
+                            </div>
+                        </div>
+                    </article>
+
+                </section>
+
+                <!-- =====================================================
+                     5. BOTTOM SECTION: RECENT ORDERS & OUTLET INFO
+                     ===================================================== -->
+                <section class="dashboard-orders-grid">
+
+                    <!-- Recent Orders Table -->
+                    <article class="dealer-card orders-table-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-eyebrow">ORDER MANAGEMENT</span>
+                                <h2>Recent Customer Orders</h2>
+                            </div>
+                            <div class="header-filters">
+                                <input
+                                    type="text"
+                                    id="orderSearchInput"
+                                    class="table-search-input"
+                                    placeholder="Filter orders..."
+                                    aria-label="Filter orders table"
+                                >
+                                <a href="dealer-orders.html" class="card-link-action">
+                                    <span>All Orders</span>
+                                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="dealer-data-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Order ID</th>
+                                            <th scope="col">Customer</th>
+                                            <th scope="col">Item / Type</th>
+                                            <th scope="col">Amount</th>
+                                            <th scope="col">Payment</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col" class="text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentOrdersBody">
+                                        <tr id="emptyOrdersRow">
+                                            <td colspan="7" class="text-center py-4 text-muted" style="text-align: center; padding: 32px 16px; color: #64748b;">
+                                                <i class="fa-solid fa-receipt fa-2x" style="opacity: 0.35; margin-bottom: 8px; display: block;"></i>
+                                                <span>No customer orders received yet. New customer orders will appear here.</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Outlet Profile & EPRA Compliance Card -->
+                    <article class="dealer-card outlet-summary-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-eyebrow">OUTLET PROFILE</span>
+                                <h2>Authorized Depot Info</h2>
+                            </div>
+                            <a href="dealer-profile.html" class="card-link-action">
+                                <span>Edit</span>
+                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Compliance Badge -->
+                            <div class="compliance-status-banner">
+                                <div class="compliance-icon-box">
+                                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                                </div>
+                                <div class="compliance-text">
+                                    <strong id="dealerAccountStatusText">EPRA Safety License Active</strong>
+                                    <span id="dealerAccountStatus">Valid through Dec 2026 &bull; Category A</span>
+                                </div>
+                            </div>
+
+                            <!-- Depot Details List -->
+                            <div class="depot-meta-list">
+                                <div class="meta-row">
+                                    <span class="meta-label">
+                                        <i class="fa-solid fa-building" aria-hidden="true"></i>
+                                        Dealership
+                                    </span>
+                                    <strong class="meta-val" id="dealerBusinessName">—</strong>
+                                </div>
+
+                                <div class="meta-row">
+                                    <span class="meta-label">
+                                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                        Location
+                                    </span>
+                                    <strong class="meta-val" id="dealerBusinessLocation">—</strong>
+                                </div>
+
+                                <div class="meta-row">
+                                    <span class="meta-label">
+                                        <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                                        Hotline
+                                    </span>
+                                    <strong class="meta-val" id="dealerBusinessPhone">—</strong>
+                                </div>
+
+                                <div class="meta-row">
+                                    <span class="meta-label">
+                                        <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                                        Contact Person
+                                    </span>
+                                    <strong class="meta-val" id="dealerContactPerson">—</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                </section>
+
+                <!-- Modern Footer -->
+                <footer class="dealer-dashboard-footer">
+                    <div class="footer-left">
+                        <div class="footer-brand">
+                            <i class="fa-solid fa-fire-flame-simple" aria-hidden="true"></i>
+                            <span>GasHub Dealer Ecosystem</span>
+                        </div>
+                        <span class="footer-divider">&bull;</span>
+                        <span class="footer-copy">&copy; <span id="dealerFooterYear"></span> GasHub Kenya. All rights reserved.</span>
+                    </div>
+
+                    <div class="footer-links">
+                        <a href="#">Safety Protocols</a>
+                        <a href="#">Support Hotline</a>
+                        <a href="#">Terms</a>
+                    </div>
+                </footer>
+
+            </div>
+        </main>
+
+        <!-- MOBILE BOTTOM NAVIGATION (Optimized for Phones) -->
+        <nav class="dealer-mobile-nav" aria-label="Mobile Navigation">
+            <a href="dealer-dashboard.html" class="dealer-mobile-nav-item active">
+                <i class="fa-solid fa-chart-line fa-sm"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="dealer-products.html" class="dealer-mobile-nav-item">
+                <i class="fa-solid fa-boxes-stacked fa-sm"></i>
+                <span>Stock</span>
+                <span class="mobile-nav-dot" id="mobileStockAlertDot" hidden></span>
+            </a>
+
+            <a href="dealer-orders.html" class="dealer-mobile-nav-item">
+                <i class="fa-solid fa-cart-shopping fa-sm"></i>
+                <span>Orders</span>
+            </a>
+
+            <a href="dealer-profile.html" class="dealer-mobile-nav-item">
+                <i class="fa-regular fa-user fa-sm"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+    <!-- =====================================================
+         TIKTOK-STYLE BLUE VERIFICATION PAYMENT MODAL
+         ===================================================== -->
+    <div class="modal-backdrop" id="verificationModalBackdrop" hidden>
+        <div class="modal-dialog modal-dialog-sm" role="dialog" aria-modal="true" aria-labelledby="verificationModalTitle">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <div class="modal-icon-badge verified">
+                        <svg viewBox="0 0 24 24" class="tiktok-badge-svg-modal" aria-hidden="true">
+                            <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                            <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="verificationModalTitle">Request Blue Badge Verification</h2>
+                        <span class="modal-subtitle">Official GasHub &amp; EPRA Dealer Badge</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeVerificationModalBtn" aria-label="Close dialog">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="verificationForm">
+                <div class="modal-body">
+                    <div class="verification-perks-box">
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Official TikTok-style Blue Check Badge on your outlet profile</span></div>
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Top ranking in customer cylinder searches on GasHub App</span></div>
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>EPRA Safety Compliance digital certificate seal</span></div>
+                    </div>
+
+                    <div class="verification-fee-pill">
+                        <span>Admin Verification Fee:</span>
+                        <strong id="verificationFeeAmount">KSh 2,500 / Year</strong>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="verifyOutletName" class="form-label required">Depot / Outlet Name</label>
+                        <input type="text" id="verifyOutletName" class="form-control" required placeholder="e.g. GasHub Dealer business">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="verifyEpraLicense" class="form-label required">EPRA License Number</label>
+                        <input type="text" id="verifyEpraLicense" class="form-control" required placeholder="e.g. EPRA/LPG/2026/8942">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="verifyMpesaPhone" class="form-label required">M-Pesa Phone Number (for STK Prompt)</label>
+                        <input type="tel" id="verifyMpesaPhone" class="form-control" required placeholder="07XX XXX XXX or 2547XX XXX XXX">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="cancelVerificationBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitVerificationBtn">
+                        <i class="fa-solid fa-mobile-screen-button fa-sm"></i>
+                        <span>Pay KSh 2,500 via M-Pesa</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="gashub-core.js"></script>
+    <script src="dealer-logout.js"></script>
+    <script src="dealer-dashboard.js"></script>
+    <script>
+        (function() {
+            var el = document.getElementById("dealerFooterYear");
+            if (el) el.textContent = new Date().getFullYear();
+        })();
+    </script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="dealer-mobile.js" defer></script>
+</body>
+</html>

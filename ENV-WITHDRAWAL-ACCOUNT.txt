@@ -1,0 +1,12 @@
+Add these lines to your .env file (anywhere), then restart the server.
+They are the "GasHub withdrawal account": the account the money is sent FROM when you pay customers' withdrawals.
+The admin Withdrawals page shows it with the exact amount each time you approve or mark a request as paid.
+Anything you save in Admin > Withdrawals > GasHub Withdrawal Account takes priority over these lines.
+
+# ---- GasHub withdrawal account ----
+# TYPE is one of: mpesa_phone, paybill, till, bank
+GASHUB_WITHDRAWAL_ACCOUNT_TYPE=paybill
+GASHUB_WITHDRAWAL_ACCOUNT_NUMBER=
+GASHUB_WITHDRAWAL_ACCOUNT_NAME=GasHub
+# only for paybill (the account reference), otherwise leave empty
+GASHUB_WITHDRAWAL_ACCOUNT_REFERENCE=

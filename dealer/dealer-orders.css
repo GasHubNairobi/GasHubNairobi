@@ -1,0 +1,1340 @@
+/* =========================================================
+   GASHUB EXECUTIVE DEALER ORDERS
+   File: dealer-orders.css
+   Corporate LPG Order Management, Financial Breakdown,
+   Mobile Optimizations with Small Icons, and Print Styles.
+   ========================================================= */
+
+/* =========================================================
+   1. BRANDING & WATERMARK
+   ========================================================= */
+
+/* Fixed background watermark */
+.dealer-main::before {
+    content: "";
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 140px;
+    height: 140px;
+    background-image: url("images/watermark.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Brand logo in sidebar header */
+.brand-logo-img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    display: block;
+}
+
+/* =========================================================
+   2. ORDERS WORKSPACE LAYOUT
+   ========================================================= */
+
+.dealer-orders-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: relative;
+    z-index: 1;
+}
+
+.orders-greeting-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-commission-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 12px;
+    font-weight: 600;
+    color: #1d4ed8;
+}
+
+.admin-commission-pill i {
+    font-size: 11px;
+}
+
+/* =========================================================
+   3. KPI STATS GRID (5 METRICS)
+   ========================================================= */
+
+.orders-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+}
+
+/* Icon Variations */
+.stat-icon-wrapper.orders {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.stat-icon-wrapper.pending {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.stat-icon-wrapper.revenue {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.stat-icon-wrapper.gashub {
+    background: #ede9fe;
+    color: #6366f1;
+}
+
+.stat-icon-wrapper.payout {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.text-warning {
+    color: #d97706 !important;
+}
+
+.text-gashub {
+    color: #6366f1 !important;
+}
+
+.text-success {
+    color: #059669 !important;
+}
+
+.gashub-cut-card {
+    border-left: 3px solid #6366f1;
+}
+
+.dealer-payout-card {
+    border-left: 3px solid #10b981;
+}
+
+/* =========================================================
+   4. ORDERS MANAGEMENT CARD & FILTERS
+   ========================================================= */
+
+.dealer-orders-management {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: var(--radius-md, 10px);
+    box-shadow: var(--shadow-card, 0 1px 3px rgba(15, 23, 42, 0.05));
+    overflow: hidden;
+}
+
+.dealer-card-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--slate-200, #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ffffff;
+}
+
+.dealer-orders-header-title h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--slate-900, #0f172a);
+}
+
+.dealer-orders-header-title p {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: var(--slate-500, #64748b);
+}
+
+/* Filters Bar */
+.dealer-orders-filters {
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--slate-200, #e2e8f0);
+    display: grid;
+    grid-template-columns: minmax(240px, 1.8fr) repeat(4, minmax(130px, 1fr)) auto;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.dealer-order-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.dealer-order-filter-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--slate-600, #475569);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dealer-order-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dealer-order-search i {
+    position: absolute;
+    left: 12px;
+    font-size: 13px;
+    color: var(--slate-400, #94a3b8);
+    pointer-events: none;
+}
+
+.dealer-order-search input {
+    width: 100%;
+    height: 38px;
+    padding: 0 32px 0 36px;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    background: #ffffff;
+    font-size: 12.5px;
+    color: var(--slate-800, #1e293b);
+    outline: none;
+    transition: var(--transition, all 0.2s ease);
+}
+
+.dealer-order-search input:focus {
+    border-color: var(--brand-primary, #d97706);
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+
+.dealer-order-search-clear {
+    position: absolute;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--slate-400, #94a3b8);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px;
+}
+
+.dealer-order-search-clear:hover {
+    color: var(--slate-700, #334155);
+}
+
+.dealer-order-filter-group select {
+    height: 38px;
+    padding: 0 10px;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    background: #ffffff;
+    font-size: 12.5px;
+    color: var(--slate-800, #1e293b);
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition, all 0.2s ease);
+}
+
+.dealer-order-filter-group select:focus {
+    border-color: var(--brand-primary, #d97706);
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+
+.btn-clear-filters {
+    height: 38px;
+    padding: 0 14px;
+}
+
+/* =========================================================
+   5. ORDERS TABLE
+   ======================================================== */
+
+.dealer-orders-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dealer-orders-table {
+    width: 100%;
+    min-width: 1100px;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    text-align: left;
+}
+
+.dealer-orders-table thead th {
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--slate-200, #e2e8f0);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--slate-500, #64748b);
+    white-space: nowrap;
+}
+
+.dealer-orders-table tbody td {
+    padding: 13px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--slate-800, #1e293b);
+    vertical-align: middle;
+}
+
+.dealer-orders-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.dealer-orders-table tbody tr:hover {
+    background: #fdfbf7;
+}
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+/* Table Elements */
+.order-number-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 700;
+    color: var(--brand-primary, #d97706);
+    text-decoration: none;
+}
+
+.order-number-link:hover {
+    text-decoration: underline;
+}
+
+.order-timestamp {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--slate-400, #94a3b8);
+}
+
+.customer-cell strong {
+    display: block;
+    font-size: 13px;
+    color: var(--slate-900, #0f172a);
+}
+
+.customer-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--slate-500, #64748b);
+    text-decoration: none;
+}
+
+.customer-phone:hover {
+    color: var(--brand-primary, #d97706);
+}
+
+.product-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.product-mini-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #fef3c7;
+    color: #b45309;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.product-meta-text strong {
+    display: block;
+    font-size: 12.5px;
+    color: var(--slate-900, #0f172a);
+}
+
+.product-meta-text span {
+    display: block;
+    font-size: 11px;
+    color: var(--slate-500, #64748b);
+}
+
+/* Amounts & Financial Split */
+.order-gross-amount {
+    font-weight: 700;
+    color: var(--slate-900, #0f172a);
+}
+
+.order-gashub-cut {
+    font-weight: 600;
+    color: #6366f1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.order-gashub-cut small {
+    font-size: 10px;
+    color: var(--slate-400, #94a3b8);
+}
+
+.order-dealer-net {
+    font-weight: 700;
+    color: #059669;
+}
+
+/* Status Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-pending { background: #fff7ed; color: #c2410c; }
+.badge-approved { background: #eff6ff; color: #1d4ed8; }
+.badge-dispatched { background: #fdf4ff; color: #a21caf; }
+.badge-completed { background: #ecfdf5; color: #047857; }
+.badge-rejected { background: #fef2f2; color: #b91c1c; }
+
+.badge-paid { background: #ecfdf5; color: #047857; }
+.badge-unpaid { background: #fff7ed; color: #c2410c; }
+.badge-failed { background: #fef2f2; color: #b91c1c; }
+.badge-refunded { background: #f5f3ff; color: #6d28d9; }
+
+.badge-delivery { background: #eff6ff; color: #1e40af; }
+.badge-pickup { background: #f1f5f9; color: #475569; }
+
+/* Table Action Buttons with Small Icons */
+.table-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.action-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    background: #ffffff;
+    color: var(--slate-600, #475569);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition, all 0.2s ease);
+}
+
+.action-btn:hover {
+    border-color: var(--brand-primary, #d97706);
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.action-btn.btn-print:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.action-btn.btn-approve:hover {
+    border-color: #10b981;
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.action-btn.btn-reject:hover {
+    border-color: #ef4444;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+/* =========================================================
+   6. EMPTY & LOADING STATES
+   ========================================================= */
+
+.dealer-orders-empty,
+.dealer-orders-loading {
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.dealer-orders-empty-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #fef3c7;
+    color: #b45309;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin: 0 auto 14px;
+}
+
+.dealer-orders-empty h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--slate-900, #0f172a);
+    margin-bottom: 6px;
+}
+
+.dealer-orders-empty p {
+    font-size: 13px;
+    color: var(--slate-500, #64748b);
+    max-width: 400px;
+    margin: 0 auto 16px;
+}
+
+.dealer-orders-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--slate-600, #475569);
+    font-size: 13px;
+}
+
+/* =========================================================
+   7. PAGINATION
+   ========================================================= */
+
+.dealer-orders-pagination {
+    padding: 14px 20px;
+    border-top: 1px solid var(--slate-200, #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ffffff;
+}
+
+.dealer-orders-pagination-info {
+    font-size: 12px;
+    color: var(--slate-500, #64748b);
+}
+
+.dealer-orders-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dealer-orders-page-button {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    background: #ffffff;
+    font-size: 12px;
+    color: var(--slate-700, #334155);
+    cursor: pointer;
+    transition: var(--transition, all 0.2s ease);
+}
+
+.dealer-orders-page-button:hover:not(:disabled) {
+    border-color: var(--brand-primary, #d97706);
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.dealer-orders-page-button.active {
+    background: var(--brand-primary, #d97706);
+    border-color: var(--brand-primary, #d97706);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.dealer-orders-page-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* =========================================================
+   8. OPERATIONAL INFO CARDS
+   ========================================================= */
+
+.dealer-orders-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dealer-orders-info-card {
+    background: #ffffff;
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: var(--radius-md, 10px);
+    padding: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.dealer-orders-info-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #fef3c7;
+    color: #b45309;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.dealer-orders-info-content h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--slate-900, #0f172a);
+}
+
+.dealer-orders-info-content p {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--slate-600, #475569);
+}
+
+/* =========================================================
+   9. MODALS SYSTEM (FIXED DISPLAY & CLOSE BEHAVIOR)
+   ========================================================= */
+
+.dealer-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Only display when the active class is explicitly added */
+.dealer-modal-overlay.active {
+    display: flex !important;
+}
+
+/* Ensure hidden attribute is always respected */
+.dealer-modal-overlay[hidden] {
+    display: none !important;
+}
+
+.dealer-modal-container {
+    background: #ffffff;
+    border-radius: var(--radius-lg, 14px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.invoice-modal-container {
+    max-width: 780px;
+}
+
+.export-modal-container {
+    max-width: 600px;
+}
+
+.order-details-modal-container {
+    max-width: 680px;
+}
+
+.dealer-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--slate-200, #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+}
+
+.dealer-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--slate-900, #0f172a);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-close-button {
+    background: transparent;
+    border: none;
+    color: var(--slate-400, #94a3b8);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.modal-close-button:hover {
+    color: var(--slate-800, #1e293b);
+}
+
+.dealer-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: var(--slate-700, #334155);
+}
+
+.dealer-modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--slate-200, #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #f8fafc;
+}
+
+/* =========================================================
+   10. PRINTABLE INVOICE SHEET (ON SCREEN & PRINT)
+   ========================================================= */
+
+.printable-invoice-sheet {
+    padding: 28px;
+    background: #ffffff;
+    overflow-y: auto;
+}
+
+.invoice-brand-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.invoice-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.invoice-logo-img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+}
+
+.invoice-brand h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.2px;
+}
+
+.invoice-brand p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.invoice-epra-tag {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #d97706;
+}
+
+.invoice-meta-block {
+    text-align: right;
+}
+
+.invoice-badge-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #ecfdf5;
+    color: #047857;
+    margin-bottom: 4px;
+}
+
+.invoice-meta-block h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.invoice-meta-block span {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.invoice-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 18px 0;
+}
+
+.invoice-parties-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    font-size: 12px;
+}
+
+.invoice-party-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.party-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+}
+
+.invoice-party-col strong {
+    font-size: 13px;
+    color: #0f172a;
+}
+
+.invoice-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 12px;
+}
+
+.invoice-items-table th {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.invoice-items-table td {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+}
+
+.invoice-financial-split {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+    margin-top: 10px;
+}
+
+.invoice-notes-block {
+    font-size: 11.5px;
+    color: #475569;
+}
+
+.invoice-notes-block strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #0f172a;
+}
+
+.invoice-notes-block code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.epra-safety-note {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #b45309;
+}
+
+.invoice-totals-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.invoice-total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: #475569;
+}
+
+.invoice-grand-total {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    padding-top: 4px;
+}
+
+.invoice-commission-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.invoice-net-payout {
+    font-size: 13.5px;
+    font-weight: 800;
+}
+
+.invoice-footer-note {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: #94a3b8;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 14px;
+}
+
+/* =========================================================
+   11. EXPORT DIALOG ELEMENTS
+   ========================================================= */
+
+.export-modal-description {
+    margin-bottom: 16px;
+    font-size: 12.5px;
+    color: var(--slate-600, #475569);
+    line-height: 1.5;
+}
+
+.export-timeline-selector {
+    margin-bottom: 16px;
+}
+
+.export-timeline-selector label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--slate-700, #334155);
+}
+
+.export-select {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    background: #ffffff;
+    font-size: 13px;
+    color: var(--slate-800, #1e293b);
+}
+
+.export-summary-card {
+    background: #f8fafc;
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: var(--radius-sm, 6px);
+    padding: 14px;
+    margin-bottom: 18px;
+}
+
+.export-summary-card h4 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--slate-500, #64748b);
+    text-transform: uppercase;
+}
+
+.export-summary-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.export-metric span {
+    display: block;
+    font-size: 10.5px;
+    color: var(--slate-500, #64748b);
+}
+
+.export-metric strong {
+    display: block;
+    font-size: 14px;
+    margin-top: 2px;
+    color: var(--slate-900, #0f172a);
+}
+
+.export-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.export-option-box {
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: var(--radius-sm, 6px);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #ffffff;
+}
+
+.export-option-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.export-option-icon.print-icon {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.export-option-info strong {
+    display: block;
+    font-size: 13px;
+    color: var(--slate-900, #0f172a);
+}
+
+.export-option-info p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--slate-500, #64748b);
+    line-height: 1.4;
+}
+
+/* =========================================================
+   12. MOBILE & RESPONSIVE (SMALL ICONS IN MOBILE VIEW)
+   ========================================================= */
+
+@media (max-width: 1200px) {
+    .orders-stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .dealer-orders-filters {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 820px) {
+    .dealer-orders-content {
+        padding: 14px;
+        gap: 14px;
+    }
+
+    .orders-greeting-bar {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .orders-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    /* Small Icons on Mobile */
+    .stat-card {
+        padding: 12px 14px;
+        gap: 6px;
+    }
+
+    .stat-icon-wrapper {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .stat-title {
+        font-size: 10px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .dealer-orders-filters {
+        grid-template-columns: 1fr;
+        padding: 14px;
+        gap: 10px;
+    }
+
+    .dealer-orders-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-parties-grid,
+    .invoice-financial-split,
+    .export-options-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .export-summary-metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    /* Small Action Icons in Mobile Table */
+    .action-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+
+    .dealer-main::before {
+        width: 80px;
+        height: 80px;
+        opacity: 0.02;
+    }
+}
+
+@media (max-width: 480px) {
+    .orders-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dealer-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .dealer-orders-pagination {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .dealer-orders-pagination-controls {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* =========================================================
+   13. PRINT STYLESHEET (@media print)
+   ========================================================= */
+
+@media print {
+    body, html {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Hide UI Chrome */
+    .dealer-sidebar,
+    .dealer-header,
+    .dealer-dashboard-footer,
+    .dealer-orders-content,
+    .dealer-sidebar-overlay,
+    .no-print,
+    .dealer-modal-header,
+    .dealer-modal-footer,
+    .modal-close-button {
+        display: none !important;
+    }
+
+    .dealer-main::before {
+        display: none !important;
+    }
+
+    .dealer-modal-overlay {
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    .dealer-modal-container {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .printable-invoice-sheet {
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    .invoice-brand-row,
+    .invoice-parties-grid,
+    .invoice-financial-split {
+        page-break-inside: avoid;
+    }
+}
+
+/* ===== One "View" button per order; all actions live inside the order window ===== */
+.view-order-btn {
+    min-height: 40px; min-width: 76px; padding: 0 18px;
+    border: 1px solid #1d4ed8; background: #1d4ed8; color: #fff;
+    border-radius: 10px; font: 700 14px/1 inherit; font-family: inherit; cursor: pointer;
+}
+.view-order-btn:hover { background: #1e40af; }
+.oa-panel { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid #e2e8f0; }
+.oa-row { display: grid; gap: 10px; }
+.oa-cols-1 { grid-template-columns: 1fr; }
+.oa-cols-2 { grid-template-columns: 1fr 1fr; }
+.oa-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.oa-btn {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    min-height: 56px; padding: 8px 6px; font: 800 13px/1.2 inherit; font-family: inherit;
+    border: 0; border-radius: 12px; color: #fff; cursor: pointer; letter-spacing: .1px;
+    box-shadow: 0 3px 8px rgba(15, 23, 42, .15); transition: transform .08s, filter .15s;
+}
+.oa-btn:hover { filter: brightness(1.06); }
+.oa-btn:active { transform: scale(.97); }
+.oa-confirm { background: linear-gradient(135deg, #10b981, #047857); }   /* green: confirm / cash / complete */
+.oa-assign  { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }   /* blue: assign messenger */
+.oa-reject  { background: linear-gradient(135deg, #f87171, #dc2626); }   /* red: reject */
+.oa-print   { min-height: 44px; background: #f1f5f9; color: #334155; box-shadow: none; border: 1px solid #cbd5e1; font-size: 13px; }
+.oa-note { font-size: 12px; color: #475569; text-align: center; }
+@media (min-width: 640px) { .oa-btn { font-size: 14px; min-height: 52px; } }
+
+/* =========================================================
+   PHONE LAYOUT (screens up to 640px wide only; desktop and tablet are unchanged)
+   Smaller graphics, 2-column stats, and each order is a compact card instead of an 11-column table.
+   ========================================================= */
+@media (max-width: 640px) {
+    .dealer-orders-content { padding: 10px; gap: 10px; min-width: 0; }
+
+    /* title area */
+    .orders-greeting-bar h1, .orders-greeting-bar h2 { font-size: 18px; line-height: 1.25; }
+    .orders-greeting-bar p { font-size: 12px; }
+
+    /* stat cards: two per row, small */
+    .orders-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .stat-card { padding: 9px 10px; gap: 3px; border-radius: 10px; }
+    .stat-header { gap: 6px; }
+    .stat-title { font-size: 9px; letter-spacing: .2px; }
+    .stat-value { font-size: 16px; line-height: 1.2; }
+    .stat-breakdown, .stat-breakdown span { font-size: 10px; }
+    .stat-icon-wrapper { width: 22px; height: 22px; font-size: 10px; border-radius: 6px; flex: 0 0 22px; }
+    .orders-stats-grid .stat-card:last-child:nth-child(odd) { grid-column: 1 / -1; }   /* the 5th card spans the row */
+
+    /* cards, filters and notices */
+    .dealer-card-header { padding: 12px; }
+    .dealer-card-header h2, .dealer-card-header h3 { font-size: 15px; }
+    .dealer-card-header p { font-size: 11px; }
+    .dealer-orders-filters { grid-template-columns: 1fr 1fr; padding: 10px 12px; gap: 8px; }
+    .dealer-orders-filters > :first-child { grid-column: 1 / -1; }     /* search box full width */
+    .dealer-orders-filters label { font-size: 9px; margin-bottom: 3px; }
+    .dealer-orders-filters > * { min-width: 0; }
+    .dealer-orders-filters input, .dealer-orders-filters select { width: 100%; box-sizing: border-box; max-width: 100%; min-height: 38px; font-size: 13px; padding: 0 10px; }
+    .dealer-orders-info-grid > * { padding: 12px; }
+    .dealer-orders-info-grid h3, .dealer-orders-info-grid h4 { font-size: 13px; }
+    .dealer-orders-info-grid p { font-size: 11px; line-height: 1.5; }
+
+    /* ---- the orders table becomes one card per order ---- */
+    .dealer-orders-table-wrapper { overflow-x: visible; border: 0; }
+    .dealer-orders-table, .dealer-orders-table tbody { display: block; width: 100%; min-width: 0; }
+    .dealer-orders-table thead { display: none; }
+    .dealer-orders-table tbody tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-areas:
+            "info info status"
+            "cust cust cust"
+            "prod prod qty"
+            "gross net  net"
+            "fulf pay   pay"
+            "act  act   act";
+        gap: 6px 8px; padding: 10px; margin: 8px 0;
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+    }
+    .dealer-orders-table tbody td { display: block; padding: 0; border: 0; text-align: left; min-width: 0; font-size: 12px; }
+    .dealer-orders-table tbody td:nth-child(1)  { grid-area: info; }
+    .dealer-orders-table tbody td:nth-child(2)  { grid-area: cust; }
+    .dealer-orders-table tbody td:nth-child(3)  { grid-area: prod; }
+    .dealer-orders-table tbody td:nth-child(4)  { grid-area: qty; text-align: right; }
+    .dealer-orders-table tbody td:nth-child(5)  { grid-area: gross; }
+    .dealer-orders-table tbody td:nth-child(6)  { display: none; }            /* GasHub cut: shown in the order window */
+    .dealer-orders-table tbody td:nth-child(7)  { grid-area: net; text-align: right; }
+    .dealer-orders-table tbody td:nth-child(8)  { grid-area: fulf; }
+    .dealer-orders-table tbody td:nth-child(9)  { grid-area: pay; }
+    .dealer-orders-table tbody td:nth-child(10) { grid-area: status; text-align: right; }
+    .dealer-orders-table tbody td:nth-child(11) { grid-area: act; }
+    .dealer-orders-table tbody td:nth-child(4)::before  { content: "Qty "; color: #64748b; font-weight: 500; }
+    .dealer-orders-table tbody td:nth-child(5)::before  { content: "Total"; display: block; font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .dealer-orders-table tbody td:nth-child(7)::before  { content: "You receive"; display: block; font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .dealer-orders-table .order-number-link { font-size: 13px; word-break: break-all; }
+    .dealer-orders-table .order-timestamp { display: block; font-size: 10px; }
+    .dealer-orders-table .customer-cell { display: flex !important; align-items: center; justify-content: space-between; gap: 8px; }
+    .dealer-orders-table .customer-cell strong { font-size: 13px; }
+    .dealer-orders-table .customer-phone { font-size: 12px; }
+    .dealer-orders-table .product-cell { gap: 8px; }
+    .dealer-orders-table .product-mini-icon { width: 24px; height: 24px; font-size: 10px; border-radius: 6px; flex: 0 0 24px; }
+    .dealer-orders-table .product-meta-text strong { font-size: 12px; }
+    .dealer-orders-table .product-meta-text span { font-size: 10px; }
+    .dealer-orders-table .order-gross-amount, .dealer-orders-table .order-dealer-net { font-size: 13px; font-weight: 700; }
+    .dealer-orders-table .badge { font-size: 10px; padding: 3px 7px; }
+    .dealer-orders-table td:nth-child(9) > div { font-size: 10px !important; margin-top: 2px !important; }
+    .dealer-orders-table .view-order-btn { width: 100%; min-height: 40px; }
+    .dealer-orders-pagination { padding: 10px 12px; font-size: 12px; }
+
+    /* order window and receipts */
+    .dealer-modal-overlay { padding: 8px; }
+    .dealer-modal-container { max-height: 94vh; border-radius: 14px; }
+    .dealer-modal-header { padding: 12px 14px; }
+    .dealer-modal-body { padding: 12px 14px; }
+    .dealer-modal-footer { padding: 10px 14px; }
+    .dealer-modal-body > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }   /* customer / metadata stack */
+}

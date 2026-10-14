@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#d97706">
+    <meta name="description" content="Manage your GasHub dealer profile, business credentials, and verification status.">
+
+    <title>Outlet Profile | GasHub Dealer Pro</title>
+
+    <!-- Official GasHub Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Leaflet Interactive Map CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="dealer-dashboard.css">
+    <link rel="stylesheet" href="dealer-main.css">
+    <link rel="stylesheet" href="dealer-profile.css">
+    <link rel="stylesheet" href="dealer-products.css">
+<link rel="stylesheet" href="dealer-logout.css">
+    <script src="dealer-cache-guard.js"></script>
+    <script src="gashub-dialog.js"></script>
+    <link rel="stylesheet" href="dealer-header.css">
+    <link rel="stylesheet" href="dealer-mobile.css">
+</head>
+
+<body>
+
+<div class="dealer-app">
+
+    <!-- 1. EXECUTIVE SIDEBAR (7 EXACT ITEMS) -->
+    <aside class="dealer-sidebar" id="dealerSidebar" aria-label="Dealer Navigation">
+        <div class="sidebar-brand">
+            <a href="dealer-dashboard.html" class="brand-link" aria-label="GasHub Home">
+                <img src="images/logo.png" alt="GasHub Logo" class="brand-logo-img">
+                <div class="brand-text">
+                    <span class="brand-title">GasHub</span>
+                    <span class="brand-badge">DEALER PRO</span>
+                </div>
+            </a>
+            <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <a href="dealer-dashboard.html" class="nav-item">
+                <i class="fa-solid fa-chart-pie nav-icon" aria-hidden="true"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="dealer-orders.html" class="nav-item">
+                <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
+                <span>Orders</span>
+                <span class="nav-badge" id="sidebarOrdersBadge">4</span>
+            </a>
+
+            <a href="dealer-messengers.html" class="nav-item">
+                <i class="fa-solid fa-motorcycle nav-icon" aria-hidden="true"></i>
+                <span>Messengers</span>
+            </a>
+
+            <a href="dealer-products.html" class="nav-item">
+                <i class="fa-solid fa-boxes-stacked nav-icon" aria-hidden="true"></i>
+                <span>Stock</span>
+                <span class="nav-badge warning" id="sidebarLowStockBadge" hidden>0</span>
+            </a>
+
+            <a href="dealer-purchases.html" class="nav-item">
+                <i class="fa-solid fa-cart-shopping nav-icon" aria-hidden="true"></i>
+                <span>Purchases</span>
+            </a>
+
+            <a href="dealer-sales.html" class="nav-item">
+                <i class="fa-solid fa-arrow-trend-up nav-icon" aria-hidden="true"></i>
+                <span>Sales</span>
+            </a>
+
+                <a href="dealer-payouts.html" class="nav-item">
+                    <i class="fa-solid fa-money-bill-transfer nav-icon" aria-hidden="true"></i>
+                    <span>Payouts</span>
+                </a>
+
+            <a href="dealer-reviews.html" class="nav-item">
+                <i class="fa-solid fa-star nav-icon" aria-hidden="true"></i>
+                <span>Reviews</span>
+            </a>
+            <a href="dealer-messages.html" class="nav-item">
+                <i class="fa-solid fa-comments nav-icon" aria-hidden="true"></i>
+                <span>Messages</span>
+                <span class="nav-badge info" id="sidebarMessagesBadge">3</span>
+            </a>
+
+            <a href="dealer-profile.html" class="nav-item active" aria-current="page">
+                <i class="fa-solid fa-store nav-icon" aria-hidden="true"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer: Profile Followers, Reviews & TikTok Blue Verification Badge -->
+        <div class="sidebar-footer">
+            <div class="outlet-status-card">
+                <div class="dealer-profile-mini">
+                    <button type="button" class="btn-request-verification" id="btnRequestVerification" title="Request official GasHub blue check badge">
+                        <svg viewBox="0 0 24 24" class="tiktok-badge-svg-sm" aria-hidden="true">
+                            <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                            <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                        </svg>
+                        <span id="verificationBtnText">Request Verification</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+
+<!-- =====================================================
+     SIDEBAR OVERLAY
+     ===================================================== -->
+
+<div
+    class="dealer-sidebar-overlay"
+    id="dealerSidebarOverlay"
+></div>
+
+
+<!-- =====================================================
+     MAIN CONTENT
+     ===================================================== -->
+
+<main class="dealer-main">
+
+    <!-- =================================================
+         HEADER
+         ================================================= -->
+
+    <header class="dealer-header">
+
+        <div class="dealer-header-left">
+
+            <button
+                type="button"
+                class="dealer-mobile-menu"
+                id="dealerMobileMenu"
+                aria-label="Open navigation menu"
+                aria-controls="dealerSidebar"
+                aria-expanded="false"
+            >
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="dealer-page-heading">
+                <span>Dealer Portal</span>
+                <strong>Profile</strong>
+            </div>
+
+        </div>
+
+
+        <div class="dealer-header-right">
+
+            <button
+                type="button"
+                class="dealer-header-button"
+                data-dealer-notifications
+                aria-label="Notifications"
+            >
+                <i class="fa-regular fa-bell"></i>
+
+                <span
+                    class="dealer-notification-badge"
+                    data-notification-badge
+                    hidden
+                >
+                    0
+                </span>
+            </button>
+
+
+            <div class="dealer-header-profile">
+
+                <div class="dealer-avatar" id="dealerHeaderAvatar" data-dealer-avatar><span id="dealerAvatarInitial">D</span></div>
+
+                <div class="dealer-header-profile-info">
+
+                    <span class="gh-name-row"><strong id="dealerHeaderName">Dealer</strong><span class="tiktok-verified-badge" id="sidebarVerifiedBadge" title="Verified EPRA Dealer"></span></span><span class="user-stats"><span class="user-stat"><i class="fa-solid fa-users fa-xs" aria-hidden="true"></i> <strong id="sidebarFollowersCount">0</strong> followers</span><span class="user-stat"><i class="fa-solid fa-star fa-xs text-warning" aria-hidden="true"></i> <strong id="sidebarReviewsCount">0.0 (0)</strong></span></span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =================================================
+         PAGE CONTENT
+         ================================================= -->
+
+    <section class="dealer-content dealer-profile-page">
+
+        <!-- PAGE INTRO -->
+
+        <div class="dealer-profile-intro">
+
+            <div class="dealer-profile-intro-content">
+
+                <h1>
+                    Dealer Profile
+                </h1>
+
+                <p>
+                    Manage your business information and
+                    dealer account details.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- PROFILE MESSAGE -->
+
+        <div
+            class="dealer-profile-message"
+            id="profileMessage"
+            role="status"
+            aria-live="polite"
+        ></div>
+
+        <!-- ADMIN APPROVAL STATUS BANNER (SHOWN WHEN PROFILE CHANGES ARE QUEUED) -->
+        <div class="profile-approval-banner" id="profileApprovalBanner" hidden>
+            <div class="profile-approval-content">
+                <div class="profile-approval-icon">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div class="profile-approval-text">
+                    <strong>Profile Updates Submitted — Awaiting GasHub Admin Approval</strong>
+                    <p id="pendingApprovalDetailsText">
+                        Your modifications have been submitted for EPRA regulatory compliance review. Your existing approved profile remains active until confirmed by the GasHub Administrator.
+                    </p>
+                </div>
+            </div>
+            <div class="profile-approval-actions">
+                
+            </div>
+        </div>
+
+        <!-- PROFILE LAYOUT -->
+        <div class="dealer-profile-layout">
+
+            <!-- =========================================
+                 PROFILE SUMMARY
+                 ========================================= -->
+
+            <section class="dealer-profile-summary-card">
+
+                <div class="dealer-profile-summary-top">
+
+                    <div
+                        class="dealer-profile-large-avatar"
+                        data-profile-avatar
+                    >
+                        D
+                    </div>
+
+                    <div class="dealer-profile-summary-info">
+
+                        <!-- Business name + verified badge (if verified) or "Get verified" button (if not) -->
+                        <div class="dealer-profile-name-row">
+
+                            <div class="gh-name-row gh-name-row-lg"><h2
+                                data-profile-business-name
+                            >
+                                Dealer Business
+                            </h2><span class="tiktok-verified-badge verified-active" id="profileVerifiedBadge" title="Verified EPRA Dealer" hidden>
+                                <svg viewBox="0 0 24 24" class="tiktok-badge-svg" aria-hidden="true">
+                                    <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                                    <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                                </svg>
+                            </span></div>
+
+                            <button type="button" class="btn-profile-verify" id="btnProfileRequestVerification" title="Request the blue verification badge">
+                                <svg viewBox="0 0 24 24" class="tiktok-badge-svg-sm" aria-hidden="true">
+                                    <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                                    <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                                </svg>
+                                <span id="profileVerificationBtnText">Get verified</span>
+                            </button>
+
+                        </div>
+
+                        <p
+                            data-profile-contact-name
+                        >
+                            Dealer
+                        </p>
+
+                        <div class="dealer-profile-photo-actions" role="group" aria-label="Business photo">
+
+                            <button type="button" class="dealer-photo-btn" id="btnPhotoGallery" title="Choose a photo from your gallery">
+                                <i class="fa-solid fa-image" aria-hidden="true"></i>
+                                <span>Upload photo</span>
+                            </button>
+
+                            <button type="button" class="dealer-photo-btn" id="btnPhotoCamera" title="Take a photo with your camera">
+                                <i class="fa-solid fa-camera" aria-hidden="true"></i>
+                                <span>Take photo</span>
+                            </button>
+
+                            <button type="button" class="dealer-photo-btn dealer-photo-btn-remove" id="btnPhotoRemove" title="Remove photo" aria-label="Remove photo" hidden>
+                                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                            </button>
+
+                            <input type="file" id="profilePhotoGallery" accept="image/*" hidden>
+                            <input type="file" id="profilePhotoCamera" accept="image/*" capture="environment" hidden>
+
+                        </div>
+
+                        <div class="dealer-profile-status-stack">
+
+                            <span class="dealer-profile-account-status" id="profileStatusPill">
+                                <span class="dealer-profile-status-dot"></span>
+                                <span id="profileStatusText">Active Dealer Account</span>
+                            </span>
+
+                            <span class="dealer-profile-hours-status" id="profileHoursStatus" hidden></span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-profile-summary-divider"></div>
+
+
+                <div class="dealer-profile-summary-details">
+
+                    <div class="dealer-profile-summary-item">
+
+                        <i class="fa-solid fa-location-dot"></i>
+
+                        <div>
+                            <span>Business Location</span>
+
+                            <strong
+                                data-profile-location
+                            >
+                                —
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="dealer-profile-summary-item">
+
+                        <i class="fa-solid fa-phone"></i>
+
+                        <div>
+                            <span>Phone Number</span>
+
+                            <strong
+                                data-profile-phone
+                            >
+                                —
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="dealer-profile-summary-item">
+
+                        <i class="fa-solid fa-envelope"></i>
+
+                        <div>
+                            <span>Email Address</span>
+
+                            <strong
+                                data-profile-email
+                            >
+                                —
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================================
+                 BUSINESS INFORMATION
+                 ========================================= -->
+
+            <section class="dealer-card dealer-profile-form-card">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h2 class="dealer-card-title">
+                            Business Information
+                        </h2>
+
+                        <p class="dealer-profile-card-description">
+                            Your dealer business details.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <form
+                        id="dealerBusinessProfileForm"
+                        novalidate
+                    >
+
+                        <div class="dealer-profile-form-grid">
+
+                            <div class="dealer-profile-form-group">
+
+                                <label for="profileBusinessName">
+                                    Business Name
+                                </label>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-building"></i>
+
+                                    <input
+                                        type="text"
+                                        id="profileBusinessName"
+                                        name="businessName"
+                                        placeholder="Enter business name"
+                                        autocomplete="organization"
+                                    >
+
+                                </div>
+
+                                <small
+                                    class="dealer-profile-field-error"
+                                    data-error-for="profileBusinessName"
+                                ></small>
+
+                            </div>
+
+
+                            <div class="dealer-profile-form-group">
+
+                                <label for="profileBusinessType">
+                                    Business Type
+                                </label>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-store"></i>
+
+                                    <select
+                                        id="profileBusinessType"
+                                        name="businessType"
+                                    >
+                                        <option value="">
+                                            Select business type
+                                        </option>
+
+                                        <option value="Gas Dealer">
+                                            Gas Dealer
+                                        </option>
+
+                                        <option value="Gas Shop">
+                                            Gas Shop
+                                        </option>
+
+                                        <option value="Gas Distributor">
+                                            Gas Distributor
+                                        </option>
+
+                                        <option value="Other">
+                                            Other
+                                        </option>
+                                    </select>
+
+                                </div>
+
+                                <small
+                                    class="dealer-profile-field-error"
+                                    data-error-for="profileBusinessType"
+                                ></small>
+
+                            </div>
+
+
+                            <div class="dealer-profile-form-group">
+
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                    <label for="profileLocation" style="margin:0;">
+                                        Business Location
+                                    </label>
+                                    <button type="button" class="btn-link-xs" id="btnOpenLocationMapPicker" style="color:#d97706; background:#fef3c7; border:1px solid #fde68a; padding:3px 9px; border-radius:5px; font-weight:700; cursor:pointer; font-size:11px; display:inline-flex; align-items:center; gap:5px; transition:all 0.2s ease;">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                        <span>Pin / Choose on Map</span>
+                                    </button>
+                                </div>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-location-dot"></i>
+
+                                    <input
+                                        type="text"
+                                        id="profileLocation"
+                                        name="location"
+                                        placeholder="Enter business location or pin on map"
+                                        autocomplete="address-level2"
+                                    >
+
+                                </div>
+
+                                <small
+                                    class="dealer-profile-field-error"
+                                    data-error-for="profileLocation"
+                                ></small>
+
+                            </div>
+
+
+                            <div class="dealer-profile-form-group">
+
+                                <label for="profileAddress">
+                                    Business Address
+                                </label>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-map-location-dot"></i>
+
+                                    <input
+                                        type="text"
+                                        id="profileAddress"
+                                        name="address"
+                                        placeholder="Enter business address"
+                                        autocomplete="street-address"
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="dealer-profile-form-group">
+
+                                <label for="profileRegistrationNumber">
+                                    Business Registration Number
+                                </label>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-file-lines"></i>
+
+                                    <input
+                                        type="text"
+                                        id="profileRegistrationNumber"
+                                        name="registrationNumber"
+                                        placeholder="Enter registration number"
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="dealer-profile-form-group">
+
+                                <label for="profileTaxNumber">
+                                    Tax / PIN Number
+                                </label>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-file-invoice"></i>
+
+                                    <input
+                                        type="text"
+                                        id="profileTaxNumber"
+                                        name="taxNumber"
+                                        placeholder="Enter tax or PIN number"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="dealer-profile-form-actions">
+
+                            <button
+                                type="button"
+                                class="dealer-button dealer-button-secondary"
+                                id="resetBusinessProfile"
+                            >
+                                <i class="fa-solid fa-rotate-left"></i>
+                                Reset
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="dealer-button dealer-button-primary"
+                                id="saveBusinessProfile"
+                            >
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                Save Changes
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================================
+                 CONTACT INFORMATION
+                 ========================================= -->
+
+            <section class="dealer-card dealer-profile-form-card">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h2 class="dealer-card-title">
+                            Contact Information
+                        </h2>
+
+                        <p class="dealer-profile-card-description">
+                            Contact details customers and GAS HUB
+                            may use to reach your business.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <form
+                        id="dealerContactProfileForm"
+                        novalidate
+                    >
+
+                        <div class="dealer-profile-form-grid">
+
+                            <div class="dealer-profile-form-group">
+
+                                <label for="profileContactName">
+                                    Contact Person
+                                </label>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-user"></i>
+
+                                    <input
+                                        type="text"
+                                        id="profileContactName"
+                                        name="contactName"
+                                        placeholder="Enter contact person"
+                                        autocomplete="name"
+                                    >
+
+                                </div>
+
+                                <small
+                                    class="dealer-profile-field-error"
+                                    data-error-for="profileContactName"
+                                ></small>
+
+                            </div>
+
+
+                            <div class="dealer-profile-form-group">
+
+                                <label for="profilePhone">
+                                    Phone Number
+                                </label>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-phone"></i>
+
+                                    <input
+                                        type="tel"
+                                        id="profilePhone"
+                                        name="phone"
+                                        placeholder="e.g. 0712345678"
+                                        autocomplete="tel"
+                                    >
+
+                                </div>
+
+                                <small
+                                    class="dealer-profile-field-error"
+                                    data-error-for="profilePhone"
+                                ></small>
+
+                            </div>
+
+
+                            <div class="dealer-profile-form-group dealer-profile-full-width">
+
+                                <label for="profileEmail">
+                                    Email Address
+                                </label>
+
+                                <div class="dealer-profile-input-wrap">
+
+                                    <i class="fa-solid fa-envelope"></i>
+
+                                    <input
+                                        type="email"
+                                        id="profileEmail"
+                                        name="email"
+                                        placeholder="Enter email address"
+                                        autocomplete="email"
+                                    >
+
+                                </div>
+
+                                <small
+                                    class="dealer-profile-field-error"
+                                    data-error-for="profileEmail"
+                                ></small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="dealer-profile-form-actions">
+
+                            <button
+                                type="button"
+                                class="dealer-button dealer-button-secondary"
+                                id="resetContactProfile"
+                            >
+                                <i class="fa-solid fa-rotate-left"></i>
+                                Reset
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="dealer-button dealer-button-primary"
+                                id="saveContactProfile"
+                                data-loading-button
+                            >
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                Save Changes
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================================
+                 WORKING HOURS
+                 ========================================= -->
+
+            <section class="dealer-card dealer-profile-form-card">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h2 class="dealer-card-title">
+                            Working Hours
+                        </h2>
+
+                        <p class="dealer-profile-card-description">
+                            Choose Open 24 hours if your shop never closes. Otherwise set
+                            your working days and times; outside them customers and the
+                            admin see your business as closed. Times are Kenya time.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <form
+                        id="dealerWorkingHoursForm"
+                        novalidate
+                    >
+
+                        <div class="dealer-profile-hours-switches">
+
+                            <label class="dealer-profile-hours-check" for="hoursOpen24">
+                                <input type="checkbox" id="hoursOpen24">
+                                <span>
+                                    <strong>Open 24 hours</strong>
+                                    &ndash; my shop is always open, every day.
+                                </span>
+                            </label>
+
+                        </div>
+
+                        <p class="dealer-profile-card-description" id="hoursModeHint">
+                            Leave this off to set your own opening and closing times below.
+                            Your shop will then switch between Open and Closed automatically.
+                        </p>
+
+
+                        <div class="dealer-profile-hours-fields" id="hoursFields">
+
+                            <div class="dealer-profile-form-grid">
+
+                                <div class="dealer-profile-form-group">
+
+                                    <label for="hoursOpenTime">
+                                        Opening Time
+                                    </label>
+
+                                    <div class="dealer-profile-input-wrap">
+
+                                        <i class="fa-regular fa-clock"></i>
+
+                                        <input
+                                            type="time"
+                                            id="hoursOpenTime"
+                                            name="openTime"
+                                            value="08:00"
+                                        >
+
+                                    </div>
+
+                                    <small
+                                        class="dealer-profile-field-error"
+                                        data-error-for="hoursOpenTime"
+                                    ></small>
+
+                                </div>
+
+
+                                <div class="dealer-profile-form-group">
+
+                                    <label for="hoursCloseTime">
+                                        Closing Time
+                                    </label>
+
+                                    <div class="dealer-profile-input-wrap">
+
+                                        <i class="fa-regular fa-clock"></i>
+
+                                        <input
+                                            type="time"
+                                            id="hoursCloseTime"
+                                            name="closeTime"
+                                            value="18:00"
+                                        >
+
+                                    </div>
+
+                                    <small
+                                        class="dealer-profile-field-error"
+                                        data-error-for="hoursCloseTime"
+                                    ></small>
+
+                                </div>
+
+                            </div>
+
+
+                            <span class="dealer-profile-hours-days-label" id="hoursDaysLabel">
+                                Working days
+                            </span>
+
+                            <div class="dealer-profile-hours-days" role="group" aria-labelledby="hoursDaysLabel">
+                                <label class="dealer-profile-day-chip"><input type="checkbox" name="hoursDay" value="1"><span>Mon</span></label>
+                                <label class="dealer-profile-day-chip"><input type="checkbox" name="hoursDay" value="2"><span>Tue</span></label>
+                                <label class="dealer-profile-day-chip"><input type="checkbox" name="hoursDay" value="3"><span>Wed</span></label>
+                                <label class="dealer-profile-day-chip"><input type="checkbox" name="hoursDay" value="4"><span>Thu</span></label>
+                                <label class="dealer-profile-day-chip"><input type="checkbox" name="hoursDay" value="5"><span>Fri</span></label>
+                                <label class="dealer-profile-day-chip"><input type="checkbox" name="hoursDay" value="6"><span>Sat</span></label>
+                                <label class="dealer-profile-day-chip"><input type="checkbox" name="hoursDay" value="0"><span>Sun</span></label>
+                            </div>
+
+                            <small
+                                class="dealer-profile-field-error"
+                                data-error-for="hoursDays"
+                            ></small>
+
+                        </div>
+
+
+                        <div class="dealer-profile-hours-preview" id="hoursPreview" role="status" aria-live="polite">
+                            <i class="fa-regular fa-clock"></i>
+                            <span id="hoursPreviewText">
+                                Open 24 hours. Customers always see your outlet as open.
+                            </span>
+                        </div>
+
+
+                        <div class="dealer-profile-form-actions">
+
+                            <button
+                                type="button"
+                                class="dealer-button dealer-button-secondary"
+                                id="resetWorkingHours"
+                            >
+                                <i class="fa-solid fa-rotate-left"></i>
+                                Reset
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="dealer-button dealer-button-primary"
+                                id="saveWorkingHours"
+                            >
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                Save Hours
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================================
+                 ACCOUNT INFORMATION
+                 ========================================= -->
+
+            <section class="dealer-card dealer-profile-account-card">
+
+                <div class="dealer-card-header">
+
+                    <div>
+                        <h2 class="dealer-card-title">
+                            Account Information
+                        </h2>
+
+                        <p class="dealer-profile-card-description">
+                            Basic information about your dealer
+                            account.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="dealer-card-body">
+
+                    <div class="dealer-profile-account-grid">
+
+                        <div class="dealer-profile-account-item">
+
+                            <span>
+                                Account Type
+                            </span>
+
+                            <strong>
+                                Dealer
+                            </strong>
+
+                        </div>
+
+
+                        <div class="dealer-profile-account-item">
+
+                            <span>
+                                Account Status
+                            </span>
+
+                            <strong class="dealer-profile-account-active">
+                                <span class="dealer-profile-status-dot"></span>
+                                Active
+                            </strong>
+
+                        </div>
+
+
+                        <div class="dealer-profile-account-item">
+
+                            <span>
+                                Dealer ID
+                            </span>
+
+                            <strong
+                                data-profile-dealer-id
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="dealer-profile-account-item">
+
+                            <span>
+                                Date Registered
+                            </span>
+
+                            <strong
+                                data-profile-created-date
+                            >
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         MOBILE BOTTOM NAV
+         ================================================= -->
+
+    <nav
+        class="dealer-mobile-nav"
+        aria-label="Mobile dealer navigation"
+    >
+
+        <a
+            href="dealer-dashboard.html"
+            class="dealer-nav-item"
+            data-mobile-page="dealer-dashboard.html"
+        >
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Home</span>
+        </a>
+
+        <a
+            href="dealer-products.html"
+            class="dealer-nav-item"
+            data-mobile-page="dealer-products.html"
+        >
+            <i class="fa-solid fa-box"></i>
+            <span>Products</span>
+        </a>
+
+        <a
+            href="dealer-orders.html"
+            class="dealer-nav-item"
+            data-mobile-page="dealer-orders.html"
+        >
+            <i class="fa-solid fa-receipt"></i>
+            <span>Orders</span>
+        </a>
+
+        <a
+            href="dealer-profile.html"
+            class="dealer-nav-item active"
+            data-mobile-page="dealer-profile.html"
+        >
+            <i class="fa-solid fa-user"></i>
+            <span>Profile</span>
+        </a>
+
+    </nav>
+
+</main>
+
+</div>
+
+    <!-- Verification Modal -->
+    <div class="modal-backdrop" id="verificationModalBackdrop" hidden>
+        <div class="modal-dialog modal-dialog-sm" role="dialog" aria-modal="true" aria-labelledby="verificationModalTitle">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <div class="modal-icon-badge verified">
+                        <svg viewBox="0 0 24 24" class="tiktok-badge-svg-modal" aria-hidden="true">
+                            <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
+                            <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="verificationModalTitle">Request Blue Badge Verification</h2>
+                        <span class="modal-subtitle">Official GasHub &amp; EPRA Dealer Badge</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeVerificationModalBtn" aria-label="Close dialog">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="verificationForm">
+                <div class="modal-body">
+                    <div class="verification-perks-box">
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Official TikTok-style Blue Check Badge on your outlet profile</span></div>
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Top ranking in customer cylinder searches on GasHub App</span></div>
+                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>EPRA Safety Compliance digital certificate seal</span></div>
+                    </div>
+                    <div class="verification-fee-pill" id="verificationFeePill">
+                        <span>Admin Verification Fee:</span>
+                        <strong id="verificationFeeAmount">—</strong>
+                    </div>
+                    <div class="form-group">
+                        <label for="verifyOutletName" class="form-label required">Depot / Outlet Name</label>
+                        <input type="text" id="verifyOutletName" class="form-control" required placeholder="e.g. GasHub Nairobi Central Depot">
+                    </div>
+                    <div class="form-group">
+                        <label for="verifyEpraLicense" class="form-label required">EPRA License Number</label>
+                        <input type="text" id="verifyEpraLicense" class="form-control" required placeholder="e.g. EPRA/LPG/2026/8942">
+                    </div>
+                    <div class="form-group">
+                        <label for="verifyMpesaPhone" class="form-label required">M-Pesa Phone Number (for STK Prompt)</label>
+                        <input type="tel" id="verifyMpesaPhone" class="form-control" required placeholder="07XX XXX XXX or 2547XX XXX XXX">
+                    </div>
+                    <div class="verification-pay-status" id="verificationPayStatus" role="status" aria-live="polite"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="cancelVerificationBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitVerificationBtn">
+                        <i class="fa-solid fa-mobile-screen-button fa-sm"></i>
+                        <span id="verificationPayBtnText">Pay via M-Pesa</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         INTERACTIVE MAP LOCATION PICKER MODAL (PIN GPS OR CHOOSE)
+         ===================================================== -->
+    <div class="modal-backdrop" id="locationPickerModalBackdrop" hidden>
+        <div class="modal-dialog map-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="mapModalTitle">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <div class="modal-icon-badge">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <div>
+                        <h2 id="mapModalTitle">Pin or Choose Business Location</h2>
+                        <span class="modal-subtitle">Pin your exact depot GPS coordinates or choose location on interactive map</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeLocationModalBtn" aria-label="Close dialog">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="map-picker-top-bar">
+                    <div class="map-quick-buttons">
+                        <button type="button" class="map-quick-btn gps-btn" id="btnPinCurrentGpsLocation" title="Use device GPS location">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                            <span>Pin My Current GPS Location</span>
+                        </button>
+                        <button type="button" class="map-quick-btn" id="btnChooseOnMap" title="Click or drag pin anywhere on map">
+                            <i class="fa-solid fa-hand-pointer"></i>
+                            <span>Click Map to Move Pin</span>
+                        </button>
+                    </div>
+
+                    <div class="map-search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="mapSearchTownInput" placeholder="Search town or street (e.g. Westlands, Industrial Area)...">
+                    </div>
+                </div>
+
+                <div id="dealerLocationMap" class="map-canvas-container"></div>
+
+                <div class="selected-location-pill">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <div>
+                        <strong>Selected Location:</strong>
+                        <span id="selectedLocationDisplay">Nairobi Central, Commercial Bay A [-1.2921, 36.8219]</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="cancelLocationPickerBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmLocationPickerBtn">
+                    <i class="fa-solid fa-check"></i>
+                    <span>Confirm &amp; Use Location</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<!-- =========================================================
+     SCRIPTS
+     ========================================================= -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="gashub-core.js"></script>
+    <script src="dealer-logout.js"></script>
+<script src="dealer-main.js"></script>
+<script src="dealer-profile.js"></script>
+
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="dealer-mobile.js" defer></script>
+</body>
+</html>

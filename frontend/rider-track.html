@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1f4fd8">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Delivery | GasHub Messenger</title>
+    <link rel="icon" type="image/png" href="/Images/favicon.png">
+    <link rel="stylesheet" href="rider-track.css">
+</head>
+<body>
+    <header class="top">
+        <img src="/Images/logo.png" alt="GasHub" class="logo">
+        <span class="role">Messenger</span>
+    </header>
+
+    <main class="wrap">
+        <!-- loading -->
+        <section class="card center" id="vLoading">
+            <div class="spinner"></div>
+            <p>Loading your delivery...</p>
+        </section>
+
+        <!-- invalid link / finished -->
+        <section class="card center" id="vEnd" hidden>
+            <div class="big" id="endIcon">!</div>
+            <h1 id="endTitle"></h1>
+            <p id="endText"></p>
+        </section>
+
+        <!-- the delivery -->
+        <section id="vMain" hidden>
+            <div class="card">
+                <div class="row"><small>Order</small><b id="orderNo"></b></div>
+                <div class="row"><small>Messenger</small><b id="riderName"></b></div>
+                <div class="dest">
+                    <small>Deliver to</small>
+                    <p id="destText"></p>
+                    <p class="landmark" id="destLandmark" hidden></p>
+                </div>
+                <div class="actions">
+                    <a class="btn ghost" id="callBtn" href="#" hidden>Call customer</a>
+                    <a class="btn ghost" id="navBtn" href="#" target="_blank" rel="noopener" hidden>Open in Maps</a>
+                </div>
+            </div>
+
+            <div class="card status" id="statusCard">
+                <div class="dot" id="statusDot"></div>
+                <div>
+                    <b id="statusTitle">Ready to start</b>
+                    <p id="statusText">Tap Start delivery when you leave the shop. Your phone's location is shared with the customer until you mark the order delivered.</p>
+                </div>
+            </div>
+
+            <!-- what to do about payment at the door (filled from the order) -->
+            <div class="card pay" id="payCard" hidden>
+                <small>Payment</small>
+                <b id="payTitle"></b>
+                <p id="payText"></p>
+            </div>
+
+            <p class="warn" id="warn" hidden></p>
+
+            <button class="btn primary" id="startBtn" type="button">Start delivery</button>
+            <p class="near" id="nearHint" hidden></p>
+            <button class="btn good" id="doneBtn" type="button" hidden>Confirm order completed</button>
+
+            <p class="hint">Keep this page open and your phone's location turned on while you deliver. The customer only sees where you are while the delivery is running. The button to confirm the order appears when you are about 1 minute from the customer.</p>
+        </section>
+    </main>
+
+    <script src="rider-track.js"></script>
+</body>
+</html>

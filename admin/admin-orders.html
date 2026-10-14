@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Orders | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="admin-orders.css">
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <!-- Mobile overlay -->
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+
+            <div class="topbar-left">
+
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    id="mobileMenuButton"
+                    aria-label="Open menu"
+                >
+                    ☰
+                </button>
+
+                <div>
+                    <h2>Orders</h2>
+                    <p>Manage customer orders and track their progress.</p>
+                </div>
+
+            </div>
+
+            <div class="admin-user-area">
+                <div class="admin-user-info">
+                    <strong id="adminUserName">Administrator</strong>
+                    <span id="adminUserRole">Admin</span>
+                </div>
+            </div>
+
+        </header>
+
+        <section class="admin-content">
+
+            <!-- =================================================
+                 MESSAGE
+            ================================================== -->
+            <div
+                class="admin-message"
+                id="ordersMessage"
+                role="alert"
+            ></div>
+
+            <!-- =================================================
+                 ORDER STATISTICS
+            ================================================== -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Total Orders</span>
+                        <strong class="stat-value" id="totalOrders">0</strong>
+                    </div>
+
+                    <div class="stat-icon">▤</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Pending</span>
+                        <strong class="stat-value" id="pendingOrders">0</strong>
+                    </div>
+
+                    <div class="stat-icon">◷</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Confirmed</span>
+                        <strong class="stat-value" id="confirmedOrders">0</strong>
+                    </div>
+
+                    <div class="stat-icon">✓</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <span class="stat-label">Completed</span>
+                        <strong class="stat-value" id="completedOrders">0</strong>
+                    </div>
+
+                    <div class="stat-icon">★</div>
+                </div>
+
+            </div>
+
+            <!-- =================================================
+                 ORDERS TABLE
+            ================================================== -->
+            <div class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>All Orders</h3>
+                        <p>View and manage customer orders.</p>
+                    </div>
+
+                    <div class="table-tools">
+
+                        <div class="search-box">
+                            <input
+                                type="search"
+                                id="orderSearch"
+                                placeholder="Search order no., name or phone..."
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <select id="orderStatusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="delivery">Out for Delivery</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="ordersTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="8"
+                                    class="table-loading"
+                                >
+                                    Loading orders...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+                <div class="table-pagination">
+
+                    <div
+                        class="pagination-info"
+                        id="ordersPaginationInfo"
+                    >
+                        Showing 0 orders
+                    </div>
+
+                    <div
+                        class="pagination-buttons"
+                        id="ordersPaginationButtons"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- =====================================================
+         ORDER DETAILS MODAL
+    ====================================================== -->
+    <div
+        class="modal"
+        id="orderDetailsModal"
+        aria-hidden="true"
+    >
+
+        <div class="modal-backdrop" id="orderModalBackdrop"></div>
+
+        <div
+            class="modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="orderModalTitle"
+        >
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="orderModalTitle">Order Details</h2>
+                    <p id="orderModalSubtitle">
+                        View order information.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="closeOrderModal"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div class="order-details-body" id="orderDetailsBody">
+
+                <div class="table-loading">
+                    Loading order details...
+                </div>
+
+            </div>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="closeOrderButton"
+                >
+                    Close
+                </button>
+
+                <button
+                    type="button"
+                    class="danger-button"
+                    id="cancelOrderButton"
+                >
+                    Cancel Order
+                </button>
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="updateOrderButton"
+                >
+                    Update Status
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         ORDER STATUS MODAL
+    ====================================================== -->
+    <div
+        class="modal"
+        id="orderStatusModal"
+        aria-hidden="true"
+    >
+
+        <div class="modal-backdrop" id="orderStatusBackdrop"></div>
+
+        <div
+            class="modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="orderStatusTitle"
+        >
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="orderStatusTitle">Update Order Status</h2>
+                    <p>Select the new status for this order.</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="closeStatusModal"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="orderStatusForm">
+
+                <input
+                    type="hidden"
+                    id="statusOrderId"
+                >
+
+                <div class="form-group">
+
+                    <label for="newOrderStatus">
+                        Order Status
+                    </label>
+
+                    <select id="newOrderStatus" required>
+                        <option value="">Select status</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="delivery">Out for Delivery</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+
+                </div>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        id="cancelStatusButton"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="saveOrderStatusButton"
+                    >
+                        Save Status
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-orders.js"></script>
+
+</body>
+</html>

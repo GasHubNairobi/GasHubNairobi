@@ -1,0 +1,156 @@
+/* =========================================================
+   GASHUB CUSTOMER LOGIN - mobile-first
+   Brand: blue / yellow / red (same as home, products, profile)
+   Dark mode comes from gashub-theme.css (load it after this file)
+   ========================================================= */
+:root {
+    --blue: #1f4fd8;
+    --blue-dark: #0f2a7a;
+    --blue-soft: #eaf0ff;
+    --yellow: #ffc20e;
+    --red: #e03131;
+    --green: #1c8b52;
+    --ink: #141b34;
+    --muted: #5f6783;
+    --line: #e3e8f5;
+    --bg: #f5f7fc;
+    --white: #fff;
+    --radius: 12px;
+    --shadow: 0 4px 16px rgba(20, 27, 52, .08);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+    min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; color: var(--ink); background: var(--bg);
+    -webkit-tap-highlight-color: transparent;
+}
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; }
+img { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.login-page { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ---------- BRAND (kept short on phones) ---------- */
+.login-brand {
+    position: relative; overflow: hidden; color: #fff; padding: 14px 16px 18px;
+    background: linear-gradient(135deg, #0f2a7a, #1f4fd8 70%);
+}
+.brand-link { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 800; color: #fff; }
+.brand-link img { width: 28px; height: 28px; object-fit: contain; background: #fff; border-radius: 8px; padding: 3px; }
+.brand-content { position: relative; z-index: 1; margin-top: 14px; max-width: 460px; }
+.brand-label { display: inline-block; margin-bottom: 6px; padding: 2px 9px; border-radius: 10px; background: rgba(255, 255, 255, .16); font-size: 10.5px; font-weight: 700; }
+.brand-content h1 { font-size: 22px; line-height: 1.15; margin-bottom: 4px; }
+.brand-content p { font-size: 12.5px; line-height: 1.5; opacity: .88; }
+.brand-watermark { position: absolute; right: 8px; bottom: 6px; width: 64px; height: auto; opacity: .1; pointer-events: none; }
+
+/* ---------- CARD ---------- */
+.login-section { flex: 1; display: flex; justify-content: center; padding: 14px 12px calc(20px + var(--safe-b)); }
+.login-card { width: 100%; max-width: 460px; padding: 18px 16px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); align-self: flex-start; }
+.login-heading { margin-bottom: 14px; }
+.login-heading h2 { font-size: 20px; line-height: 1.2; color: var(--blue-dark); }
+.login-heading p { margin-top: 2px; font-size: 12.5px; color: var(--muted); }
+
+/* ---------- MESSAGE ---------- */
+.login-message { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 14px; padding: 10px 12px; border-radius: 10px; background: #fdeaea; color: #a82525; font-size: 12.5px; line-height: 1.45; }
+.login-message.success { background: #e5f6ec; color: #17683f; }
+.login-message.info { background: var(--blue-soft); color: var(--blue-dark); }
+.msg-action { padding: 0; font-size: 12.5px; font-weight: 800; text-decoration: underline; color: inherit; }
+
+/* ---------- SOCIAL ---------- */
+.social-title { margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.social-login { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.social-button {
+    min-height: 44px; padding: 0 6px; display: flex; align-items: center; justify-content: center; gap: 7px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--white); color: var(--ink); font-size: 12.5px; font-weight: 700;
+}
+.social-button:active { background: var(--blue-soft); }
+.social-button.is-off { opacity: .5; }
+.social-button:disabled { opacity: .6; cursor: wait; }
+.social-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; }
+.social-logo { width: 20px; height: 20px; flex: none; object-fit: contain; }
+.x-button .social-icon { color: var(--ink); }
+
+.login-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+.login-divider::before, .login-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.login-divider span { font-size: 10.5px; font-weight: 700; color: var(--muted); }
+
+/* ---------- FORM ---------- */
+.form-group { margin-bottom: 14px; }
+.form-group > label, .password-header label { display: block; margin-bottom: 5px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.form-group input[type="email"], .form-group input[type="password"], .form-group input[type="text"] {
+    width: 100%; height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; outline: none;
+    background: var(--white); color: var(--ink); font-size: 16px;   /* 16px stops iPhone zoom */
+}
+.form-group input::placeholder { color: #98a0bb; }
+.form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(31, 79, 216, .12); }
+.password-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.password-header label { margin-bottom: 5px; }
+.link-btn { font-size: 12px; font-weight: 700; color: var(--blue); }
+.password-field { position: relative; }
+.password-field input { padding-right: 64px !important; }
+.password-toggle { position: absolute; top: 50%; right: 7px; min-width: 46px; height: 32px; padding: 0 8px; transform: translateY(-50%); border-radius: 8px; background: var(--blue-soft); color: var(--blue); font-size: 11.5px; font-weight: 700; }
+.field-hint { display: block; min-height: 16px; margin-top: 4px; font-size: 11.5px; color: var(--muted); }
+.field-hint.warn { color: #b25e00; font-weight: 700; }
+.strength { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+.strength i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+.strength[data-level="1"] i:nth-child(1) { background: var(--red); }
+.strength[data-level="2"] i:nth-child(-n+2) { background: var(--yellow); }
+.strength[data-level="3"] i { background: var(--green); }
+.strength span { flex: none; margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--muted); }
+
+.remember-option { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 12.5px; cursor: pointer; }
+.remember-option input { width: 17px; height: 17px; margin: 0; accent-color: var(--blue); }
+
+.login-button {
+    width: 100%; min-height: 48px; border-radius: 10px; background: var(--blue); color: #fff; font-size: 14px; font-weight: 800;
+}
+.login-button:active { background: var(--blue-dark); }
+.login-button:disabled { opacity: .6; cursor: not-allowed; }
+.login-button.yellow { background: var(--yellow); color: #141b34; }
+.text-center-btn { display: block; width: 100%; margin-top: 12px; padding: 6px; text-align: center; font-size: 12.5px; font-weight: 700; color: var(--blue); }
+
+.register-section { margin-top: 18px; padding-top: 16px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-top: 1px solid var(--line); text-align: center; font-size: 12.5px; color: var(--muted); }
+.register-link { font-weight: 800; color: var(--blue); }
+.login-terms { margin-top: 14px; text-align: center; font-size: 10.5px; line-height: 1.55; color: var(--muted); }
+.login-terms a { color: var(--blue); font-weight: 700; }
+.privacy-link { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 12px auto 0; width: max-content; max-width: 100%; padding: 9px 16px; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: 12.5px; font-weight: 700; text-decoration: none; }
+.privacy-link:hover { filter: brightness(.97); }
+.back-home { display: block; margin-top: 12px; text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+.noscript { margin: 12px; padding: 10px 12px; border-radius: 10px; background: #fff8dc; color: #6b5600; font-size: 12.5px; }
+
+/* ---------- LARGER SCREENS ---------- */
+@media (min-width: 600px) {
+    .login-brand { padding: 22px 28px 26px; }
+    .brand-content h1 { font-size: 28px; }
+    .brand-content p { font-size: 13.5px; }
+    .brand-watermark { width: 100px; }
+    .login-section { padding: 26px 24px 40px; }
+    .login-card { padding: 26px 24px; }
+}
+@media (min-width: 900px) {
+    .login-page { display: grid; grid-template-columns: .9fr 1.1fr; }
+    .login-brand { min-height: 100vh; padding: 40px; display: flex; flex-direction: column; justify-content: space-between; }
+    .brand-link { font-size: 20px; }
+    .brand-link img { width: 34px; height: 34px; }
+    .brand-content { margin-top: 0; margin-bottom: 80px; }
+    .brand-content h1 { font-size: 40px; }
+    .brand-content p { font-size: 15px; }
+    .brand-watermark { width: 220px; right: -20px; bottom: 20px; }
+    .login-section { align-items: center; padding: 40px; }
+    .login-card { align-self: center; max-width: 480px; padding: 32px; }
+}
+@media (max-width: 360px) {
+    .social-button { font-size: 11.5px; gap: 5px; }
+    .login-card { padding: 16px 13px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.dealer-entry { margin-top: 14px; padding-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-top: 1px dashed var(--line); text-align: center; font-size: 12.5px; color: var(--muted); }
+.dealer-entry-link { font-weight: 800; color: var(--blue); }
+
+.dealer-entry-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 10px; }

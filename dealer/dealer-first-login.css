@@ -1,0 +1,13 @@
+ .setup-page{padding:28px 16px;align-items:flex-start}.setup-container{width:min(760px,100%)}.setup-card{width:100%;max-width:none}.setup-form{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}.setup-form h3{grid-column:1/-1;margin:14px 0 0;padding-bottom:8px;border-bottom:1px solid #e5e7eb;color:#92400e}.setup-form label{font-size:14px;font-weight:600;color:#374151}.setup-form input,.setup-form textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d1d5db;border-radius:9px;font:inherit}.setup-form button{grid-column:1/-1;margin-top:10px}.setup-form label:has(+ input){display:block}.setup-form label,.setup-form input,.setup-form textarea{grid-column:auto}.setup-form label{align-self:end}.setup-form textarea{grid-column:1/-1}.setup-form input[name="address"],.setup-form input[name="business_name"]{grid-column:1/-1}.setup-form input[name="new_password"],.setup-form input[name="confirm_password"]{grid-column:auto}@media(max-width:620px){.setup-form{grid-template-columns:1fr}.setup-form h3,.setup-form button,.setup-form textarea,.setup-form input[name="address"],.setup-form input[name="business_name"]{grid-column:1}}
+
+.map-picker-container{grid-column:1/-1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:6px 0 12px}
+.map-picker-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.map-picker-title{font-size:14px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:6px}
+.btn-detect-gps{background:#d97706!important;color:#ffffff!important;border:none;border-radius:7px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s ease;width:auto!important;margin:0!important}
+.btn-detect-gps:hover{background:#b45309!important}
+.map-picker-desc{font-size:12.5px;color:#64748b;margin:0 0 10px;line-height:1.45}
+.dealer-location-map{height:260px;width:100%;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:8px;z-index:1}
+.pin-status-box{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:8px 12px;background:#ffffff;border:1px solid #e2e8f0;border-radius:6px;color:#334155;font-weight:500}
+.pin-status-box.pinned{border-color:#86efac;background:#f0fdf4;color:#166534}
+.pin-status-box.pinned i{color:#16a34a}
+

@@ -1,0 +1,48 @@
+/* GasHub floating assistant - styles. Edit freely; the logic lives in gashub-assistant.js. */
+body.gha-open{overflow:hidden}
+.gha-fab{position:fixed;right:12px;bottom:84px;z-index:1200;display:flex;align-items:center;gap:7px;height:42px;padding:0 14px 0 6px;border:0;border-radius:21px;background:#1f4fd8;color:#fff;font-weight:700;font-size:12px;line-height:1;font-family:inherit;box-shadow:0 6px 18px rgba(31,79,216,.4);cursor:pointer}
+.gha-fab i{width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+.gha-fab img,.gha-head img{width:18px;height:auto;max-height:24px;object-fit:contain;display:block}
+body.gha-open .gha-fab{display:none}
+.gha-chat{position:fixed;inset:0;z-index:4000;display:none;align-items:flex-end;justify-content:center;background:rgba(10,18,50,.5)}
+.gha-chat.active{display:flex}
+.gha-card{display:flex;flex-direction:column;width:100%;max-width:420px;height:min(76vh,540px);background:#fff;color:#141b34;border-radius:18px 18px 0 0;overflow:hidden;font-family:inherit}
+.gha-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#1f4fd8;color:#fff}
+.gha-head>div{display:flex;align-items:center;gap:8px}
+.gha-head i{width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+.gha-head img{width:20px}
+.gha-head span{display:flex;flex-direction:column;line-height:1.2}
+.gha-head b{font-size:13px}
+.gha-head small{font-size:11px;opacity:.8}
+.gha-x{width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:20px;line-height:1;cursor:pointer}
+.gha-msgs{flex:1;overflow-y:auto;padding:12px;background:#f5f7fc;display:flex;flex-direction:column;gap:8px}
+.gha-row{display:flex;align-items:flex-end;gap:6px;max-width:100%}
+.gha-row.user{justify-content:flex-end}
+.gha-av{flex:none;width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid #e3e8f5;display:flex;align-items:center;justify-content:center}
+.gha-av img{width:14px;height:auto;max-height:18px;object-fit:contain}
+.gha-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.gha-dots{display:inline-flex;gap:4px;padding:2px 0}
+.gha-dots i{width:6px;height:6px;border-radius:50%;background:#9aa6c8;animation:ghaDot 1s infinite ease-in-out}
+.gha-dots i:nth-child(2){animation-delay:.15s}.gha-dots i:nth-child(3){animation-delay:.3s}
+@keyframes ghaDot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.gha-msg{max-width:86%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.45;white-space:pre-line;word-wrap:break-word}
+.gha-msg.bot{background:#fff;border:1px solid #e3e8f5;border-bottom-left-radius:3px}
+.gha-msg.user{background:#1f4fd8;color:#fff;border-bottom-right-radius:3px}
+.gha-msg a{display:inline-block;padding:4px 10px;border-radius:12px;background:#ffc20e;color:#141b34;font-size:12px;font-weight:700;text-decoration:none}
+.gha-chips{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;scrollbar-width:none;border-top:1px solid #e3e8f5;background:#fff}
+.gha-chips::-webkit-scrollbar{display:none}
+.gha-chips button{flex:none;padding:6px 11px;border:1px solid #1f4fd8;border-radius:15px;background:#fff;color:#1f4fd8;font-weight:600;font-size:12px;font-family:inherit;white-space:nowrap;cursor:pointer}
+.gha-form{display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #e3e8f5}
+.gha-form input{flex:1;min-width:0;height:40px;padding:0 12px;border:1px solid #e3e8f5;border-radius:20px;outline:none;font-size:16px;font-family:inherit;background:#fff;color:#141b34}
+.gha-form input:focus{border-color:#1f4fd8}
+.gha-form button{border:0;border-radius:20px;padding:0 16px;background:#ffc20e;color:#141b34;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer}
+[data-theme=dark] .gha-av{background:#fff;border-color:#2a3358}
+[data-theme=dark] .gha-card{background:#151b30;color:#e8ecf8}
+[data-theme=dark] .gha-msgs{background:#0f1426}
+[data-theme=dark] .gha-msg.bot{background:#1b2340;border-color:#2a3358;color:#e8ecf8}
+[data-theme=dark] .gha-chips,[data-theme=dark] .gha-form{background:#151b30;border-color:#2a3358}
+[data-theme=dark] .gha-chips button{background:#151b30;color:#a9c1ff;border-color:#a9c1ff}
+[data-theme=dark] .gha-form input{background:#0f1426;border-color:#2a3358;color:#e8ecf8}
+@media(min-width:900px){.gha-fab{bottom:20px;right:20px}
+.gha-chat{justify-content:flex-end;background:transparent;pointer-events:none}
+.gha-card{pointer-events:auto;margin:0 20px 20px 0;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.25)}}

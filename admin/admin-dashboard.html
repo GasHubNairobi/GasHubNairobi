@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>GasHub Admin Dashboard</title>
+
+<link rel="icon" type="image/png" href="images/favicon.png">
+
+
+
+<link rel="stylesheet" href="admin-dashboard.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+
+<!-- Sidebar -->
+<aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+
+<!-- Main Content -->
+<main class="admin-main">
+
+    <!-- Top Bar -->
+    <header class="admin-topbar">
+
+        <div class="topbar-left">
+            <button type="button" class="mobile-menu-button" id="mobileMenuButton">
+                ☰
+            </button>
+
+            <div>
+                <h1>Dashboard</h1>
+                <p>Welcome to the GasHub administration panel.</p>
+            </div>
+        </div>
+
+        <div class="topbar-right">
+
+            <div class="admin-user">
+                <div class="admin-avatar" id="adminAvatar">
+                    A
+                </div>
+
+                <div class="admin-user-info">
+                    <strong id="adminName">Administrator</strong>
+                    <span>Administrator</span>
+                </div>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- Dashboard Content -->
+    <section class="dashboard-content">
+
+        <!-- Page Heading -->
+        <div class="page-heading">
+            <div>
+                <h2>Overview</h2>
+                <p>Monitor your GasHub operations from one place.</p>
+            </div>
+
+            <button type="button" class="refresh-button" id="refreshDashboard">
+                Refresh
+            </button>
+        </div>
+
+
+        <!-- Statistics -->
+        <div class="dashboard-stats">
+
+            <div class="stat-card">
+                <div class="stat-card-content">
+                    <span class="stat-label">Total Products</span>
+                    <strong class="stat-value" id="totalProducts">0</strong>
+                </div>
+
+                <div class="stat-icon">
+                    ▣
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-card-content">
+                    <span class="stat-label">Total Orders</span>
+                    <strong class="stat-value" id="totalOrders">0</strong>
+                </div>
+
+                <div class="stat-icon">
+                    ▤
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-card-content">
+                    <span class="stat-label">Total Customers</span>
+                    <strong class="stat-value" id="totalCustomers">0</strong>
+                </div>
+
+                <div class="stat-icon">
+                    ♙
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-card-content">
+                    <span class="stat-label">Pending Orders</span>
+                    <strong class="stat-value" id="pendingOrders">0</strong>
+                </div>
+
+                <div class="stat-icon">
+                    ◷
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+
+            <!-- Recent Orders -->
+            <section class="dashboard-card recent-orders-card">
+
+                <div class="card-header">
+                    <div>
+                        <h3>Recent Orders</h3>
+                        <p>Latest customer orders</p>
+                    </div>
+
+                    <a href="admin-orders.html" class="view-all-link">
+                        View All
+                    </a>
+                </div>
+
+                <div class="table-container">
+
+                    <table class="dashboard-table">
+
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="recentOrdersTable">
+
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    No orders available.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- Order Status -->
+            <section class="dashboard-card">
+
+                <div class="card-header">
+                    <div>
+                        <h3>Order Status</h3>
+                        <p>Current order breakdown</p>
+                    </div>
+                </div>
+
+                <div class="order-status-list">
+
+                    <div class="status-row">
+                        <span>
+                            <span class="status-indicator pending"></span>
+                            Pending
+                        </span>
+                        <strong id="statusPending">0</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <span>
+                            <span class="status-indicator confirmed"></span>
+                            Confirmed
+                        </span>
+                        <strong id="statusConfirmed">0</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <span>
+                            <span class="status-indicator delivery"></span>
+                            Out for Delivery
+                        </span>
+                        <strong id="statusDelivery">0</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <span>
+                            <span class="status-indicator completed"></span>
+                            Completed
+                        </span>
+                        <strong id="statusCompleted">0</strong>
+                    </div>
+
+                    <div class="status-row">
+                        <span>
+                            <span class="status-indicator cancelled"></span>
+                            Cancelled
+                        </span>
+                        <strong id="statusCancelled">0</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- Lower Dashboard -->
+        <div class="dashboard-grid">
+
+            <!-- Quick Actions -->
+            <section class="dashboard-card">
+
+                <div class="card-header">
+                    <div>
+                        <h3>Quick Actions</h3>
+                        <p>Frequently used administration tools</p>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+
+                    <a href="admin-product.html" class="quick-action">
+                        <span class="quick-action-icon">+</span>
+                        <div>
+                            <strong>Add Product</strong>
+                            <span>Add a new gas product</span>
+                        </div>
+                    </a>
+
+                    <a href="admin-orders.html" class="quick-action">
+                        <span class="quick-action-icon">▤</span>
+                        <div>
+                            <strong>Manage Orders</strong>
+                            <span>Review customer orders</span>
+                        </div>
+                    </a>
+
+                    <a href="admin-customers.html" class="quick-action">
+                        <span class="quick-action-icon">♙</span>
+                        <div>
+                            <strong>Customers</strong>
+                            <span>View registered customers</span>
+                        </div>
+                    </a>
+
+                    <a href="admin-report.html" class="quick-action">
+                        <span class="quick-action-icon">▥</span>
+                        <div>
+                            <strong>Reports</strong>
+                            <span>View business reports</span>
+                        </div>
+                    </a>
+
+                </div>
+
+            </section>
+
+
+            <!-- System Information -->
+            <section class="dashboard-card">
+
+                <div class="card-header">
+                    <div>
+                        <h3>System Information</h3>
+                        <p>GasHub administration system</p>
+                    </div>
+                </div>
+
+                <div class="system-information">
+
+                    <div class="info-row">
+                        <span>System Status</span>
+                        <strong class="online-text">Online</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Admin Panel</span>
+                        <strong>GasHub</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Last Updated</span>
+                        <strong id="lastUpdated">—</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- Scripts -->
+<script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+<script src="admin-dashboard.js"></script>
+
+
+</body>
+</html>

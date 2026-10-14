@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1f4fd8">
+    <meta name="color-scheme" content="light dark">
+    <title>Create account | GasHub</title>
+    <meta name="description" content="Create your GasHub customer account.">
+    <meta name="robots" content="noindex">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; connect-src 'self'; base-uri 'self'; object-src 'none'">
+    <link rel="icon" type="image/png" href="Images/favicon.png">
+    <script src="gashub-theme.js"></script>
+    <link rel="stylesheet" href="customer-register.css">
+    <link rel="stylesheet" href="gashub-theme.css">
+</head>
+<body>
+
+    <noscript><p class="noscript">GasHub needs JavaScript turned on to create your account.</p></noscript>
+
+    <main class="login-page">
+
+        <!-- BRAND -->
+        <section class="login-brand">
+            <a href="customer-home.html" class="brand-link">
+                <img src="Images/logo.png" alt="GasHub logo">
+                <span>GasHub</span>
+            </a>
+            <div class="brand-content">
+                <span class="brand-label">New customer</span>
+                <h1>Join GasHub</h1>
+                <p>Order gas, manage your deliveries and keep track of every order.</p>
+            </div>
+            <img src="Images/watermark.png" alt="" class="brand-watermark" aria-hidden="true">
+        </section>
+
+        <!-- CARD -->
+        <section class="login-section">
+            <div class="login-card">
+
+                <div class="login-heading">
+                    <h2 id="panelTitle">Create your account</h2>
+                    <p id="panelSub">Sign up with a social account or your email.</p>
+                </div>
+
+                <div id="formMessage" class="login-message" role="alert" aria-live="polite" hidden></div>
+
+                <!-- Social sign-up (hidden once a social profile is being completed) -->
+                <div id="socialSection">
+                    <p class="social-title">Sign up with</p>
+                    <div class="social-login">
+                        <button type="button" class="social-button google-button" id="googleLogin"><img class="social-logo" src="images/google-logo.svg" alt="" width="20" height="20"><span>Google</span></button>
+                        <button type="button" class="social-button facebook-button" id="facebookLogin"><img class="social-logo" src="images/facebook-logo.svg" alt="" width="20" height="20"><span>Facebook</span></button>
+                        <button type="button" class="social-button x-button" id="xLogin"><span class="social-icon" aria-hidden="true">X</span><span>X</span></button>
+                    </div>
+                    <div class="login-divider"><span>OR USE YOUR EMAIL</span></div>
+                </div>
+
+                <!-- Shown when coming back from Google / Facebook / X -->
+                <div id="socialBanner" class="social-banner" hidden>
+                    <img id="socialPhoto" alt="" hidden>
+                    <p id="socialBannerText"></p>
+                </div>
+
+                <form id="registerForm" novalidate>
+
+                    <div class="form-group" id="fullNameGroup">
+                        <label for="fullName">Full name</label>
+                        <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" autocomplete="name" enterkeyhint="next" required>
+                        <small class="field-error" id="fullNameError"></small>
+                    </div>
+
+                    <div class="form-group" id="phoneGroup">
+                        <label for="phone">Phone number</label>
+                        <input type="tel" id="phone" name="phone" placeholder="e.g. 0712345678" autocomplete="tel" inputmode="tel" enterkeyhint="next" required>
+                        <small class="field-error" id="phoneError"></small>
+                    </div>
+
+                    <div class="form-group" id="emailGroup">
+                        <label for="email">Email address</label>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" inputmode="email"
+                               autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" required>
+                        <small class="field-error" id="emailError"></small>
+                    </div>
+
+                    <div class="form-group" id="addressGroup">
+                        <label for="address">Default delivery address <span class="optional">(optional)</span></label>
+                        <textarea id="address" name="address" rows="3" placeholder="Estate, street, house / building" autocomplete="street-address"></textarea>
+                        <small class="field-error" id="addressError"></small>
+                    </div>
+
+                    <div id="passwordSection">
+                        <div class="form-group" id="passwordGroup">
+                            <label for="password">Password</label>
+                            <div class="password-field">
+                                <input type="password" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" enterkeyhint="next" required>
+                                <button type="button" class="password-toggle" data-target="password" aria-label="Show password" aria-pressed="false">Show</button>
+                            </div>
+                            <div class="strength" id="strength" data-level="0"><i></i><i></i><i></i><span id="strengthText"></span></div>
+                            <small class="field-error" id="passwordError"></small>
+                        </div>
+
+                        <div class="form-group" id="confirmPasswordGroup">
+                            <label for="confirmPassword">Confirm password</label>
+                            <div class="password-field">
+                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Type it again" autocomplete="new-password" enterkeyhint="go" required>
+                                <button type="button" class="password-toggle" data-target="confirmPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                            </div>
+                            <small class="field-error" id="confirmPasswordError"></small>
+                        </div>
+                    </div>
+
+                    <label class="terms-row">
+                        <input type="checkbox" id="terms" name="terms">
+                        <span>I agree to GasHub's Terms of Service and
+                            <a href="privacy-policy.html?from=customer" target="_blank" rel="noopener">Privacy Policy</a>, and understand how my account information will be used.</span>
+                    </label>
+                    <small class="field-error terms-error" id="termsError"></small>
+
+                    <button type="submit" id="registerButton" class="login-button">Create account</button>
+                </form>
+
+                <div class="register-section">
+                    <span>Already have a GasHub account?</span>
+                    <a href="customer-login.html" class="register-link" id="signinLink">Sign in</a>
+                </div>
+
+                <a href="customer-home.html" class="back-home">&larr; Back to GasHub</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="customer-register.js"></script>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="gashub-assistant.js" defer></script>
+</body>
+</html>

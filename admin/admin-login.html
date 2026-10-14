@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>GasHub Admin Login</title>
+
+<link rel="icon" type="image/png" href="images/favicon.png">
+
+
+
+<link rel="stylesheet" href="admin-login.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+
+<main class="login-page">
+
+    <!-- Background Watermark -->
+    <div class="login-watermark" aria-hidden="true"></div>
+
+    <section class="login-card">
+
+        <!-- Logo -->
+        <div class="login-brand">
+            <img
+                src="images/logo.png"
+                alt="GasHub Logo"
+                class="login-logo"
+            >
+
+            <h1>GasHub</h1>
+            <p>ADMIN PANEL</p>
+        </div>
+
+
+        <!-- Login Heading -->
+        <div class="login-heading">
+            <h2>Welcome Back</h2>
+            <p>Sign in to access the GasHub administration panel.</p>
+        </div>
+
+
+        <!-- Login Form -->
+        <form id="adminLoginForm" novalidate>
+
+            <div class="form-group">
+
+                <label for="username">
+                    Username or Email
+                </label>
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username or email"
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <div class="password-label-row">
+                    <label for="password">
+                        Password
+                    </label>
+                </div>
+
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        id="togglePassword"
+                        class="password-toggle"
+                        aria-label="Show password"
+                    >
+                        Show
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Error / Success Message -->
+            <div
+                id="loginMessage"
+                class="login-message"
+                role="alert"
+                aria-live="polite"
+            ></div>
+
+
+            <!-- Login Button -->
+            <button
+                type="submit"
+                id="loginButton"
+                class="login-button"
+            >
+                <span id="loginButtonText">
+                    Sign In
+                </span>
+            </button>
+
+        </form>
+
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <span>GasHub Administration</span>
+            <a class="login-privacy-link" href="/privacy-policy.html?from=admin" target="_blank" rel="noopener">Privacy Policy</a>
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="admin-auth.js"></script>
+
+
+</body>
+</html>

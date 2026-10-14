@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Payments | GasHub Admin</title>
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+<link rel="stylesheet" href="admin-payment.css">
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+
+            <div class="topbar-left">
+
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    id="mobileMenuButton"
+                    aria-label="Open menu"
+                >
+                    ☰
+                </button>
+
+                <div>
+                    <h2>Payments</h2>
+
+                    <p>
+                        View and manage customer payment records.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="admin-user-area">
+
+                <div class="admin-user-info">
+                    <strong id="adminUserName">
+                        Administrator
+                    </strong>
+
+                    <span id="adminUserRole">
+                        Admin
+                    </span>
+                </div>
+
+            </div>
+
+        </header>
+
+        <section class="admin-content">
+
+            <!-- =================================================
+                 MESSAGE
+            ================================================== -->
+            <div
+                class="admin-message"
+                id="paymentsMessage"
+                role="alert"
+            ></div>
+
+            <!-- =================================================
+                 STATISTICS
+            ================================================== -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">
+                            Total Payments
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="totalPayments"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">KSh</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">
+                            Total Amount
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="totalPaymentAmount"
+                        >
+                            KSh 0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">₵</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">
+                            Pending
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="pendingPayments"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">◷</div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-card-content">
+                        <span class="stat-label">
+                            Completed
+                        </span>
+
+                        <strong
+                            class="stat-value"
+                            id="completedPayments"
+                        >
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="stat-icon">✓</div>
+
+                </div>
+
+            </div>
+
+            <!-- =================================================
+                 REFUNDS TO SEND (paid orders that were cancelled)
+            ================================================== -->
+            <div class="content-card" id="refundsCard">
+                <div class="card-header">
+                    <div>
+                        <h3>Refunds to send <span class="refund-count" id="refundCount" hidden>0</span></h3>
+                        <p>
+                            When a customer or dealer cancels an order that was already paid to GasHub, the money is owed back.
+                            Send it to the customer's M-Pesa number, then press <strong>Mark as refunded</strong> and enter the
+                            receipt code of that transfer. The customer then sees the order as refunded.
+                        </p>
+                    </div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Send to (M-Pesa)</th>
+                                <th>Amount</th>
+                                <th>Reason</th>
+                                <th>Requested</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="refundsTableBody">
+                            <tr><td colspan="7" class="table-loading">Loading refunds...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <details class="refund-done" id="refundDoneBox" hidden>
+                    <summary>Refunds already sent (<span id="refundDoneCount">0</span>)</summary>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Sent to</th><th>Receipt</th><th>Sent</th><th>By</th></tr></thead>
+                            <tbody id="refundsDoneBody"></tbody>
+                        </table>
+                    </div>
+                </details>
+            </div>
+
+            <!-- =================================================
+                 CONFIRM M-PESA MONEY RECEIVED (by order number)
+            ================================================== -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Confirm M-Pesa Money Received</h3>
+                        <p>
+                            M-Pesa and bank payments go into the GasHub account, and only GasHub marks them as paid.
+                            Check the money in your M-Pesa statement, then confirm it here. Pending payments below
+                            (customers who already sent their code) can be confirmed from their details.
+                            Dealers can only confirm cash.
+                        </p>
+                    </div>
+                </div>
+                <form id="confirmOrderPaymentForm" class="form-grid" autocomplete="off">
+                    <div class="form-group">
+                        <label for="confirmOrderNumber">Order number</label>
+                        <input type="text" id="confirmOrderNumber" placeholder="e.g. GH-100245" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmOrderCode">M-Pesa code (from the statement)</label>
+                        <input type="text" id="confirmOrderCode" maxlength="12" placeholder="e.g. QGH7XK2LMN" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="primary-button" id="confirmOrderButton">Confirm money received</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- =================================================
+                 PAYMENTS TABLE
+            ================================================== -->
+            <div class="content-card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Payment Records</h3>
+
+                        <p>
+                            Review payments made for GasHub orders.
+                        </p>
+                    </div>
+
+                    <div class="table-tools">
+
+                        <div class="search-box">
+                            <input
+                                type="search"
+                                id="paymentSearch"
+                                placeholder="Search payments..."
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <select id="paymentStatusFilter">
+
+                            <option value="">
+                                All Statuses
+                            </option>
+
+                            <option value="pending">
+                                Pending
+                            </option>
+
+                            <option value="completed">
+                                Completed
+                            </option>
+
+                            <option value="failed">
+                                Failed
+                            </option>
+
+                            <option value="cancelled">
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="admin-table-wrapper">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>Payment</th>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="paymentsTableBody">
+
+                            <tr>
+                                <td
+                                    colspan="8"
+                                    class="table-loading"
+                                >
+                                    Loading payments...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+                <div class="table-pagination">
+
+                    <div
+                        class="pagination-info"
+                        id="paymentsPaginationInfo"
+                    >
+                        Showing 0 payments
+                    </div>
+
+                    <div
+                        class="pagination-buttons"
+                        id="paymentsPaginationButtons"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- =====================================================
+         PAYMENT DETAILS MODAL
+    ====================================================== -->
+    <div
+        class="modal"
+        id="paymentDetailsModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-backdrop"
+            id="paymentModalBackdrop"
+        ></div>
+
+        <div
+            class="modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="paymentModalTitle"
+        >
+
+            <div class="modal-header">
+
+                <div>
+                    <h2 id="paymentModalTitle">
+                        Payment Details
+                    </h2>
+
+                    <p id="paymentModalSubtitle">
+                        View payment information.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="closePaymentModal"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div id="paymentDetailsBody">
+
+                <div class="table-loading">
+                    Loading payment details...
+                </div>
+
+            </div>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="closePaymentButton"
+                >
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-payment.js"></script>
+
+</body>
+</html>

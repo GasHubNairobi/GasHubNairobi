@@ -1,0 +1,126 @@
+/* =========================================================
+   GASHUB ADMIN - SHARED SIDEBAR (identical on every page)
+   Rendered by admin-sidebar.js into <aside id="ghSidebar">
+========================================================= */
+:root { --gh-sw: 260px; --gh-sw-collapsed: 76px; }
+
+/* Hide any legacy sidebar chrome left over from older page styles */
+.gh-legacy-hidden { display: none !important; }
+
+.gh-sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 1000;
+    width: var(--gh-sw);
+    display: flex; flex-direction: column;
+    background: #101d36; color: #c4cede;
+    border-right: 1px solid #22314a;
+    box-shadow: 8px 0 30px rgba(16, 29, 54, .12);
+    font-family: Inter, "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    font-size: 14px; line-height: 1.3;
+    transition: width .25s ease, transform .25s ease;
+    box-sizing: border-box;
+}
+.gh-sidebar *, .gh-sidebar *::before, .gh-sidebar *::after { box-sizing: border-box; }
+.gh-sidebar a { text-decoration: none; color: inherit; }
+
+.gh-sb-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 18px 14px 16px; border-bottom: 1px solid #ffffff18; min-height: 76px;
+}
+.gh-sb-brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.gh-sb-brand img {
+    width: 42px; height: 42px; flex: 0 0 42px; object-fit: contain;
+    background: #fff; border-radius: 11px; padding: 4px; display: block;
+}
+.gh-sb-brand-text { display: flex; flex-direction: column; min-width: 0; }
+.gh-sb-brand-text strong { color: #fff; font-size: 18px; letter-spacing: -.3px; }
+.gh-sb-brand-text span { color: #aabaff; font-size: 10px; letter-spacing: 1.6px; margin-top: 3px; white-space: nowrap; }
+.gh-sb-toggle {
+    flex: 0 0 auto; width: 34px; height: 34px; border: 0; border-radius: 9px;
+    background: #ffffff12; color: #fff; font-size: 17px; cursor: pointer;
+}
+.gh-sb-toggle:hover { background: #ffffff22; }
+
+.gh-sb-nav {
+    flex: 1 1 auto; overflow-y: auto; padding: 12px 10px; display: flex; flex-direction: column; gap: 3px;
+    scrollbar-width: thin; scrollbar-color: #33466a transparent;
+}
+.gh-sb-link {
+    position: relative; display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px; border-radius: 10px; color: #c4cede; font-weight: 550;
+    transition: background .18s ease, color .18s ease;
+}
+.gh-sb-link:hover { background: #ffffff10; color: #fff; }
+.gh-sb-link.active { background: #4267e82b; color: #fff; }
+.gh-sb-link.active::before {
+    content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 4px;
+    border-radius: 0 4px 4px 0; background: #7da0ff;
+}
+.gh-sb-icon { flex: 0 0 24px; width: 24px; text-align: center; font-size: 16px; color: #a9b8d4; }
+.gh-sb-link.active .gh-sb-icon, .gh-sb-link:hover .gh-sb-icon { color: #fff; }
+.gh-sb-text { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh-sb-badge {
+    display: none; align-items: center; justify-content: center; min-width: 22px; height: 20px;
+    padding: 0 7px; border-radius: 20px; background: #4267e8; color: #fff; font-size: 11px; font-weight: 700;
+}
+
+.gh-sb-footer { padding: 14px 12px 16px; border-top: 1px solid #ffffff18; display: grid; gap: 10px; }
+.gh-sb-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.gh-sb-avatar {
+    flex: 0 0 36px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+    background: #4267e8; color: #fff; font-weight: 800; font-size: 13px;
+}
+.gh-sb-user-meta { min-width: 0; display: flex; flex-direction: column; }
+.gh-sb-user-meta strong { color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh-sb-user-meta small { color: #8fa0bf; font-size: 11px; }
+.gh-sb-status { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 9px; background: #ffffff0d; color: #c4cede; font-size: 12px; }
+.gh-sb-dot { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; flex: 0 0 8px; box-shadow: 0 0 0 3px #3ddc8426; }
+.gh-sb-logout {
+    display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%;
+    padding: 10px 12px; border: 1px solid #ffffff22; border-radius: 10px; cursor: pointer;
+    background: #ffffff0d; color: #fff; font: inherit; font-weight: 650;
+    transition: background .18s ease, border-color .18s ease;
+}
+.gh-sb-logout:hover { background: #d9455a; border-color: #d9455a; }
+.gh-sb-logout[disabled] { opacity: .65; cursor: wait; }
+
+.gh-sb-overlay { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(8, 15, 30, .55); }
+
+/* ---------- Content offset (overrides each page's own sidebar margin) ---------- */
+body.gh-has-sidebar .admin-main,
+body.gh-has-sidebar .main-area,
+body.gh-has-sidebar .main-content {
+    margin-left: var(--gh-sw) !important;
+    width: auto !important;
+    max-width: none;
+    transition: margin-left .25s ease;
+}
+
+/* ---------- Collapsed (desktop) ---------- */
+body.gh-collapsed { --gh-sw: var(--gh-sw-collapsed); }
+body.gh-collapsed .gh-sb-brand-text,
+body.gh-collapsed .gh-sb-text,
+body.gh-collapsed .gh-sb-user-meta,
+body.gh-collapsed .gh-sb-status span:last-child,
+body.gh-collapsed .gh-sb-logout .gh-sb-logout-label { display: none; }
+body.gh-collapsed .gh-sb-header { flex-direction: column; padding: 14px 8px; gap: 10px; }
+body.gh-collapsed .gh-sb-link { justify-content: center; padding: 11px 0; }
+body.gh-collapsed .gh-sb-link.active::before { left: -10px; }
+body.gh-collapsed .gh-sb-badge { position: absolute; top: 3px; right: 6px; min-width: 16px; height: 16px; font-size: 9px; padding: 0 4px; }
+body.gh-collapsed .gh-sb-user { justify-content: center; }
+body.gh-collapsed .gh-sb-status { justify-content: center; }
+
+/* ---------- Tablet / mobile: off-canvas ---------- */
+@media (max-width: 900px) {
+    :root, body.gh-collapsed { --gh-sw: 260px; }
+    .gh-sidebar { transform: translateX(-100%); width: 260px; box-shadow: none; }
+    body.gh-open .gh-sidebar { transform: translateX(0); box-shadow: 8px 0 40px rgba(0, 0, 0, .35); }
+    body.gh-open .gh-sb-overlay { display: block; }
+    body.gh-has-sidebar .admin-main,
+    body.gh-has-sidebar .main-area,
+    body.gh-has-sidebar .main-content { margin-left: 0 !important; }
+    body.gh-collapsed .gh-sb-brand-text, body.gh-collapsed .gh-sb-text, body.gh-collapsed .gh-sb-user-meta,
+    body.gh-collapsed .gh-sb-status span:last-child, body.gh-collapsed .gh-sb-logout .gh-sb-logout-label { display: revert; }
+    body.gh-collapsed .gh-sb-header { flex-direction: row; padding: 18px 14px 16px; }
+    body.gh-collapsed .gh-sb-link { justify-content: flex-start; padding: 10px 12px; }
+    .gh-sb-toggle { display: none; }
+}

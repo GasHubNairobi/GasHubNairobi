@@ -1,0 +1,1100 @@
+/* =========================================================
+   GASHUB EXECUTIVE DEALER PORTAL - OUTLET PROFILE
+   File: dealer-profile.css
+   Modern, Clean, Enterprise LPG Dealership Profile & Credentials
+   Mobile-Optimized with Compact Graphics, TikTok Blue Badge & Watermark
+   ========================================================= */
+
+/* FIX: make the [hidden] attribute always win over display:flex/grid */
+[hidden] {
+    display: none !important;
+}
+
+/* =========================================================
+   1. WATERMARK & GLOBAL CONTAINER
+   ========================================================= */
+
+.dealer-main {
+    position: relative;
+    min-height: 100vh;
+}
+
+.dealer-main::before {
+    content: "";
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    width: 160px;
+    height: 160px;
+    background-image: url("images/watermark.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.dealer-profile-page {
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.dealer-profile-intro {
+    margin-bottom: 24px;
+}
+
+.dealer-profile-intro-content h1 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--slate-900, #0f172a);
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+}
+
+.dealer-profile-intro-content p {
+    color: var(--slate-500, #64748b);
+    font-size: 14px;
+    margin: 0;
+}
+
+.dealer-profile-message {
+    padding: 12px 16px;
+    border-radius: var(--radius-md, 8px);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.dealer-profile-message.success {
+    display: flex;
+    align-items: center;
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.dealer-profile-message.error {
+    display: flex;
+    align-items: center;
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.dealer-profile-layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* =========================================================
+   2. PROFILE SUMMARY CARD (LEFT SIDEBAR)
+   ========================================================= */
+
+.dealer-profile-summary-card {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: var(--radius-lg, 12px);
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dealer-profile-summary-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+}
+
+.dealer-profile-large-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28);
+    border: 4px solid #fef3c7;
+}
+
+.dealer-profile-summary-info h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--slate-900, #0f172a);
+    margin: 0 0 4px;
+}
+
+.dealer-profile-summary-info p {
+    font-size: 13px;
+    color: var(--slate-500, #64748b);
+    margin: 0 0 10px;
+}
+
+.dealer-profile-account-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: #ecfdf5;
+    color: #059669;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #a7f3d0;
+}
+
+.dealer-profile-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.dealer-profile-summary-divider {
+    height: 1px;
+    background: var(--slate-100, #f1f5f9);
+    width: 100%;
+}
+
+.dealer-profile-summary-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dealer-profile-summary-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 12px;
+}
+
+.dealer-profile-summary-item i {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 6px;
+    background: var(--slate-50, #f8fafc);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    color: var(--brand-primary, #d97706);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.dealer-profile-summary-item span {
+    display: block;
+    color: var(--slate-400, #94a3b8);
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.dealer-profile-summary-item strong {
+    color: var(--slate-800, #1e293b);
+    font-weight: 600;
+    word-break: break-word;
+}
+
+/* =========================================================
+   3. PROFILE FORMS & CARDS (RIGHT SIDE)
+   ========================================================= */
+
+.dealer-profile-form-card {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: var(--radius-lg, 12px);
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+}
+
+.dealer-card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--slate-100, #f1f5f9);
+    background: #ffffff;
+}
+
+.dealer-card-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--slate-900, #0f172a);
+    margin: 0 0 2px;
+}
+
+.dealer-profile-card-description {
+    font-size: 12px;
+    color: var(--slate-500, #64748b);
+    margin: 0;
+}
+
+.dealer-card-body {
+    padding: 24px;
+}
+
+.dealer-profile-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dealer-profile-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dealer-profile-form-group.dealer-profile-full-width {
+    grid-column: span 2;
+}
+
+.dealer-profile-form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--slate-700, #334155);
+}
+
+.dealer-profile-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dealer-profile-input-wrap i {
+    position: absolute;
+    left: 12px;
+    color: var(--slate-400, #94a3b8);
+    font-size: 13px;
+    pointer-events: none;
+}
+
+.dealer-profile-input-wrap input,
+.dealer-profile-input-wrap select,
+.dealer-profile-input-wrap textarea {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px 0 36px;
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: var(--radius-md, 8px);
+    font-size: 13px;
+    color: var(--slate-900, #0f172a);
+    background: #ffffff;
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.dealer-profile-input-wrap textarea {
+    height: auto;
+    padding: 10px 12px 10px 36px;
+    min-height: 80px;
+    resize: vertical;
+}
+
+.dealer-profile-input-wrap input:focus,
+.dealer-profile-input-wrap select:focus,
+.dealer-profile-input-wrap textarea:focus {
+    border-color: var(--brand-primary, #d97706);
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+
+.dealer-profile-field-error {
+    font-size: 11px;
+    color: #ef4444;
+    min-height: 14px;
+}
+
+.dealer-profile-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--slate-100, #f1f5f9);
+}
+
+.dealer-button {
+    height: 38px;
+    padding: 0 18px;
+    border-radius: var(--radius-md, 8px);
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.dealer-button-primary {
+    background: var(--brand-primary, #d97706);
+    color: #ffffff;
+}
+
+.dealer-button-primary:hover {
+    background: var(--brand-primary-hover, #b45309);
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+}
+
+.dealer-button-secondary {
+    background: #ffffff;
+    color: var(--slate-700, #334155);
+    border: 1px solid var(--slate-300, #cbd5e1);
+}
+
+.dealer-button-secondary:hover {
+    background: var(--slate-50, #f8fafc);
+    border-color: var(--slate-400, #94a3b8);
+}
+
+/* =========================================================
+   4. SIDEBAR MINI-PROFILE, TIKTOK BLUE BADGE & VERIFICATION
+   ========================================================= */
+
+.outlet-status-card {
+    background: #ffffff;
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.dealer-profile-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dealer-profile-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.dealer-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--slate-900, #0f172a);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tiktok-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    opacity: 0.35;
+    filter: grayscale(1);
+    transition: all 0.3s ease;
+}
+
+.tiktok-verified-badge.verified-active {
+    opacity: 1;
+    filter: none;
+    animation: badgePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes badgePop {
+    0% { transform: scale(0.5); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.tiktok-badge-svg {
+    width: 18px;
+    height: 18px;
+}
+
+.tiktok-badge-svg-sm {
+    width: 14px;
+    height: 14px;
+}
+
+.dealer-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--slate-500, #64748b);
+}
+
+.dealer-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.text-warning {
+    color: #f59e0b;
+}
+
+.text-success {
+    color: #10b981;
+}
+
+.btn-request-verification {
+    width: 100%;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-request-verification:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.btn-request-verification.is-verified {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+    cursor: default;
+}
+
+/* =========================================================
+   5. MOBILE OPTIMIZATIONS (COMPACT GRAPHICS)
+   ========================================================= */
+
+@media (max-width: 992px) {
+    .dealer-profile-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dealer-profile-page {
+        padding: 16px;
+    }
+
+    .dealer-profile-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dealer-profile-form-group.dealer-profile-full-width {
+        grid-column: span 1;
+    }
+
+    .dealer-profile-large-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .dealer-profile-summary-card {
+        padding: 16px;
+    }
+
+    .dealer-card-body {
+        padding: 16px;
+    }
+
+    .dealer-card-header {
+        padding: 14px 16px;
+    }
+
+    .dealer-main::before {
+        width: 90px;
+        height: 90px;
+        right: 12px;
+        bottom: 12px;
+        opacity: 0.03;
+    }
+}
+
+@media (max-width: 480px) {
+    .dealer-profile-form-actions {
+        flex-direction: column;
+    }
+
+    .dealer-button {
+        width: 100%;
+    }
+}
+
+/* =========================================================
+   6. GLOBAL VISIBLE WATERMARK OVERLAY
+   ========================================================= */
+
+.gashub-watermark-overlay {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    width: 170px;
+    height: 170px;
+    background-image: url("images/watermark.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 99;
+    filter: drop-shadow(0 2px 8px rgba(217, 119, 6, 0.25));
+}
+
+/* =========================================================
+   7. AVATAR WITH BUSINESS LOGO
+   ========================================================= */
+
+.dealer-avatar.has-logo,
+.dealer-profile-large-avatar.has-logo {
+    padding: 0 !important;
+    background: transparent !important;
+    border: 2px solid #fde68a !important;
+    overflow: hidden !important;
+}
+
+.dealer-avatar-img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+/* =========================================================
+   8. ADMIN APPROVAL BANNER & STATUS BADGES
+   ========================================================= */
+
+.profile-approval-banner {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-left: 5px solid #d97706;
+    border-radius: var(--radius-md, 10px);
+    padding: 16px 20px;
+    margin-bottom: 22px;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    animation: bannerSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-approval-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex: 1;
+    min-width: 280px;
+}
+
+.profile-approval-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 10px;
+    background: #fef3c7;
+    color: #b45309;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    animation: alertPulse 2s infinite ease-in-out;
+}
+
+.profile-approval-text strong {
+    font-size: 14px;
+    font-weight: 800;
+    color: #92400e;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.profile-approval-text p {
+    font-size: 12px;
+    color: #78350f;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.profile-approval-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dealer-profile-account-status.pending {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+}
+
+.dealer-profile-account-status.pending .dealer-profile-status-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+.dealer-profile-account-status.suspended {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.dealer-profile-account-status.suspended .dealer-profile-status-dot {
+    background: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+.dealer-profile-account-status.inactive {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.dealer-profile-account-status.inactive .dealer-profile-status-dot {
+    background: #94a3b8;
+    box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.25);
+}
+
+/* =========================================================
+   9. INTERACTIVE MAP PICKER MODAL
+   ========================================================= */
+
+.map-modal-dialog {
+    max-width: 760px;
+    width: 100%;
+}
+
+.map-picker-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.map-quick-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.map-quick-btn {
+    height: 34px;
+    padding: 0 14px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    transition: all 0.2s ease;
+}
+
+.map-quick-btn:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+
+.map-quick-btn.gps-btn {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.map-quick-btn.gps-btn:hover {
+    background: #dbeafe;
+}
+
+.map-search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+}
+
+.map-search-wrapper input {
+    width: 100%;
+    height: 34px;
+    padding: 0 12px 0 32px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.map-search-wrapper i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.map-canvas-container {
+    height: 350px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    position: relative;
+    overflow: hidden;
+    background: #f1f5f9;
+}
+
+.selected-location-pill {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.selected-location-pill i {
+    color: var(--brand-primary, #d97706);
+    font-size: 15px;
+}
+
+/* =========================================================
+   10. NAME ROW: VERIFIED BADGE / GET VERIFIED BUTTON
+   ========================================================= */
+
+.dealer-profile-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 4px;
+}
+
+.dealer-profile-name-row h2 {
+    margin: 0;
+}
+
+.dealer-profile-name-row .tiktok-verified-badge {
+    width: 22px;
+    height: 22px;
+}
+
+.dealer-profile-name-row .tiktok-badge-svg {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-profile-verify {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-profile-verify:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.btn-profile-verify.is-pending {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #b45309;
+    cursor: default;
+}
+
+.dealer-profile-status-stack {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.dealer-profile-hours-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.dealer-profile-hours-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.dealer-profile-hours-status.is-open {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+}
+
+.dealer-profile-hours-status.is-closed {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+/* =========================================================
+   11. WORKING HOURS CARD
+   ========================================================= */
+
+.dealer-profile-hours-switches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    margin-bottom: 20px;
+}
+
+.dealer-profile-hours-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--slate-800, #1e293b);
+    cursor: pointer;
+}
+
+.dealer-profile-hours-check input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--brand-primary, #d97706);
+    cursor: pointer;
+}
+
+.dealer-profile-hours-days-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--slate-700, #334155);
+    margin-bottom: 8px;
+}
+
+.dealer-profile-hours-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.dealer-profile-day-chip {
+    position: relative;
+}
+
+.dealer-profile-day-chip input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    margin: 0;
+}
+
+.dealer-profile-day-chip span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 46px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--slate-600, #475569);
+    font-size: 12px;
+    font-weight: 700;
+    transition: all 0.15s ease;
+}
+
+.dealer-profile-day-chip input:checked + span {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.dealer-profile-day-chip input:focus-visible + span {
+    outline: 2px solid var(--brand-primary, #d97706);
+    outline-offset: 2px;
+}
+
+.dealer-profile-hours-fields.is-off {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.dealer-profile-input-wrap input:disabled {
+    background: var(--slate-50, #f8fafc);
+    cursor: not-allowed;
+}
+
+.dealer-profile-hours-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    margin: 12px 0 20px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.dealer-profile-hours-preview.is-open {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+
+.dealer-profile-hours-preview.is-closed {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.dealer-profile-hours-preview i {
+    margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+    .dealer-profile-day-chip span {
+        min-width: 40px;
+    }
+}
+
+/* =========================================================
+   12. VERIFICATION MODAL: ADMIN FEE & PAYMENT STATUS
+   ========================================================= */
+
+.verification-fee-pill.is-missing strong {
+    color: #b45309;
+    font-size: 12px;
+}
+
+.verification-pay-status {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-top: 4px;
+    border-radius: 8px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.verification-pay-status.is-visible {
+    display: flex;
+}
+
+.verification-pay-status.is-error {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.verification-pay-status.is-success {
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+/* =========================================================
+   BUSINESS PHOTO OPTIONS (Upload photo / Take photo), just above the account status
+   ========================================================= */
+.dealer-profile-photo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 2px 0 12px;
+}
+
+.dealer-photo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #334155;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.dealer-photo-btn i { color: #d97706; font-size: 13px; }
+.dealer-photo-btn:hover:not(:disabled) { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+.dealer-photo-btn:disabled { opacity: 0.55; cursor: default; }
+.dealer-photo-btn[hidden] { display: none; }
+.dealer-photo-btn-remove { padding: 8px 11px; }
+.dealer-photo-btn-remove i { color: #dc2626; }
+.dealer-photo-btn-remove:hover:not(:disabled) { background: #fef2f2; border-color: #fecaca; }
+
+/* the big picture is always one fixed circle and shows a spinner while the photo saves */
+.dealer-profile-large-avatar {
+    position: relative;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    overflow: hidden;
+}
+.dealer-profile-large-avatar.has-logo { background: #e2e8f0 !important; }
+.dealer-profile-large-avatar.is-saving::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.65) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='18' fill='none' stroke='%23d97706' stroke-width='5' stroke-linecap='round' stroke-dasharray='80 40'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 25 25' to='360 25 25' dur='0.9s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E") center / 34px no-repeat;
+}
