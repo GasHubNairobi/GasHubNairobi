@@ -1,0 +1,16 @@
+DEALER VERIFICATION (blue badge) - paid by M-Pesa, verified automatically
+
+How it works
+ 1. Admin sets the verification fee for a dealer (Admin > Dealer details > commercial settings). That is the only amount ever charged.
+ 2. Dealer clicks "Get verified" / "Request Verification". The pop-up shows that fee. A dealer who is already verified (and not expired)
+    never sees the button: the page asks the server, not the browser.
+ 3. Dealer types the M-Pesa number. The server sends the PIN prompt using the M-Pesa keys saved in the environment.
+ 4. When Safaricom confirms the money (callback + a direct re-check, with a status poll as backup), the dealer is verified for 365 days.
+
+Needs (Netlify > Site settings > Environment variables, same names as .env.example):
+ MPESA_ENV, MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, MPESA_PASSKEY, MPESA_TRANSACTION_TYPE,
+ MPESA_CALLBACK_BASE_URL (your https Netlify address, no slash at the end), MPESA_CALLBACK_SECRET (24+ characters)
+ These are the same keys the customer checkout already uses. Nothing to run in Supabase: table dealer_verification_payments is created on first use.
+
+Files: backend/controllers/dealer-verification-controller.js, routes in backend/routes/dealer-routes.js (/api/dealers/verification/...),
+ callback hook in backend/controllers/mpesa-controller.js, dealer/dealer-verification.js (used by every dealer page).

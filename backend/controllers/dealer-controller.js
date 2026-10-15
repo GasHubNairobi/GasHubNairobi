@@ -169,7 +169,7 @@ async function setFollow(req, res, shouldFollow) {
     });
   } catch (error) {
     console.error("Follow dealer error:", error);
-    return res.status(500).json({ success: false, message: "Unable to update follow.", detail: error.message });
+    return res.status(500).json({ success: false, message: "Unable to update follow." });
   }
 }
 
@@ -209,7 +209,7 @@ async function addDealerReview(req, res) {
     });
   } catch (error) {
     console.error("Add dealer review error:", error);
-    return res.status(500).json({ success: false, message: "Unable to save your review.", detail: error.message });
+    return res.status(500).json({ success: false, message: "Unable to save your review." });
   }
 }
 
@@ -548,7 +548,7 @@ const MAX_LOGO_LENGTH = 600000;   /* the page shrinks logos to 512px (about 50 K
 async function updateMyLogo(req, res) {
   try {
     const raw = req.body && typeof req.body === "object" ? req.body.logo : "";
-    const logo = String(raw == null ? "" : raw).trim();
+    let logo = String(raw == null ? "" : raw).trim();
 
     if (logo) {
       const okData = LOGO_DATA_URL.test(logo);
@@ -558,6 +558,20 @@ async function updateMyLogo(req, res) {
       }
       if (logo.length > MAX_LOGO_LENGTH) {
         return res.status(413).json({ success: false, message: "That image is too large. Choose a smaller one." });
+      }
+    }
+
+    /* With Cloudinary switched on the logo is uploaded there and only its link is saved (keys empty = old behaviour). */
+    const cloud = require("../config/cloudinary-config");
+    if (logo && cloud.isConfigured()) {
+      if (LOGO_DATA_URL.test(logo)) {
+        try { logo = await cloud.uploadDataUrl(logo, "logo"); }
+        catch (e) {
+          console.error("Cloudinary logo upload failed:", e && e.message);
+          return res.status(502).json({ success: false, message: "We could not upload the logo right now. Please try again." });
+        }
+      } else if (!cloud.isCloudinaryUrl(logo)) {
+        return res.status(400).json({ success: false, message: "Choose a PNG, JPG or WebP image." });
       }
     }
 

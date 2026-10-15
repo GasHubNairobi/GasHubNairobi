@@ -1,0 +1,37 @@
+AUTOMATIC PAYOUT TO CUSTOMERS (Admin > Withdrawals > "Schedule Payouts" and the "Send now" button)
+
+The money is sent straight to the customer's M-Pesa with Safaricom Daraja B2C. Until these lines are in .env the admin page
+shows "Automatic payout not set up" and Send now / scheduling say so (nothing is ever marked Paid without M-Pesa confirming).
+Paying by hand and pressing "Mark paid" still works exactly as before.
+
+1. In the Safaricom Daraja portal, get your app approved for B2C (Go Live). You will get:
+     - the B2C shortcode (the Paybill the money is sent FROM)
+     - an Initiator name and Initiator password
+2. Turn the Initiator password into a SecurityCredential: encrypt it with Safaricom's public certificate
+   (SandboxCertificate.cer for testing, ProductionCertificate.cer for live) and base64 it. Daraja's portal has a tool for this.
+3. Add these lines to .env (the existing MPESA_CONSUMER_KEY / MPESA_CONSUMER_SECRET / MPESA_CALLBACK_BASE_URL /
+   MPESA_CALLBACK_SECRET / MPESA_ENV lines from ENV-PAYMENT-FIELDS.txt are reused):
+
+     MPESA_B2C_INITIATOR_NAME=your_initiator_name
+     MPESA_B2C_SECURITY_CREDENTIAL=the_long_encrypted_base64_string
+     # optional: only if the B2C shortcode is different from MPESA_SHORTCODE
+     MPESA_B2C_SHORTCODE=
+     # optional: BusinessPayment (default) or SalaryPayment
+     MPESA_B2C_COMMAND=BusinessPayment
+
+4. In the Daraja portal set the B2C Result URL and Queue Timeout URL for your shortcode to:
+     <MPESA_CALLBACK_BASE_URL>/api/payments/mpesa/b2c/result/<MPESA_CALLBACK_SECRET>
+     <MPESA_CALLBACK_BASE_URL>/api/payments/mpesa/b2c/timeout/<MPESA_CALLBACK_SECRET>
+   (the app also sends them with every payment). The address must be public HTTPS.
+5. Fully restart the Node server.
+
+HOW IT WORKS
+- Send now (next to every waiting / approved request): sends that customer's money immediately, at today's rate and charge, rounded to whole
+  shillings. The row shows "Sending to M-Pesa..." and turns Paid by itself when Safaricom confirms; the customer gets the usual
+  "deposited" email + SMS. Mark paid and Reject are blocked while a payment is on its way, so it can never be paid twice.
+- If M-Pesa refuses or fails, the row shows the reason and the button becomes "Send again". The customer's coins stay held.
+  If there was no answer at all, check your M-Pesa statement before pressing Send again.
+- Schedule Payouts: pick a date and time (Nairobi). At that time every waiting / approved request that has not been tried yet is sent,
+  one after the other. Customers see "GasHub will send withdrawals to M-Pesa on ..." on their withdraw page. The result of the last run
+  is shown under the schedule. Clear schedule removes it.
+- The database gets new columns on first use (payout_state, payout_receipt, ...). No migration to run.

@@ -80,10 +80,37 @@ function checkProductImage(value) {
   if (IMAGE_DATA_URL.test(v) || /^https:\/\/[^\s]{1,500}$/i.test(v) || /^\/?[Ii]mages\/[A-Za-z0-9._\/-]{1,200}$/.test(v)) return { image: v, keep: false };
   return { image: null, keep: true };
 }
+/* With Cloudinary switched on, a new photo (a small data URL from the dealer page) is uploaded there and only its https link is
+   saved. Photos that are already Cloudinary links are kept as they are. Without Cloudinary keys the old behaviour is used.
+   The uploads run together (5 at a time) BEFORE the database transaction starts, so no database connection is held while waiting. */
+const cloud = require("../config/cloudinary-config");
+const MAX_UPLOADS_PER_SYNC = 25;
+async function prepareProductImages(input) {
+  const results = input.map((p) => checkProductImage(p && p.image));
+  if (!cloud.isConfigured()) return { results, pending: 0 };
+  let budget = MAX_UPLOADS_PER_SYNC, pending = 0;
+  const jobs = [];
+  input.forEach((p, i) => {
+    const v = cloud.stripTransformation(String((p && p.image) == null ? "" : p.image).trim());
+    if (!v) { results[i] = { image: null, keep: false }; return; }
+    if (v.length <= MAX_PRODUCT_IMAGE && cloud.DATA_URL.test(v)) {
+      if (budget-- > 0) jobs.push({ i, v }); else { results[i] = { image: null, keep: true }; pending++; }
+      return;
+    }
+    if (cloud.isCloudinaryUrl(v) || /^\/?[Ii]mages\/[A-Za-z0-9._\/-]{1,200}$/.test(v)) { results[i] = { image: v, keep: false }; return; }
+    results[i] = { image: null, keep: true };      /* oversized, odd, or a link from another website: leave the saved photo alone */
+  });
+  await cloud.mapLimit(jobs, 5, async (job) => {
+    try { results[job.i] = { image: await cloud.uploadDataUrl(job.v, "product"), keep: false }; }
+    catch (e) { console.error("Cloudinary upload failed:", e && e.message); results[job.i] = { image: null, keep: true }; pending++; }
+  });
+  return { results, pending };
+}
 async function syncMyProducts(req, res) {
   const input=req.body && req.body.products;
   if (!Array.isArray(input)) return res.status(400).json({success:false,message:"products must be an array."});
   if (input.length > MAX_SYNC_PRODUCTS) return res.status(400).json({success:false,message:`You can publish up to ${MAX_SYNC_PRODUCTS} products at a time.`});
+  const prepared=await prepareProductImages(input);
   const client=await pool.connect();
   try {
     await client.query("BEGIN");
@@ -91,7 +118,7 @@ async function syncMyProducts(req, res) {
     const labels=await loadStatusLabels(client);
     const categoryLabels=await loadCategoryLabels(client);
     const hiddenStatus=pickStatus(labels,["inactive","unavailable","discontinued","out_of_stock"]);
-    for (const p of input) {
+    for (const [pi, p] of input.entries()) {
       const name=String(p.name||"").trim(), category=String(p.type||p.category||"gas").trim(), price=Number(p.price);
       if (!name || !Number.isFinite(price) || price<0) continue;
       const code=String(p.sku||p.product_code||"").trim()||generateCode("GAS");
@@ -100,7 +127,7 @@ async function syncMyProducts(req, res) {
       const stock=Math.max(0,Number.parseInt(p.stock??p.stock_quantity??0,10)||0);
       const cat=pickCategory(categoryLabels,category);
       const status=productStatus(p,stock,labels);
-      const desc=p.description?String(p.description).slice(0,2000):null, chk=checkProductImage(p.image), img=chk.image, keepImg=chk.keep;
+      const desc=p.description?String(p.description).slice(0,2000):null, chk=prepared.results[pi], img=chk.image, keepImg=chk.keep;
       const existing = await client.query(`SELECT id FROM products WHERE product_code=$1 AND dealer_id=$2 LIMIT 1`, [code, dealerId]);
       // The size column may be numeric (13) or text ("13kg") depending on the database,
       // so try the numeric+unit form first and fall back to plain text, then to no size.
@@ -134,10 +161,10 @@ async function syncMyProducts(req, res) {
     else await client.query(`UPDATE products SET status=$2,updated_at=NOW() WHERE dealer_id=$1`,[dealerId,hiddenStatus]);
     const result=await client.query(`SELECT p.*,d.business_name,d.location AS dealer_location FROM products p LEFT JOIN dealers d ON d.id=p.dealer_id WHERE p.dealer_id=$1 ORDER BY p.created_at DESC`,[dealerId]);
     await client.query("COMMIT");
-    return res.json({success:true,message:"Inventory synced.",products:result.rows.map(formatProduct)});
+    return res.json({success:true,message:prepared.pending?`Inventory synced. ${prepared.pending} photo(s) could not be uploaded yet - save again to retry them.`:"Inventory synced.",images_pending:prepared.pending,products:result.rows.map(formatProduct)});
   } catch(error) {
     await client.query("ROLLBACK").catch(()=>{}); console.error("Sync dealer products error:",error);
-    return res.status(500).json({success:false,message:"Unable to save dealer inventory.",detail:error.message});
+    return res.status(500).json({success:false,message:"Unable to save dealer inventory."});
   } finally { client.release(); }
 }
 module.exports={listMyProducts,syncMyProducts};

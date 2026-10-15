@@ -1,0 +1,455 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Dealer Registration | GAS HUB</title>
+
+    <link rel="stylesheet" href="dealer-auth.css">
+
+    <!-- Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+    <script src="gashub-dialog.js"></script>
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <section class="auth-container">
+
+            <!-- Brand -->
+            <div class="auth-brand">
+
+                <div class="brand-logo">
+                    <i class="fa-solid fa-fire-flame-simple"></i>
+                </div>
+
+                <div>
+                    <h1>GAS HUB</h1>
+                    <p>Dealer Portal</p>
+                </div>
+
+            </div>
+
+
+            <!-- Registration Card -->
+            <div class="auth-card">
+
+                <div class="auth-header">
+
+                    <h2>Create dealer account</h2>
+
+                    <p>
+                        Register your business to start managing
+                        your gas products and orders.
+                    </p>
+
+                </div>
+
+
+                <form
+                    id="dealerRegisterForm"
+                    class="auth-form"
+                    novalidate
+                >
+
+                    <!-- =====================================
+                         BUSINESS INFORMATION
+                         ===================================== -->
+
+                    <div class="form-section">
+
+                        <div class="form-section-title">
+                            <i class="fa-solid fa-building"></i>
+
+                            <span>Business information</span>
+                        </div>
+
+
+                        <!-- Business Name -->
+                        <div class="form-group">
+
+                            <label for="businessName">
+                                Business Name
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i
+                                    class="fa-regular fa-building input-icon"
+                                ></i>
+
+                                <input
+                                    type="text"
+                                    id="businessName"
+                                    name="businessName"
+                                    placeholder="Enter business name"
+                                    autocomplete="organization"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Business Type -->
+                        <div class="form-group">
+
+                            <label for="businessType">
+                                Business Type
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i
+                                    class="fa-solid fa-briefcase input-icon"
+                                ></i>
+
+                                <select
+                                    id="businessType"
+                                    name="businessType"
+                                    required
+                                >
+                                    <option value="">
+                                        Select business type
+                                    </option>
+
+                                    <option value="gas_dealer">
+                                        Gas Dealer
+                                    </option>
+
+                                    <option value="gas_shop">
+                                        Gas Shop
+                                    </option>
+
+                                    <option value="gas_distributor">
+                                        Gas Distributor
+                                    </option>
+
+                                    <option value="other">
+                                        Other
+                                    </option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Business Location -->
+                        <div class="form-group">
+
+                            <label for="businessLocation">
+                                Business Location
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i
+                                    class="fa-solid fa-location-dot input-icon"
+                                ></i>
+
+                                <input
+                                    type="text"
+                                    id="businessLocation"
+                                    name="businessLocation"
+                                    placeholder="Town / area"
+                                    autocomplete="address-level2"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         CONTACT INFORMATION
+                         ===================================== -->
+
+                    <div class="form-section">
+
+                        <div class="form-section-title">
+                            <i class="fa-solid fa-address-book"></i>
+
+                            <span>Contact information</span>
+                        </div>
+
+
+                        <!-- Contact Person -->
+                        <div class="form-group">
+
+                            <label for="contactName">
+                                Contact Person
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i
+                                    class="fa-regular fa-user input-icon"
+                                ></i>
+
+                                <input
+                                    type="text"
+                                    id="contactName"
+                                    name="contactName"
+                                    placeholder="Full name"
+                                    autocomplete="name"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Phone -->
+                        <div class="form-group">
+
+                            <label for="phoneNumber">
+                                Phone Number
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i
+                                    class="fa-solid fa-phone input-icon"
+                                ></i>
+
+                                <input
+                                    type="tel"
+                                    id="phoneNumber"
+                                    name="phone"
+                                    placeholder="e.g. 0712 345 678"
+                                    autocomplete="tel"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Email -->
+                        <div class="form-group">
+
+                            <label for="emailAddress">
+                                Email Address
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i
+                                    class="fa-regular fa-envelope input-icon"
+                                ></i>
+
+                                <input
+                                    type="email"
+                                    id="emailAddress"
+                                    name="email"
+                                    placeholder="Enter email address"
+                                    autocomplete="email"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         ACCOUNT SECURITY
+                         ===================================== -->
+
+                    <div class="form-section">
+
+                        <div class="form-section-title">
+                            <i class="fa-solid fa-shield-halved"></i>
+
+                            <span>Account security</span>
+                        </div>
+
+
+                        <!-- Password -->
+                        <div class="form-group">
+
+                            <label for="registerPassword">
+                                Password
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i
+                                    class="fa-solid fa-lock input-icon"
+                                ></i>
+
+                                <input
+                                    type="password"
+                                    id="registerPassword"
+                                    name="password"
+                                    placeholder="Create a password"
+                                    autocomplete="new-password"
+                                    minlength="6"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    id="registerPasswordToggle"
+                                    aria-label="Show password"
+                                >
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Confirm Password -->
+                        <div class="form-group">
+
+                            <label for="confirmPassword">
+                                Confirm Password
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i
+                                    class="fa-solid fa-lock input-icon"
+                                ></i>
+
+                                <input
+                                    type="password"
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    placeholder="Confirm your password"
+                                    autocomplete="new-password"
+                                    minlength="6"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="password-toggle"
+                                    id="confirmPasswordToggle"
+                                    aria-label="Show password"
+                                >
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Terms -->
+                    <div class="terms-row">
+
+                        <label class="checkbox-label">
+
+                            <input
+                                type="checkbox"
+                                id="agreeTerms"
+                                name="agreeTerms"
+                                required
+                            >
+
+                            <span class="custom-checkbox"></span>
+
+                            <span>
+                                I agree to the GAS HUB dealer
+                                terms and conditions and the
+                                <a href="/privacy-policy.html?from=dealer" target="_blank" rel="noopener">Privacy Policy</a>.
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- Message -->
+                    <div
+                        id="registerMessage"
+                        class="auth-message"
+                        role="alert"
+                        aria-live="polite"
+                    ></div>
+
+
+                    <!-- Register -->
+                    <button
+                        type="submit"
+                        class="auth-button"
+                        id="registerButton"
+                    >
+
+                        <span class="button-text">
+                            Create Dealer Account
+                        </span>
+
+                        <span
+                            class="button-loader"
+                            aria-hidden="true"
+                        >
+                            <i class="fa-solid fa-spinner"></i>
+                        </span>
+
+                    </button>
+
+                </form>
+
+
+                <!-- Login -->
+                <div class="auth-footer">
+
+                    <p>
+                        Already have a dealer account?
+                        <a href="dealer-login.html">
+                            Sign in
+                        </a>
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Footer -->
+            <div class="auth-bottom">
+
+                <p>
+                    &copy;
+                    <span id="currentYear"></span>
+                    GAS HUB. All rights reserved.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="dealer-auth.js"></script>
+
+</body>
+</html>

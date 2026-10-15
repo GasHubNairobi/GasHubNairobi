@@ -1,0 +1,68 @@
+/* GasHub dark theme. Load this AFTER the page's own stylesheet:
+   <link rel="stylesheet" href="gashub-theme.css">
+   It only does something when gashub-theme.js has set data-theme="dark" on <html>. */
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b1020;
+    --white: #151c35;        /* cards, header, sheets */
+    --line: #27304f;
+    --ink: #e8ecfa;          /* main text */
+    --muted: #9aa3c4;
+    --blue-soft: #1b2750;
+    --blue-dark: #a9c1ff;    /* headings and prices */
+    --blue: #3f6df0;
+    --shadow: 0 4px 16px rgba(0, 0, 0, .45);
+}
+
+[data-theme="dark"] body { background: var(--bg); color: var(--ink); }
+
+/* big blue areas stay dark blue (not light) */
+[data-theme="dark"] .home-hero,
+[data-theme="dark"] .page-hero,
+[data-theme="dark"] .profile-hero { background: linear-gradient(135deg, #0d1a4d, #1b3fa8 70%); }
+[data-theme="dark"] .about-home { background: #0d1a4d; }
+[data-theme="dark"] .customer-footer { background: #070b18; }
+[data-theme="dark"] .chat-head, [data-theme="dark"] .chat-top { background: #1b3fa8; }
+
+/* text that sits on yellow stays dark */
+[data-theme="dark"] .hero-btn.primary,
+[data-theme="dark"] .customer-search-form button,
+[data-theme="dark"] .btn-yellow,
+[data-theme="dark"] .btn.yellow,
+[data-theme="dark"] .view-all-btn,
+[data-theme="dark"] .about-link,
+[data-theme="dark"] .step-number,
+[data-theme="dark"] .cform button,
+[data-theme="dark"] .chat-form button,
+[data-theme="dark"] .msg a,
+[data-theme="dark"] .chat-avatar,
+[data-theme="dark"] .products-empty button,
+[data-theme="dark"] .order-main,
+[data-theme="dark"] .cart-btn,
+[data-theme="dark"] .pbadge.mine,
+[data-theme="dark"] .social:hover { color: #141b34; }
+[data-theme="dark"] .fab svg, [data-theme="dark"] .chat-head svg { fill: #141b34; }
+
+/* hard-coded greys in the page stylesheets */
+[data-theme="dark"] .customer-navigation a,
+[data-theme="dark"] .mobile-menu-footer a,
+[data-theme="dark"] .chip,
+[data-theme="dark"] .fav-filter,
+[data-theme="dark"] .location-btn { color: var(--ink); }
+[data-theme="dark"] .customer-navigation a.active,
+[data-theme="dark"] .customer-navigation a:hover { background: var(--blue-soft); color: #9db8ff; }
+[data-theme="dark"] .mobile-bottom-nav a { color: #8a93b5; }
+[data-theme="dark"] .mobile-bottom-nav a.active { color: #9db8ff; }
+[data-theme="dark"] .fav-btn, [data-theme="dark"] .modal-close { background: rgba(21, 28, 53, .95); }
+[data-theme="dark"] .fav-filter[aria-pressed="true"] { background: #3a1620; }
+[data-theme="dark"] .bubble.sys { background: #3a3210; border-color: #5a4d16; color: #f1dc86; }
+[data-theme="dark"] .chat-warn { background: #3a1620; border-color: #6a2630; }
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea { background: var(--white); color: var(--ink); }
+[data-theme="dark"] .search-box input, [data-theme="dark"] .customer-search-form input { background: transparent; }
+[data-theme="dark"] .search-box, [data-theme="dark"] .customer-search-form { background: var(--white); }
+[data-theme="dark"] .customer-search-form input::placeholder { color: #7f88a8; }
+[data-theme="dark"] .about-card { background: #fff; }
+
+/* map tiles */
+[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9); }

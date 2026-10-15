@@ -1,0 +1,22 @@
+GasHub admin access protection
+==============================
+
+What changed
+- Admin HTML pages are checked by the Express server before they are sent. Unauthenticated requests are redirected to /admin/admin-login.html.
+- A successful database-backed admin login sets an HttpOnly, SameSite=Strict cookie. The cookie cannot be read by page JavaScript.
+- Admin API endpoints remain protected by the server-side session and Bearer token checks.
+- Admin sessions expire after 8 hours; logging out or restarting the backend invalidates the in-memory session.
+- The unused admin/admin-login.js file that contained a plaintext temporary password was removed and is blocked by the server. It was not connected to the database-backed login and must not be used as an authentication bypass.
+
+How to run
+1. Stop the current backend with Ctrl+C in the terminal where it is running.
+2. Replace your project files with this ZIP (or copy the changed files into your existing project, preserving your .env).
+3. Open a terminal in the backend folder and run: npm install (only if dependencies are not installed).
+4. Start the server with: npm start
+5. Visit http://localhost:3000/admin/admin-login.html.
+6. Sign in using the admin account that exists in your Supabase/Postgres users table: its email or user_code and the password set for that account. The old hardcoded temporary file was never a valid database-backed admin account.
+
+Important
+- Do not share your .env file or database password.
+- The server must remain the only way to serve the admin HTML pages; do not open admin files directly using file:// or use a separate static-file server.
+- Admin JavaScript and CSS assets can be requested publicly, but admin HTML and data APIs are server-protected. Sensitive records are returned only by authenticated APIs.

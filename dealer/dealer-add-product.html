@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#d97706">
+    <meta name="description" content="GasHub Executive Dealer Portal - Add New LPG Inventory Item.">
+
+    <title>Add Product | GasHub Dealer Pro</title>
+
+    <!-- Official GasHub Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="dealer-dashboard.css">
+    <link rel="stylesheet" href="dealer-products.css">
+<link rel="stylesheet" href="dealer-logout.css">
+    <script src="dealer-cache-guard.js"></script>
+    <script src="gashub-dialog.js"></script>
+    <link rel="stylesheet" href="dealer-header.css">
+    <link rel="stylesheet" href="dealer-mobile.css">
+</head>
+
+<body>
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="dealer-sidebar-overlay" id="dealerSidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dealer-layout">
+        <!-- 1. EXECUTIVE SIDEBAR (7 EXACT ITEMS) -->
+        <aside class="dealer-sidebar" id="dealerSidebar" aria-label="Dealer Navigation">
+            <div class="sidebar-brand">
+                <a href="dealer-dashboard.html" class="brand-link" aria-label="GasHub Home">
+                    <img src="images/logo.png" alt="GasHub Logo" class="brand-logo-img">
+                    <div class="brand-text">
+                        <span class="brand-title">GasHub</span>
+                        <span class="brand-badge">DEALER PRO</span>
+                    </div>
+                </a>
+                <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Main navigation">
+                <a href="dealer-dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie nav-icon" aria-hidden="true"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="dealer-orders.html" class="nav-item">
+                    <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
+                    <span>Orders</span>
+                    <span class="nav-badge" id="sidebarOrdersBadge" hidden>0</span>
+                </a>
+
+                <a href="dealer-messengers.html" class="nav-item">
+                    <i class="fa-solid fa-motorcycle nav-icon" aria-hidden="true"></i>
+                    <span>Messengers</span>
+                </a>
+
+                <a href="dealer-products.html" class="nav-item active" aria-current="page">
+                    <i class="fa-solid fa-boxes-stacked nav-icon" aria-hidden="true"></i>
+                    <span>Stock</span>
+                </a>
+
+                <a href="dealer-purchases.html" class="nav-item">
+                    <i class="fa-solid fa-cart-shopping nav-icon" aria-hidden="true"></i>
+                    <span>Purchases</span>
+                </a>
+
+                <a href="dealer-sales.html" class="nav-item">
+                    <i class="fa-solid fa-arrow-trend-up nav-icon" aria-hidden="true"></i>
+                    <span>Sales</span>
+                </a>
+
+                <a href="dealer-payouts.html" class="nav-item">
+                    <i class="fa-solid fa-money-bill-transfer nav-icon" aria-hidden="true"></i>
+                    <span>Payouts</span>
+                </a>
+
+                <a href="dealer-reviews.html" class="nav-item">
+                    <i class="fa-solid fa-star nav-icon" aria-hidden="true"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="dealer-messages.html" class="nav-item">
+                    <i class="fa-solid fa-comments nav-icon" aria-hidden="true"></i>
+                    <span>Messages</span>
+                    <span class="nav-badge info" id="sidebarMessagesBadge" hidden>0</span>
+                </a>
+
+                <a href="dealer-profile.html" class="nav-item">
+                    <i class="fa-solid fa-store nav-icon" aria-hidden="true"></i>
+                    <span>Profile</span>
+                </a>
+            </nav>
+
+            <!-- Sidebar Footer: Followers, Reviews & TikTok Blue Badge -->
+            <div class="sidebar-footer">
+                <div class="outlet-status-card">
+                    <div class="dealer-profile-mini">
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 2. MAIN APPLICATION CONTENT -->
+        <main class="dealer-main">
+            <!-- Header Bar -->
+            <header class="dealer-header">
+                <div class="header-left">
+                    <button type="button" class="mobile-menu-trigger" id="dealerMobileMenu" aria-label="Open navigation menu">
+                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                    </button>
+                    <div class="header-breadcrumb">
+                        <a href="dealer-products.html" class="breadcrumb-root">Stock Control</a>
+                        <i class="fa-solid fa-chevron-right breadcrumb-separator" aria-hidden="true"></i>
+                        <span class="breadcrumb-current">Add New Product</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <a href="dealer-profile.html" class="dealer-profile-btn" aria-label="Dealer profile">
+                        <div class="dealer-avatar" id="dealerHeaderAvatar"><span id="dealerAvatarInitial">G</span></div>
+                        <div class="dealer-info">
+                            <span class="gh-name-row"><span class="dealer-name" id="dealerHeaderName">GasHub Depot</span><span class="tiktok-verified-badge" id="sidebarVerifiedBadge" title="Verified EPRA Dealer"></span></span>
+                            <span class="user-stats"><span class="user-stat"><i class="fa-solid fa-users fa-xs" aria-hidden="true"></i> <strong id="sidebarFollowersCount">0</strong> followers</span><span class="user-stat"><i class="fa-solid fa-star fa-xs text-warning" aria-hidden="true"></i> <strong id="sidebarReviewsCount">0.0 (0)</strong></span></span>
+                        </div>
+                    </a>
+                </div>
+            </header>
+
+            <section class="stock-content">
+                <div class="stock-intro-bar">
+                    <div class="stock-intro-text">
+                        <div class="stock-eyebrow">
+                            <i class="fa-solid fa-plus-circle fa-xs"></i>
+                            <span>INVENTORY CREATION</span>
+                        </div>
+                        <h1>Add New Product to Stock</h1>
+                        <p>Upload product photo, set pricing, safety specifications, and auto-generate SKU code.</p>
+                    </div>
+                    <div class="stock-intro-actions">
+                        <a href="dealer-products.html" class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-arrow-left fa-sm"></i>
+                            <span>Back to Stock</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="stock-table-card" style="padding: 24px; max-width: 900px; margin: 0 auto;">
+                    <form id="standaloneProductForm" novalidate>
+                        <!-- Photo Section -->
+                        <div class="form-section-label">
+                            <i class="fa-solid fa-camera fa-xs"></i>
+                            <span>PRODUCT PHOTO (UPLOAD OR CAMERA)</span>
+                        </div>
+
+                        <div class="form-group photo-upload-group" style="margin-bottom: 20px;">
+                            <div class="photo-preview-container" id="standalonePhotoContainer" style="width: 140px; height: 140px; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc;">
+                                <img id="standalonePhotoPreview" src="" alt="Preview" style="width:100%; height:100%; object-fit:cover; display:none;">
+                                <div class="photo-placeholder" id="standalonePhotoPlaceholder" style="text-align: center; color: #94a3b8; font-size: 12px;">
+                                    <i class="fa-solid fa-image fa-2x" style="margin-bottom:6px; display:block;"></i>
+                                    <span>No photo selected</span>
+                                </div>
+                            </div>
+
+                            <div class="photo-actions-row" style="display:flex; gap:10px; margin-top:10px;">
+                                <input type="file" id="standaloneFileInput" accept="image/*" hidden>
+                                <input type="file" id="standaloneCameraInput" accept="image/*" capture="environment" hidden>
+                                <input type="hidden" id="standaloneProductImageData" value="">
+
+                                <button type="button" class="btn btn-secondary btn-sm" id="btnStandaloneUpload">
+                                    <i class="fa-solid fa-upload fa-sm"></i> Upload Photo
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btnStandaloneCamera">
+                                    <i class="fa-solid fa-camera fa-sm"></i> Open Camera
+                                </button>
+                                <button type="button" class="btn btn-outline btn-sm" id="btnStandaloneRemovePhoto" style="display:none; color:#ef4444;">
+                                    <i class="fa-solid fa-trash fa-sm"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Brand & Name -->
+                        <div class="form-section-label">
+                            <i class="fa-solid fa-tag fa-xs"></i>
+                            <span>BASIC PRODUCT SPECIFICATIONS</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="saBrand" class="form-label required">Gas Brand</label>
+                                <input type="text" id="saBrand" class="form-control" placeholder="e.g. TotalEnergies, K-Gas, Afrigas, SeaGas..." required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="saName" class="form-label required">Product Display Name</label>
+                                <input type="text" id="saName" class="form-control" placeholder="e.g. TotalEnergies 13kg Cylinder &amp; Gas" required>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="saType" class="form-label required">Product Type</label>
+                                <select id="saType" class="form-control" required>
+                                    <option value="cylinder">Complete Cylinder (Full Gas)</option>
+                                    <option value="refill">Gas Refill Swap</option>
+                                    <option value="empty">Empty Cylinder</option>
+                                    <option value="accessory">Accessory (Burner, Regulator, Hose)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="saSize" class="form-label required">Size / Weight</label>
+                                <input type="text" id="saSize" class="form-control" placeholder="e.g. 6kg, 13kg, 50kg" required value="13kg">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="saValve" class="form-label">Valve Fitting</label>
+                                <select id="saValve" class="form-control">
+                                    <option value="20mm Clip-On">20mm Clip-On (Standard)</option>
+                                    <option value="27mm Quick-On">27mm Quick-On</option>
+                                    <option value="Threaded POL">Threaded POL Valve</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Quantities & Thresholds -->
+                        <div class="form-section-label">
+                            <i class="fa-solid fa-boxes-stacked fa-xs"></i>
+                            <span>STOCK QUANTITIES &amp; ALERT THRESHOLDS</span>
+                        </div>
+
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="saStock" class="form-label required">Full Stock Units</label>
+                                <input type="number" id="saStock" class="form-control" min="0" placeholder="0" required value="10">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="saEmptyStock" class="form-label">Empty Units</label>
+                                <input type="number" id="saEmptyStock" class="form-control" min="0" placeholder="0" value="0">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="saLowStockLimit" class="form-label required">Low Stock Alert Limit</label>
+                                <input type="number" id="saLowStockLimit" class="form-control" min="1" value="5" required>
+                            </div>
+                        </div>
+
+                        <!-- Pricing & Auto SKU -->
+                        <div class="form-section-label">
+                            <i class="fa-solid fa-coins fa-xs"></i>
+                            <span>PRICING &amp; SYSTEM AUTO-GENERATED SKU</span>
+                        </div>
+
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="saCostPrice" class="form-label">Cost / Wholesale Price (KSh)</label>
+                                <input type="number" id="saCostPrice" class="form-control" min="0" placeholder="e.g. 2500" value="2500">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="saPrice" class="form-label required">Selling Price (KSh)</label>
+                                <input type="number" id="saPrice" class="form-control" min="0" placeholder="e.g. 3200" required value="3200">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="saSku" class="form-label">SKU Code (Auto-Generated)</label>
+                                <div style="display:flex; gap:6px;">
+                                    <input type="text" id="saSku" class="form-control" readonly placeholder="Generating...">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btnSaRegenSku" title="Regenerate">
+                                        <i class="fa-solid fa-arrows-rotate"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="saLocation" class="form-label">Depot Storage Location / Bay</label>
+                                <input type="text" id="saLocation" class="form-control" placeholder="e.g. Yard Bay A, Counter Rack" value="Main Depot Bay">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="saAvailable" class="form-label">Portal Status</label>
+                                <select id="saAvailable" class="form-control">
+                                    <option value="true">Active &amp; Visible in Portal</option>
+                                    <option value="false">Hidden / Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="saDescription" class="form-label">Description / EPRA Seal Notes</label>
+                            <textarea id="saDescription" class="form-control" rows="2" placeholder="Standard certified cylinder with EPRA tamper-proof safety seal."></textarea>
+                        </div>
+
+                        <div class="modal-footer" style="padding: 16px 0 0; margin-top: 24px; border-top: 1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:12px;">
+                            <a href="dealer-products.html" class="btn btn-outline">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="btnSaveStandaloneProduct">
+                                <i class="fa-solid fa-floppy-disk fa-sm"></i>
+                                <span>Save Product to Inventory</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Core State & Logic Scripts -->
+    <script src="gashub-core.js"></script>
+    <script src="dealer-logout.js"></script>
+    <script src="dealer-alerts.js" defer></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const STORAGE_KEY = "gashub_dealer_inventory_v2";
+
+            // Mobile nav
+            const menuBtn = document.getElementById("dealerMobileMenu");
+            const closeBtn = document.getElementById("sidebarCloseBtn");
+            const sidebar = document.getElementById("dealerSidebar");
+            const overlay = document.getElementById("dealerSidebarOverlay");
+            if (menuBtn && sidebar && overlay) {
+                menuBtn.addEventListener("click", () => {
+                    sidebar.classList.add("open");
+                    overlay.classList.add("active");
+                });
+                const closeNav = () => {
+                    sidebar.classList.remove("open");
+                    overlay.classList.remove("active");
+                };
+                overlay.addEventListener("click", closeNav);
+                if (closeBtn) closeBtn.addEventListener("click", closeNav);
+            }
+
+            // SKU Generator
+            function genSku(brand, size, type) {
+                const b = (brand || "GH").replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase() || "GH";
+                const s = (size || "13K").replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase() || "13K";
+                const t = (type || "REF").slice(0, 3).toUpperCase();
+                const hex = Math.floor(100 + Math.random() * 900);
+                return `GH-${b}-${s}-${hex}`;
+            }
+
+            const skuInput = document.getElementById("saSku");
+            const brandInput = document.getElementById("saBrand");
+            const sizeInput = document.getElementById("saSize");
+            const typeInput = document.getElementById("saType");
+            const regenBtn = document.getElementById("btnSaRegenSku");
+
+            function updateSku() {
+                if (skuInput) {
+                    skuInput.value = genSku(brandInput.value, sizeInput.value, typeInput.value);
+                }
+            }
+
+            if (brandInput) brandInput.addEventListener("input", updateSku);
+            if (sizeInput) sizeInput.addEventListener("input", updateSku);
+            if (typeInput) typeInput.addEventListener("change", updateSku);
+            if (regenBtn) regenBtn.addEventListener("click", updateSku);
+            updateSku();
+
+            // Photo handlers
+            const fileInput = document.getElementById("standaloneFileInput");
+            const cameraInput = document.getElementById("standaloneCameraInput");
+            const btnUpload = document.getElementById("btnStandaloneUpload");
+            const btnCamera = document.getElementById("btnStandaloneCamera");
+            const btnRemove = document.getElementById("btnStandaloneRemovePhoto");
+            const imgPreview = document.getElementById("standalonePhotoPreview");
+            const imgPlaceholder = document.getElementById("standalonePhotoPlaceholder");
+            const hiddenData = document.getElementById("standaloneProductImageData");
+
+            if (btnUpload && fileInput) btnUpload.addEventListener("click", () => fileInput.click());
+            if (btnCamera && cameraInput) btnCamera.addEventListener("click", () => cameraInput.click());
+
+            function handleFile(e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const read = window.GasHubCore && window.GasHubCore.readImageCompressed
+                    ? window.GasHubCore.readImageCompressed(file)
+                    : new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(file);
+                    });
+                read.then((dataUrl) => {
+                    hiddenData.value = dataUrl;
+                    imgPreview.src = dataUrl;
+                    imgPreview.style.display = "block";
+                    imgPlaceholder.style.display = "none";
+                    if (btnRemove) btnRemove.style.display = "inline-flex";
+                });
+            }
+
+            if (fileInput) fileInput.addEventListener("change", handleFile);
+            if (cameraInput) cameraInput.addEventListener("change", handleFile);
+
+            if (btnRemove) {
+                btnRemove.addEventListener("click", () => {
+                    hiddenData.value = "";
+                    imgPreview.src = "";
+                    imgPreview.style.display = "none";
+                    imgPlaceholder.style.display = "block";
+                    btnRemove.style.display = "none";
+                    if (fileInput) fileInput.value = "";
+                    if (cameraInput) cameraInput.value = "";
+                });
+            }
+
+            // Form Submit & Guaranteed LocalStorage Persistence
+            const form = document.getElementById("standaloneProductForm");
+            if (form) {
+                form.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+
+                    const brand = brandInput.value.trim();
+                    const name = document.getElementById("saName").value.trim();
+                    const price = parseFloat(document.getElementById("saPrice").value);
+
+                    if (!brand || !name || isNaN(price) || price <= 0) {
+                        alert("Please fill in valid brand, product name, and selling price.");
+                        return;
+                    }
+
+                    const newItem = {
+                        id: `PRD-${Date.now().toString(36).toUpperCase()}`,
+                        sku: skuInput.value || genSku(brand, sizeInput.value, typeInput.value),
+                        brand,
+                        name,
+                        type: typeInput.value,
+                        size: sizeInput.value.trim() || "13kg",
+                        valve: document.getElementById("saValve").value,
+                        stock: Math.max(0, parseInt(document.getElementById("saStock").value, 10) || 0),
+                        emptyStock: Math.max(0, parseInt(document.getElementById("saEmptyStock").value, 10) || 0),
+                        lowStockLimit: Math.max(1, parseInt(document.getElementById("saLowStockLimit").value, 10) || 5),
+                        costPrice: Math.max(0, parseFloat(document.getElementById("saCostPrice").value) || 0),
+                        price,
+                        location: document.getElementById("saLocation").value.trim() || "Main Yard",
+                        available: document.getElementById("saAvailable").value === "true",
+                        description: document.getElementById("saDescription").value.trim(),
+                        image: hiddenData.value || ""
+                    };
+
+                    // Retrieve existing inventory
+                    let items = [];
+                    try {
+                        const raw = localStorage.getItem(STORAGE_KEY);
+                        if (raw) items = JSON.parse(raw);
+                    } catch (err) {}
+
+                    // Fresh browser: start from the dealer's saved products so publishing never replaces them with just this one
+                    if (items.length === 0 && window.GasHubCore) {
+                        items = await window.GasHubCore.hydrateFromServer();
+                    }
+
+                    items.unshift(newItem);
+                    try {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+                    } catch (err) {
+                        alert("Could not save - browser storage is full. Try a smaller photo or remove old photos.");
+                        return;
+                    }
+
+                    // Publish to customers and wait for the result before leaving this page
+                    let published = null;
+                    const saveBtn = document.getElementById("btnSaveStandaloneProduct");
+                    if (saveBtn) saveBtn.disabled = true;
+                    if (window.GasHubCore) {
+                        published = await window.GasHubCore.syncInventory(items, { immediate: true });
+                    }
+
+                    // Show success & redirect (stay a little longer if publishing failed so the message can be read)
+                    if (window.GasHubCore) {
+                        window.GasHubCore.showToast(`Product "${newItem.name}" added successfully!`, "success");
+                    }
+                    setTimeout(() => {
+                        window.location.href = "dealer-products.html";
+                    }, published && !published.ok && !published.skipped ? 2500 : 600);
+                });
+            }
+        });
+    </script>
+    <script src="dealer-mobile.js" defer></script>
+</body>
+</html>

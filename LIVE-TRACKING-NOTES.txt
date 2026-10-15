@@ -1,0 +1,53 @@
+LIVE ORDER TRACKING (delivery map) + PICKUP SHOP LOCATION
+
+WHAT IT DOES
+- Delivery order: in "Your messenger" on the customer's order page, a live map shows the messenger's real phone GPS, the delivery
+  pin, distance and an estimated arrival time. It updates by itself every 5 seconds, the marker glides instead of jumping,
+  and a button centres the map on the messenger.
+- The map only exists while the order is open. When the order is delivered, completed or cancelled the map is removed, the
+  server stops sending coordinates, and the messenger's phone stops being accepted.
+- Pickup order: a "Pick up your order" card shows the dealer's shop (name, address, pinned map, Get directions). It disappears
+  once the order is finished.
+
+SETUP (once)
+1) Supabase SQL Editor: run backend/live-tracking-migration.sql (safe to run again; it only adds columns to orders).
+2) Restart the server. Dealers must sign in again (dealer sessions are kept in memory).
+3) GPS only works on HTTPS pages (or localhost on the same computer). To test with real phones, open GasHub through a public
+   https address (your deployed site, or a tunnel such as cloudflared / ngrok) and sign in as the dealer THERE, so the
+   link the dealer copies has the public address. If you serve behind a proxy, set APP_BASE_URL in .env to the public https URL.
+
+HOW A DELIVERY RUNS
+1) Dealer confirms the order and assigns a messenger (as before).
+2) Dealer opens the order details -> "Get live tracking link" -> Copy or Send on WhatsApp to the messenger.
+3) Messenger opens the link on their phone (no account), taps "Start delivery" and allows location.
+   The order becomes "Out for delivery" and the customer's map goes live.
+4) The "Confirm order completed" button only appears when the messenger is about 1 minute from the customer. Tapping it
+   marks the order delivered and stops sharing. See PAYMENT-CONFIRMATION-NOTES.txt.
+
+WHO CAN SEE WHAT (all checked on the server)
+- Customer: only their own order (/api/my/orders/:id/tracking uses the signed-in customer's id).
+- Dealer: can only create links for their own orders; a different messenger on the order wipes the old link and position.
+- Messenger link: works for one order only, accepts GPS only while the order is "out for delivery", and shows nothing once finished.
+- A stored position is deleted when the order is delivered, completed, cancelled or rejected.
+
+SAVING DATABASE WRITES
+- At most one position per 3 seconds; a position within 8 m of the last one is skipped (except one "still here" every 25 s);
+  GPS fixes worse than 500 m are ignored. The phone sends every 6 seconds. Only one row per order is ever updated.
+
+COST
+- Maps use Leaflet + OpenStreetMap (same as the rest of GasHub): no Google billing. ETA is worked out in the browser from
+  straight-line distance (x1.3 road factor, ~25 km/h), so no routing service is called. If traffic grows, use a paid tile provider
+  (OpenStreetMap's own tile server has a fair-use policy).
+
+LIMITS TO KNOW
+- A web page can only read GPS while it is open and the screen is on. The messenger must keep the page open (the page asks the
+  phone to stay awake). Reliable background tracking needs a native app (Expo) later.
+- The customer sees a straight dashed line, not turn-by-turn roads.
+- Orders with no saved delivery pin show the messenger live but no distance/ETA.
+
+FILES
+New:      backend/live-tracking-migration.sql, backend/controllers/tracking-controller.js, backend/routes/tracking-routes.js,
+          frontend/rider-track.html, rider-track.css, rider-track.js, frontend/customer-live-track.js, customer-live-track.css
+Changed:  backend/server.js (1 route), backend/routes/customer-order-routes.js (1 route), backend/routes/dealer-routes.js (1 route),
+          backend/controllers/dealer-order-controller.js (clears tracking on messenger change / finished order),
+          frontend/customer-orders.html + customer-orders.js (map box, pickup card, 1 hook), dealer/dealer-order.js (tracking link button)

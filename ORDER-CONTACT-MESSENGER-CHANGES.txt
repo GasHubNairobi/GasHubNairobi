@@ -1,0 +1,23 @@
+ORDER COMPLETION, DEALER NUMBER, MESSENGER ON THE ORDER
+
+1) Run backend/delivery-messengers-migration.sql once in the Supabase SQL Editor, then restart the server.
+   (Your zip had empty database/*.sql files, so this adds only what these features need: delivery_agents,
+   the rider_* columns, and confirmed_at / dispatched_at / delivered_at / completed_at / cancelled_at on orders.)
+2) Dealers must sign in again if the server was restarted (dealer sessions are kept in memory).
+
+WHY "COMPLETED" DID NOT SHOW FOR THE CUSTOMER
+dealer-order.js only changed the status in the browser (localStorage) and never called the server. It also read
+/api/orders instead of the dealer's own orders. It now loads GET /api/dealers/orders/mine and every button
+(Approve, Complete, Reject, Assign messenger) sends PATCH /api/dealers/orders/:id and only updates the page when the
+server accepts it. "Complete" now works straight from Approved / In transit / Delivered.
+The customer page now says "Completed" (not "Delivered") and keeps refreshing until the order is completed.
+
+DEALER NUMBER ON THE CUSTOMER ORDER
+- Shown with a tap-to-call link while the order is open and for 2 days after it is completed (or cancelled/rejected).
+- After that the server sends it masked (0712*****78); the full number is never sent, so it can't be read from the page.
+- The messenger's phone follows the same rule.
+
+MESSENGER SECTION (customer-orders.html, "Your messenger" card)
+Name, vehicle, last digits of the ID, phone. Delivery orders only.
+Messengers are now saved on the server (dealer-messengers.html rebuilt: your zip's dealer-messengers.html was a copy of the
+Messages page). New endpoints: PUT/DELETE /api/dealers/riders/mine/:id.
