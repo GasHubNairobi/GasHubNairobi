@@ -481,6 +481,8 @@
                     }
                     const message = res.status === 401
                         ? "Dealer session expired. Please log in again to publish products."
+                        : res.status === 413
+                        ? "The photos are too large to publish together. Remove or replace some photos with smaller ones and try again."
                         : ((data.message || `The server refused the update (${res.status}).`) + (data.detail ? ` (${data.detail})` : ""));
                     this.showToast(message, "error");
                     return { ok: false, status: res.status, message };
@@ -505,13 +507,14 @@
         },
 
         /* Shrinks a chosen photo so it fits in storage and uploads quickly */
-        readImageCompressed(file, maxSide = 800, quality = 0.8) {
+        readImageCompressed(file, maxSide = 600, quality = 0.75) {
             return new Promise((resolve, reject) => {
+                if (file && file.size > 15 * 1024 * 1024) { reject(new Error("That photo is too large. Choose one under 15 MB.")); return; }
                 const reader = new FileReader();
                 reader.onerror = () => reject(reader.error);
                 reader.onload = () => {
                     const img = new Image();
-                    img.onerror = () => resolve(reader.result);
+                    img.onerror = () => reject(new Error("That file is not a picture this browser can open. Choose a JPG, PNG or WebP photo."));
                     img.onload = () => {
                         const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
                         const canvas = document.createElement("canvas");

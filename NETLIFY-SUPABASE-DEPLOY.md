@@ -17,7 +17,8 @@ GasHub's logic, pages and features are unchanged. Only the hosting layer changed
 1. Use your existing Supabase project and database (all current tables stay as they are). If this is a fresh project, run the SQL files in `database/migrations/` (see the README there) in the SQL Editor.
    **Always run `migration-007-enable-rls.sql` last.** It stops Supabase's public REST API (anon key) from reading or changing your tables. The backend also re-applies this automatically on start-up for any new table.
 2. Open **Connect** in the Supabase dashboard and copy the **Transaction pooler** details (host `aws-0-<region>.pooler.supabase.com`, port `6543`, user `postgres.<project-ref>`). Netlify starts many short-lived function instances, so the pooler keeps the number of database connections low. If you only have the direct host (`db.<ref>.supabase.co`) it works for light use, but the pooler is strongly recommended.
-3. Optional: run `database/migrations/migration-006-serverless.sql`. The backend creates its two new tables (`gashub_sessions`, `gashub_rate_limits`) by itself the first time they are needed, so this step is only for people who prefer to do it by hand.
+3. Recommended: verify the database connection. In Supabase go to Project Settings -> Database -> SSL Configuration and download the certificate, convert the file to base64 (see `.env.example`) and add it in Netlify as `DB_SSL_CA_BASE64`. Try it on a deploy preview first; if the site cannot reach the database afterwards, remove the variable and it returns to the previous encrypted-but-unverified mode.
+4. Optional: run `database/migrations/migration-006-serverless.sql`. The backend creates its two new tables (`gashub_sessions`, `gashub_rate_limits`) by itself the first time they are needed, so this step is only for people who prefer to do it by hand.
 
 ## 2. Netlify
 

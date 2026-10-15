@@ -78,10 +78,13 @@ if (!isServerless) app.use(require("./utils/compress").compress());
 // Maintenance mode (switched on by the super admin in Admin Settings)
 app.use(require("./utils/maintenance").maintenanceGate);
 
-app.use(express.json({ limit: "10mb" }));
+// Netlify Functions accept at most ~6 MB per request, so on Netlify the app answers a clear "too large" message at 5 MB
+// instead of Netlify cutting the request off with an unreadable error.
+const BODY_LIMIT = isServerless ? "5mb" : "10mb";
+app.use(express.json({ limit: BODY_LIMIT }));
 app.use(express.urlencoded({
     extended: true,
-    limit: "10mb"
+    limit: BODY_LIMIT
 }));
 
 /* Netlify safety net: on Netlify the request body can reach Express as a raw Buffer (or string) that the normal body parsers
@@ -541,7 +544,7 @@ app.use(
             return res.status(400).json({ success: false, message: "The request body is not valid JSON." });
         }
         if (error && error.type === "entity.too.large") {
-            return res.status(413).json({ success: false, message: "The request is too large." });
+            return res.status(413).json({ success: false, message: "The request is too large. Use smaller photos (or fewer at a time) and try again." });
         }
 
         console.error(

@@ -1132,13 +1132,10 @@ const GasHubStockApp = (() => {
 
         const compress = window.GasHubCore && window.GasHubCore.readImageCompressed
             ? window.GasHubCore.readImageCompressed(file)
-            : new Promise((resolve) => {
-                const r = new FileReader();
-                r.onload = (ev) => resolve(ev.target.result);
-                r.readAsDataURL(file);
-            });
+            : Promise.reject(new Error("Photo tools did not load. Refresh the page and try again."));
 
-        compress.then((dataUrl) => {
+        compress.catch((err) => { showToast((err && err.message) || "Could not use that photo.", "error"); return null; }).then((dataUrl) => {
+            if (!dataUrl) return;
             const photoPreview = document.getElementById("productPhotoPreview");
             const photoPlaceholder = document.getElementById("photoPlaceholder");
             const btnRemovePhoto = document.getElementById("btnRemovePhoto");

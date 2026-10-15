@@ -543,7 +543,7 @@ async function updateMyProfile(req, res) {
 */
 
 const LOGO_DATA_URL = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
-const MAX_LOGO_LENGTH = 2000000;
+const MAX_LOGO_LENGTH = 600000;   /* the page shrinks logos to 512px (about 50 KB); this is a safety cap */
 
 async function updateMyLogo(req, res) {
   try {
