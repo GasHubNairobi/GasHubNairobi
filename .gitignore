@@ -37,3 +37,4 @@ coverage/
 .env
 .env.*
 !.env.example
+ENV-PAYMENT-FIELDS.txt
