@@ -118,26 +118,6 @@ app.use((req, res, next) => {
     next();
 });
 
-/* TEMPORARY diagnostic (remove once logins work): shows what shape of request body reaches the server. It never returns the values. */
-app.all("/api/_diag/echo", (req, res) => {
-    const ev = req.apiGateway && req.apiGateway.event;
-    const b = req.body;
-    res.json({
-        ok: true,
-        serverless: !!process.env.GASHUB_SERVERLESS,
-        method: req.method,
-        contentType: req.headers["content-type"] || null,
-        contentLengthHeader: req.headers["content-length"] || null,
-        parsedBodyType: b === undefined ? "undefined" : Array.isArray(b) ? "array" : typeof b,
-        parsedBodyKeys: b && typeof b === "object" ? Object.keys(b) : [],
-        eventBodyType: ev ? (ev.body === null || ev.body === undefined ? "none" : typeof ev.body) : "no-event",
-        eventBodyLength: ev && typeof ev.body === "string" ? ev.body.length : null,
-        eventIsBase64: ev ? !!ev.isBase64Encoded : null,
-        publicUrlSet: !!process.env.PUBLIC_URL,
-        dbConfigured: !!(process.env.DATABASE_URL || (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD))
-    });
-});
-
 // ============================================================
 // FRONTEND PATHS
 // ============================================================
@@ -335,9 +315,53 @@ app.use(
     },
     express.static(adminPath, {
         index: false,
-        dotfiles: "deny"
+        dotfiles: "deny",
+        setHeaders(res, filePath) {
+            if (/\.html?$/i.test(filePath) && !/admin-login\.html$/i.test(filePath)) res.setHeader("Cache-Control", "no-store, private");
+        }
     })
 );
+
+// ============================================================
+// DEALER PAGE AUTHENTICATION
+// ============================================================
+// Same idea as the admin pages: every dealer .html page except the public login / application pages is only
+// served to a browser holding a valid dealer session cookie (set at dealer login). On Netlify these pages are NOT on the CDN
+// (scripts/build-netlify.js leaves them out), so this function is the only way to reach them.
+
+const { dealerSessions, DEALER_SESSION_COOKIE, dealerCookieOptions } = require("./middleware/dealer-authentication");
+const PUBLIC_DEALER_PAGES = new Set(["/dealer-login.html", "/dealer-application.html"]);
+
+async function requireDealerPage(req, res, next) {
+    const toLogin = () => {
+        res.clearCookie(DEALER_SESSION_COOKIE, dealerCookieOptions());
+        res.setHeader("Cache-Control", "no-store, private");
+        return res.redirect(302, "/dealer/dealer-login.html");
+    };
+    try {
+        const token = readCookie(req, DEALER_SESSION_COOKIE);
+        const session = token ? await dealerSessions.get(token) : null;
+        if (!session) return toLogin();
+
+        const result = await pool.query(
+            `SELECT u.status AS user_status, u.must_change_password, u.onboarding_completed, d.status AS dealer_status
+             FROM users u INNER JOIN dealers d ON d.user_id = u.id
+             WHERE u.id = $1 AND d.id = $2 AND u.role = 'dealer' LIMIT 1`,
+            [session.userId, session.dealerId]
+        );
+        const a = result.rows[0];
+        const pendingFirstLogin = Boolean(a && a.must_change_password && !a.onboarding_completed);
+        if (!a || a.user_status !== "active" || (a.dealer_status !== "active" && !pendingFirstLogin)) {
+            await dealerSessions.delete(token);
+            return toLogin();
+        }
+        res.setHeader("Cache-Control", "no-store, private");
+        return next();
+    } catch (error) {
+        console.error("Dealer page authentication error:", error);
+        return toLogin();
+    }
+}
 
 // ============================================================
 // DEALER STATIC FILES
@@ -345,7 +369,29 @@ app.use(
 
 app.use(
     "/dealer",
-    express.static(dealerPath, staticCache)
+    (req, res, next) => {
+        let pathname;
+        try {
+            pathname = decodeURIComponent(req.path || "/");
+        } catch {
+            return res.status(400).send("Invalid path");
+        }
+        if (/\.html?$/i.test(pathname) && !PUBLIC_DEALER_PAGES.has(pathname.toLowerCase())) {
+            return requireDealerPage(req, res, next);
+        }
+        // "/dealer" or "/dealer/" opens the login page
+        if (pathname === "/" || pathname === "") return res.redirect(302, "/dealer/dealer-login.html");
+        return next();
+    },
+    express.static(dealerPath, {
+        ...staticCache,
+        index: false,
+        setHeaders(res, filePath) {
+            // signed-in pages must never be kept by the browser or a shared cache
+            if (/\.html?$/i.test(filePath) && !/dealer-(login|application)\.html$/i.test(filePath)) res.setHeader("Cache-Control", "no-store, private");
+            else staticCache.setHeaders(res, filePath);
+        }
+    })
 );
 
 // ============================================================
@@ -524,7 +570,8 @@ function warmup() {
         warmedUp = Promise.all([
             withTimeout(require("./utils/payment-flow").ensurePaymentFlowColumns(), 6000),
             withTimeout(require("./utils/order-times").ensureOrderTimeColumns(), 6000),
-            withTimeout(require("./utils/account-indexes").ensureRoleScopedAccountIndexes(), 6000)
+            withTimeout(require("./utils/account-indexes").ensureRoleScopedAccountIndexes(), 6000),
+            withTimeout(require("./utils/rls-guard").ensureRowLevelSecurity(), 6000)
         ]);
     }
     return warmedUp;
@@ -605,6 +652,11 @@ async function startServer() {
         if (databaseConnected) {
             require("./utils/order-times").ensureOrderTimeColumns()
                 .catch((e) => console.error("Order time columns:", e.message));
+        }
+
+        // Keep Supabase's public REST API locked out of every table (idempotent)
+        if (databaseConnected) {
+            require("./utils/rls-guard").ensureRowLevelSecurity().catch(() => {});
         }
 
         // One email may be both a customer and a dealer: make the database allow it (idempotent, runs in the background)

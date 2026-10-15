@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
+    <script src="gashub-theme.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1f4fd8">
@@ -9,9 +11,12 @@
     <link rel="icon" type="image/png" href="/Images/favicon.png">
     <link rel="stylesheet" href="customer-home.css">
     <link rel="stylesheet" href="customer-about.css">
+    <link rel="stylesheet" href="gashub-theme.css">
     <script src="gashub-ban-guard.js"></script>
+    <link rel="stylesheet" href="/gashub-desktop.css">
 </head>
 <body>
+    <script src="customer-nav.js" data-active="about" data-sidebar="true" data-tabs="true"></script>
 
     <!-- =====================================================
          OPENING ANIMATION: GasHub x Vynex Web Solutions
@@ -24,7 +29,7 @@
 
         <!-- Stage 1: Powered by Vynex -->
         <div class="vx-stage vx-s1">
-            <div class="vx-mark"><img src="/Images/vynex-logo.png" alt="Vynex logo"></div>
+            <div class="vx-mark"><img src="/images/vynex-logo.png" alt="Vynex logo"></div>
             <p class="vx-powered">Powered by</p>
             <h2 class="vx-name">VYNEX <span>WEB SOLUTIONS</span></h2>
         </div>
@@ -32,9 +37,9 @@
         <!-- Stage 2: the collaboration -->
         <div class="vx-stage vx-s2">
             <div class="vx-pair">
-                <div class="vx-tile left"><img src="/Images/gashub-logo-trim.png" alt="GasHub logo"></div>
+                <div class="vx-tile left"><img src="/images/gashub-logo-trim.png" alt="GasHub logo"></div>
                 <span class="vx-x" aria-hidden="true">×</span>
-                <div class="vx-tile right"><img src="/Images/vynex-logo.png" alt="Vynex logo"></div>
+                <div class="vx-tile right"><img src="/images/vynex-logo.png" alt="Vynex logo"></div>
             </div>
             <p class="vx-collab">GasHub <b>×</b> Vynex Web Solutions</p>
             <p class="vx-tag">Your Vision &nbsp;|&nbsp; Our Code &nbsp;|&nbsp; Your Success</p>
@@ -76,37 +81,9 @@
     <!-- =====================================================
          SIDE MENU
     ====================================================== -->
-    <aside class="mobile-menu" id="mobileMenu" aria-hidden="true">
-        <div class="mobile-menu-header">
-            <img src="/Images/logo.png" alt="GasHub" class="mobile-menu-logo">
-            <button type="button" id="closeMenuBtn" aria-label="Close menu">×</button>
-        </div>
+    
 
-        <div class="customer-menu-profile">
-            <div class="customer-avatar" id="avatar">C</div>
-            <div>
-                <strong id="menuCustomerName">Welcome</strong>
-                <small>GasHub Customer</small>
-            </div>
-        </div>
-
-        <nav class="customer-navigation">
-            <a href="customer-home.html">Home</a>
-            <a href="customer-product.html">Gas &amp; Cylinders</a>
-            <a href="customer-dealer.html">Find a Dealer</a>
-            <a href="customer-orders.html">My Orders</a>
-            <a href="customer-profile.html">My Profile</a>
-            <a href="customer-about.html" class="active">About GasHub</a>
-        </nav>
-
-        <div class="mobile-menu-footer">
-            <a href="#" id="helpLink">Help &amp; Support</a>
-            <a href="customer-profile.html">Settings</a>
-            <a href="customer-login.html" id="logoutLink">Logout</a>
-        </div>
-    </aside>
-
-    <div class="menu-overlay" id="menuOverlay"></div>
+    
 
 
     <main class="about-page">
@@ -129,7 +106,7 @@
                 </p>
 
                 <a href="#built-by" class="ab-chip">
-                    <span class="chip-logo"><img src="/Images/vynex-logo.png" alt=""></span>
+                    <span class="chip-logo"><img src="/images/vynex-logo.png" alt=""></span>
                     <span>Developed by <strong>Vynex Web Solutions</strong></span>
                 </a>
             </div>
@@ -278,9 +255,9 @@
                 <h2>GasHub, developed by Vynex Web Solutions</h2>
 
                 <div class="collab-logos reveal">
-                    <div class="logo-tile"><img src="/Images/gashub-logo-trim.png" alt="GasHub"></div>
+                    <div class="logo-tile"><img src="/images/gashub-logo-trim.png" alt="GasHub"></div>
                     <span class="collab-x" aria-hidden="true">×</span>
-                    <div class="logo-tile"><img src="/Images/vynex-logo.png" alt="Vynex Web Solutions"></div>
+                    <div class="logo-tile"><img src="/images/vynex-logo.png" alt="Vynex Web Solutions"></div>
                 </div>
 
                 <p class="collab-lead reveal">
@@ -321,7 +298,7 @@
         <section class="ab-sec vynex-sec" id="vynex">
 
             <div class="vx-head reveal">
-                <div class="vx-head-logo"><img src="/Images/vynex-logo.png" alt="Vynex logo"></div>
+                <div class="vx-head-logo"><img src="/images/vynex-logo.png" alt="Vynex logo"></div>
                 <div>
                     <span class="ab-label">About the developer</span>
                     <h2>Vynex Web Solutions</h2>
@@ -397,8 +374,8 @@
                 </div>
 
                 <figure class="card-shot reveal">
-                    <a href="/Images/vynex-business-card.jpg" target="_blank" rel="noopener" aria-label="Open Vynex Web Solutions business card">
-                        <img src="/Images/vynex-business-card.jpg" alt="Vynex Web Solutions business card: website development services and contact details">
+                    <a href="/images/vynex-business-card.jpg" target="_blank" rel="noopener" aria-label="Open Vynex Web Solutions business card">
+                        <img src="/images/vynex-business-card.jpg" alt="Vynex Web Solutions business card: website development services and contact details">
                     </a>
                     <figcaption>Vynex Web Solutions &middot; Modern &bull; Professional &bull; Reliable</figcaption>
                 </figure>
@@ -475,7 +452,7 @@
         </div>
 
         <a href="#built-by" class="footer-credit">
-            <span class="fc-logo"><img src="/Images/vynex-logo.png" alt=""></span>
+            <span class="fc-logo"><img src="/images/vynex-logo.png" alt=""></span>
             <span>Developed by <strong>Vynex Web Solutions</strong></span>
         </a>
 
@@ -489,20 +466,7 @@
     <!-- =====================================================
          MOBILE BOTTOM NAV
     ====================================================== -->
-    <nav class="mobile-bottom-nav" aria-label="Main">
-        <a href="customer-home.html">
-            <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Home
-        </a>
-        <a href="customer-product.html">
-            <svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>Products
-        </a>
-        <a href="customer-orders.html">
-            <svg viewBox="0 0 24 24"><path d="M6 2l-2 4v14h16V6l-2-4H6zM4 6h16M9 10a3 3 0 0 0 6 0"/></svg>Orders
-        </a>
-        <a href="customer-profile.html">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Profile
-        </a>
-    </nav>
+    
 
 
     <script src="customer-logout.js"></script>
@@ -512,25 +476,6 @@
         "use strict";
         var $ = function (s) { return document.querySelector(s); };
 
-        /* side menu */
-        var menu = $("#mobileMenu"), scrim = $("#menuOverlay");
-        function openMenu() { menu.classList.add("active"); scrim.classList.add("show"); menu.setAttribute("aria-hidden", "false"); }
-        function closeMenu() { menu.classList.remove("active"); scrim.classList.remove("show"); menu.setAttribute("aria-hidden", "true"); }
-        $("#menuBtn").addEventListener("click", openMenu);
-        $("#closeMenuBtn").addEventListener("click", closeMenu);
-        scrim.addEventListener("click", closeMenu);
-        document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
-
-        /* logout */
-        var l = $("#logoutLink");
-        if (l) l.addEventListener("click", function (e) { e.preventDefault(); if (window.gasHubAskLogout) window.gasHubAskLogout(); else if (window.gasHubLogout) window.gasHubLogout(); else location.href = "customer-login.html"; });
-
-        /* customer name in the menu (same keys the logout script clears) */
-        try {
-            var c = JSON.parse(localStorage.getItem("customer") || localStorage.getItem("gasHubCustomer") || "null");
-            var n = c && (c.fullName || c.name || c.firstName);
-            if (n) { $("#menuCustomerName").textContent = n; $("#avatar").textContent = String(n).charAt(0).toUpperCase(); }
-        } catch (e) { }
 
         /* fade sections in as they scroll into view */
         var items = document.querySelectorAll(".reveal");
@@ -546,8 +491,9 @@
     </script>
 
     <script src="customer-review-popup.js" defer></script>
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="gashub-assistant.js" defer></script>
     <script src="customer-pay-prompt.js" defer></script>
+    <script src="customer-notifications.js" defer></script>
+    <script src="customer-download.js" defer></script>
 </body>
 </html>

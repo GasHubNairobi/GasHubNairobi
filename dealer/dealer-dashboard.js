@@ -497,7 +497,7 @@ function loadDealerProfileData() {
     }
 
     // TikTok Blue Verified badge sync
-    const isVerified = Boolean(dealerData.is_verified || dealerData.isVerified || localStorage.getItem("gashub_dealer_verified") === "true");
+    const isVerified = Boolean(dealerData.verification_active !== undefined ? dealerData.verification_active : (dealerData.is_verified || dealerData.isVerified || localStorage.getItem("gashub_dealer_verified") === "true"));
     const verifiedBadge = document.getElementById("sidebarVerifiedBadge");
     if (verifiedBadge) {
         if (isVerified) {
@@ -570,8 +570,8 @@ async function loadRecentOrdersLive() {
         pendingOrderAlerts = orders.filter(o => statusOf(o) === "pending").length;
         const sidebarOrdersBadge = document.getElementById("sidebarOrdersBadge");
         if (sidebarOrdersBadge) { sidebarOrdersBadge.textContent = String(pendingOrderAlerts); sidebarOrdersBadge.hidden = pendingOrderAlerts === 0; }
-        const bell = document.getElementById("notificationBadge");
-        if (bell) { const n = pendingOrderAlerts + lastLowStockCount; bell.textContent = String(n); bell.hidden = n === 0; }
+        /* the bell and the Messages badge are kept up to date by dealer-alerts.js */
+        if (window.GasHubDealerAlerts) window.GasHubDealerAlerts.refresh();
 
         if (!tableBody) return;
         if (orders.length === 0) {
@@ -702,98 +702,11 @@ function showDashboardBanner(message) {
 }
 
 /* =========================================================
-   7B. TIKTOK-STYLE BLUE BADGE VERIFICATION
+   7B. BLUE BADGE VERIFICATION
+   Handled by dealer-verification.js (server checked, paid with M-Pesa).
    ========================================================= */
-function checkVerificationStatus() {
-    const isVerified = localStorage.getItem("gashub_dealer_verified") === "true";
-    const badges = document.querySelectorAll(".tiktok-verified-badge");
-    const btns = document.querySelectorAll(".btn-request-verification");
-
-    badges.forEach((b) => {
-        if (isVerified) {
-            b.classList.add("verified-active");
-            b.style.display = "inline-flex";
-        } else {
-            b.classList.remove("verified-active");
-            b.style.display = "none";
-        }
-    });
-
-    btns.forEach((btn) => {
-        if (isVerified) {
-            btn.classList.add("is-verified");
-            btn.innerHTML = `<i class="fa-solid fa-circle-check fa-sm text-success"></i> <span>EPRA Verified Outlet</span>`;
-            btn.disabled = true;
-        } else {
-            btn.classList.remove("is-verified");
-            btn.innerHTML = `
-                <svg viewBox="0 0 24 24" class="tiktok-badge-svg-sm" aria-hidden="true">
-                    <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
-                    <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
-                </svg>
-                <span id="verificationBtnText">Request Verification</span>
-            `;
-            btn.disabled = false;
-        }
-    });
-}
-
-function setupVerificationModal() {
-    const btnRequestVerification = document.getElementById("btnRequestVerification");
-    const closeVerificationModalBtn = document.getElementById("closeVerificationModalBtn");
-    const cancelVerificationBtn = document.getElementById("cancelVerificationBtn");
-    const verificationModalBackdrop = document.getElementById("verificationModalBackdrop");
-    const verificationForm = document.getElementById("verificationForm");
-
-    if (btnRequestVerification) {
-        btnRequestVerification.addEventListener("click", () => {
-            if (verificationModalBackdrop) {
-                const outletInput = document.getElementById("verifyOutletName");
-                if (outletInput && !outletInput.value) {
-                    outletInput.value = "GasHub Depot Nairobi Central";
-                }
-                verificationModalBackdrop.hidden = false;
-            }
-        });
-    }
-
-    function closeModal() {
-        if (verificationModalBackdrop) verificationModalBackdrop.hidden = true;
-    }
-
-    if (closeVerificationModalBtn) closeVerificationModalBtn.addEventListener("click", closeModal);
-    if (cancelVerificationBtn) cancelVerificationBtn.addEventListener("click", closeModal);
-
-    if (verificationForm) {
-        verificationForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const phoneInput = document.getElementById("verifyMpesaPhone");
-            const phone = phoneInput ? phoneInput.value.trim() : "";
-            if (!phone) {
-                showDashboardBanner("Please enter a valid M-Pesa phone number for the verification prompt.");
-                return;
-            }
-
-            const submitBtn = document.getElementById("submitVerificationBtn");
-            const origHtml = submitBtn ? submitBtn.innerHTML : "";
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-sm"></i> Sending M-Pesa STK Prompt...`;
-            }
-
-            setTimeout(() => {
-                localStorage.setItem("gashub_dealer_verified", "true");
-                checkVerificationStatus();
-                closeModal();
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = origHtml;
-                }
-                showDashboardBanner("Verification fee of KSh 2,500 confirmed via M-Pesa! TikTok-style Blue Checkmark badge is now active.");
-            }, 1200);
-        });
-    }
-}
+function checkVerificationStatus() { if (window.GasHubVerification) window.GasHubVerification.refresh(); }
+function setupVerificationModal() { /* nothing to set up: dealer-verification.js does it */ }
 
 /* =========================================================
    8. UTILITY HELPERS & PUBLIC API

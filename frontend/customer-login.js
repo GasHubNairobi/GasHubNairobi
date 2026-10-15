@@ -8,6 +8,14 @@
 (function () {
     "use strict";
 
+    /* "Welcome back" only for someone who has signed in on this phone before; first-timers get a plain welcome */
+    try {
+        if (localStorage.getItem("gasHubReturning") !== "1") {
+            const h = document.querySelector(".brand-content h1");
+            if (h) h.textContent = "Welcome to GasHub";
+        }
+    } catch (e) { }
+
     const API = "/api";
     const DEFAULT_NEXT = "customer-home.html";
     const REMEMBERED_EMAIL = "gasHubRememberedEmail";
@@ -152,6 +160,7 @@
         writeJSON(localStorage, "gasHubCustomerProfile", { fullName: customer.fullName, phone: customer.phone, email: customer.email, address: customer.address });
         writeJSON(localStorage, "gasHubCustomerSession", { email: customer.email, method, loggedInAt: new Date().toISOString(), remember: !!remember });
         localStorage.setItem("gasHubLoggedIn", "true");
+        try { localStorage.setItem("gasHubReturning", "1"); } catch (e) { }   /* next visit to the sign-in page says "Welcome back" */
         if (c.photo && !localStorage.getItem("gasHubProfilePhoto") && !localStorage.getItem("gasHubPhotoRemoved")) writeJSON(localStorage, "gasHubProfilePhoto", c.photo);
 
         /* Only used if the server sends a token in the reply. A server cookie (HttpOnly) is safer; see gashub-auth-api.md. */

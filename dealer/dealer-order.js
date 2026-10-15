@@ -399,11 +399,8 @@
             sidebarOrdersBadge.hidden = waitingForDealer <= 0;
         }
 
-        const notifBadge = document.getElementById("notificationBadge");
-        if (notifBadge) {
-            notifBadge.textContent = waitingForDealer;
-            notifBadge.hidden = waitingForDealer <= 0;
-        }
+        /* the bell is kept up to date by dealer-alerts.js */
+        if (window.GasHubDealerAlerts) window.GasHubDealerAlerts.refresh();
     }
 
     /* =====================================================

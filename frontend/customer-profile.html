@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1f4fd8">
@@ -10,10 +11,12 @@
     <!-- theme script first, so the page never flashes the wrong colours -->
     <script src="gashub-theme.js"></script>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"></noscript>
     <link rel="stylesheet" href="customer-profile.css">
     <link rel="stylesheet" href="gashub-theme.css">
     <script src="gashub-ban-guard.js"></script>
+    <link rel="stylesheet" href="/gashub-desktop.css">
 </head>
 <body>
     <script src="customer-nav.js" data-active="profile" data-sidebar="true" data-tabs="true"></script>
@@ -319,13 +322,14 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <!-- MOBILE BOTTOM NAV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" defer></script>
     <script src="customer-logout.js"></script>
     <script src="customer-photo.js"></script>
     <script src="customer-profile.js"></script>
     <script src="customer-review-popup.js" defer></script>
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="gashub-assistant.js" defer></script>
     <script src="customer-pay-prompt.js" defer></script>
+    <script src="customer-notifications.js" defer></script>
+    <script src="customer-download.js" defer></script>
 </body>
 </html>

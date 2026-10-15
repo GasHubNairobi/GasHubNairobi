@@ -1119,7 +1119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (tag) tag.textContent = data.live ? "Live on Play Store" : "Not live yet";
         if (hint) {
             hint.textContent = data.live
-                ? "The app is live, so customers see the download link in their profile."
+                ? "The app is live, so customers see the Download button at the top of the site and the link in their profile."
                 : "Customers do not see a download link yet. It appears automatically once the app is published on Google Play.";
             if (!data.install_key_set) hint.textContent += " Add APP_INSTALL_KEY to the server .env file (and put the same key in the app) so the app can confirm installs; until then no install points can be given.";
         }

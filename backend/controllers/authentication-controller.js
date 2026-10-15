@@ -3,7 +3,7 @@ const { pool } = require("../config/database-config");
 const { startSession, endSession, getSessionUser, getBannedSessionUser, issueCsrf } = require("../utils/session");
 const { clean, isEmail, normalizePhone, isPhone, publicCustomer, findConflict, insertCustomer, conflictFromError } = require("../utils/customer-accounts");
 const { recordReferral } = require("../utils/referrals");
-const { dealerSessions } = require("../middleware/dealer-authentication");
+const { dealerSessions, DEALER_SESSION_COOKIE, dealerCookieOptions } = require("../middleware/dealer-authentication");
 const { generateToken } = require("../utils/assistant");
 
 const getStatus = async (req, res) => {
@@ -218,6 +218,9 @@ const loginDealer = async (req, res) => {
             dealerId: dealer.dealer_id,
             createdAt: Date.now()
         });
+
+        /* lets the server hand out the dealer pages only to signed-in dealers */
+        res.cookie(DEALER_SESSION_COOKIE, token, dealerCookieOptions({ maxAge: 30 * 24 * 60 * 60 * 1000 }));
 
         return res.json({
             success: true,

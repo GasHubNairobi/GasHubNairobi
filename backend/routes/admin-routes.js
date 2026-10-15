@@ -43,7 +43,11 @@ const customerBanController = require("../controllers/admin-customer-ban-control
 router.patch("/customers/:id/ban", requireAdmin, customerBanController.banCustomer);
 router.patch("/customers/:id/unban", requireAdmin, customerBanController.unbanCustomer);
 router.delete("/customers/:id", requireAdmin, customerBanController.deleteCustomer);
-router.get("/reports", requireAdmin, adminController.getReports);
+const reportController = require("../controllers/report-controller");
+router.get("/reports", requireAdmin, reportController.getReports);
+router.post("/reports/seal", requireAdmin, reportController.sealReport);
+router.get("/reports/verify", requireAdmin, reportController.verifyReport);
+router.get("/reports/history", requireAdmin, reportController.history);
 
 router.get("/admins", requireAdmin, requireSuperUnlock, adminController.getAdmins);
 router.post("/admins", requireAdmin, requireSuperUnlock, adminController.createAdmin);

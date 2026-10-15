@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <!-- light / dark / system theme (chosen on the Profile page): script first, stylesheet last -->
     <script src="gashub-theme.js"></script>
     <meta charset="UTF-8">
@@ -10,7 +11,8 @@
     <script src="customer-loader.js" data-manual></script>
     <link rel="icon" type="image/png" href="/Images/favicon.png">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"></noscript>
     <link rel="stylesheet" href="customer-home.css">
     <style>
 /* GasHub shared dealer styles (blue verified badge, follow, small mobile icons).
@@ -183,6 +185,7 @@
     <link rel="stylesheet" href="customer-cards.css">
     <link rel="stylesheet" href="gashub-theme.css">
     <script src="gashub-ban-guard.js"></script>
+    <link rel="stylesheet" href="/gashub-desktop.css">
 </head>
 <body>
     <script src="customer-nav.js" data-active="home" data-sidebar="true" data-tabs="true"></script>
@@ -352,7 +355,7 @@
 
     <!-- MOBILE BOTTOM NAV -->
     <!-- Map library (OpenStreetMap tiles). If it fails to load, the rest of the page still works. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" defer></script>
     <!-- Tracking helper: provides recordView() / recordPurchase() -->
     <script src="customer-logout.js"></script>
     <script src="customer-photo.js"></script>
@@ -373,7 +376,7 @@
         const PRODUCT_PAGE = "customer-product.html";
         const FAV_KEY = "gasHubFavorites";
         const LOC_KEY = "gasHubLocation";
-        const FALLBACK_IMG = "/Images/watermark.png";
+        const FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%2080%22%3E%3Crect%20width=%2280%22%20height=%2280%22%20fill=%22%23eaf0ff%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%239db3e8%22%20stroke-width=%223%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Crect%20x=%2226%22%20y=%2226%22%20width=%2228%22%20height=%2236%22%20rx=%2210%22/%3E%3Cpath%20d=%22M34%2026v-5h12v5M40%2021v-5%22/%3E%3C/g%3E%3C/svg%3E";
 
         const $ = (s, p = document) => p.querySelector(s);
         const $$ = (s, p = document) => [...p.querySelectorAll(s)];
@@ -736,10 +739,10 @@
         safe(showLocation);
         safe(bindProducts);
 
-        /* keep the loading screen for at least a moment so it never just flashes,
-           and never longer than 7 seconds even if the server is slow */
-        const minWait = new Promise(r => setTimeout(r, 1000));
-        Promise.all([safe(loadProducts), safe(loadDealers), minWait]).then(hideLoader, hideLoader);
+        /* show the loading screen only until the first data arrives,
+           and never longer than 1.5 seconds even if the server is slow (the products fill in when they arrive) */
+        const maxWait = new Promise(r => setTimeout(r, 1500));
+        Promise.race([Promise.all([safe(loadProducts), safe(loadDealers)]), maxWait]).then(hideLoader, hideLoader);
 
         /* Keep stock live: check again every 20 seconds and whenever the customer comes back to the tab,
            so a product the dealer ran out of leaves the belt and the list straight away. */
@@ -755,8 +758,9 @@
     })();
     </script>
     <script src="customer-pay-prompt.js" defer></script>
+    <script src="customer-notifications.js" defer></script>
+    <script src="customer-download.js" defer></script>
     <script src="customer-review-popup.js" defer></script>
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="gashub-assistant.js" defer></script>
 </body>
 </html>

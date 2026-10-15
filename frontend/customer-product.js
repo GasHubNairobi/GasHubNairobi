@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const CHAT_API = "/api/messages";
     const FAV_KEY = "gasHubFavorites";
     const LOC_KEY = "gasHubLocation";
-    const FALLBACK_IMG = "Images/watermark.png";
+    const FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%2080%22%3E%3Crect%20width=%2280%22%20height=%2280%22%20fill=%22%23eaf0ff%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%239db3e8%22%20stroke-width=%223%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Crect%20x=%2226%22%20y=%2226%22%20width=%2228%22%20height=%2236%22%20rx=%2210%22/%3E%3Cpath%20d=%22M34%2026v-5h12v5M40%2021v-5%22/%3E%3C/g%3E%3C/svg%3E";
 
     const $ = (s, p = document) => p.querySelector(s);
     const $$ = (s, p = document) => [...p.querySelectorAll(s)];

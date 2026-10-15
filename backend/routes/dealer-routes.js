@@ -16,8 +16,12 @@ router.post("/login", require("../utils/rate-limit").rateLimit({ windowMs: 15 * 
 // Ends the dealer session on the server (always succeeds, even if the token is already gone).
 router.post("/logout", async (req, res) => {
     try {
-        const token = require("../utils/assistant").getBearerToken(req);
-        if (token) await require("../middleware/dealer-authentication").dealerSessions.delete(token);
+        const { dealerSessions, DEALER_SESSION_COOKIE, dealerCookieOptions } = require("../middleware/dealer-authentication");
+        const bearer = require("../utils/assistant").getBearerToken(req);
+        if (bearer) await dealerSessions.delete(bearer);
+        const m = /(?:^|;\s*)gashub_dealer_session=([^;]+)/.exec(req.headers.cookie || "");
+        if (m) { try { await dealerSessions.delete(decodeURIComponent(m[1])); } catch (e) { /* ignore */ } }
+        res.clearCookie(DEALER_SESSION_COOKIE, dealerCookieOptions());
     } catch (e) { /* ignore: logging out must never fail */ }
     res.json({ success: true });
 });
@@ -26,6 +30,11 @@ router.get("/products/mine", requireDealer, dealerProductController.listMyProduc
 router.post("/products/sync", requireDealer, dealerProductController.syncMyProducts);
 router.put("/logo/mine", requireDealer, controller.updateMyLogo);
 router.get("/profile/mine", requireDealer, controller.getMyProfile);
+const verificationController = require("../controllers/dealer-verification-controller");
+const { rateLimit } = require("../utils/rate-limit");
+router.get("/verification/mine", requireDealer, verificationController.getMine);
+router.post("/verification/pay", rateLimit({ windowMs: 10 * 60 * 1000, max: 20 }), requireDealer, verificationController.pay);
+router.get("/verification/status", rateLimit({ windowMs: 60 * 1000, max: 60, local: true }), requireDealer, verificationController.status);
 router.get("/payouts/mine", requireDealer, require("../controllers/admin-payout-controller").getMyPayouts);
 const dealerPurchaseController = require("../controllers/dealer-purchase-controller");
 router.get("/purchases/mine", requireDealer, dealerPurchaseController.listMine);
@@ -36,6 +45,7 @@ router.put("/profile/mine", requireDealer, controller.updateMyProfile);
 router.get("/working-hours/mine", requireDealer, controller.getMyWorkingHours);
 router.put("/working-hours/mine", requireDealer, controller.updateMyWorkingHours);
 router.post("/heartbeat", requireDealer, messageController.heartbeat);
+router.get("/alerts", requireDealer, messageController.dealerAlerts);
 router.get("/messages/conversations", requireDealer, messageController.dealerConversations);
 router.get("/messages/thread", requireDealer, messageController.dealerThread);
 router.post("/messages", requireDealer, messageController.dealerSend);

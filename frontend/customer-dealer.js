@@ -359,9 +359,7 @@
     /* ================= START ================= */
     async function start() {
         safe(showLocation);
-        var minWait = new Promise(function (r) { setTimeout(r, 1000); });
         try { state.all = await G.load(); } catch (e) { console.error(e); state.all = []; }
-        await minWait;
         $("#dealerLoading").hidden = true;
         render();
         var want = new URLSearchParams(location.search).get("id");

@@ -161,6 +161,12 @@
 
                     </div>
 
+                    <div class="report-actions">
+                        <button type="button" class="secondary-button" id="reportPrintButton">Print Report</button>
+                        <button type="button" class="secondary-button" id="reportPdfButton">Download PDF</button>
+                        <span class="report-actions-note">Every printed or downloaded copy has the GasHub logo, watermarks and a secret report code on every page, and is saved in the report register below.</span>
+                    </div>
+
                 </form>
 
             </section>
@@ -272,7 +278,7 @@
             <!-- =========================
                  ORDER SUMMARY
             ========================== -->
-            <section class="content-card">
+            <section class="content-card" id="reportSecOrders">
 
                 <div class="card-header">
 
@@ -322,7 +328,7 @@
             <!-- =========================
                  PAYMENT SUMMARY
             ========================== -->
-            <section class="content-card">
+            <section class="content-card" id="reportSecPayments">
 
                 <div class="card-header">
 
@@ -343,6 +349,7 @@
 
                         <thead>
                             <tr>
+                                <th>Method</th>
                                 <th>Status</th>
                                 <th>Payments</th>
                                 <th>Total Amount</th>
@@ -353,7 +360,7 @@
 
                             <tr>
                                 <td
-                                    colspan="3"
+                                    colspan="4"
                                     class="table-empty"
                                 >
                                     Generate a report to view payment data.
@@ -372,7 +379,7 @@
             <!-- =========================
                  TOP PRODUCTS
             ========================== -->
-            <section class="content-card">
+            <section class="content-card" id="reportSecProducts">
 
                 <div class="card-header">
 
@@ -423,12 +430,12 @@
             <!-- =========================
                  CUSTOMER SUMMARY
             ========================== -->
-            <section class="content-card">
+            <section class="content-card" id="reportSecCustomers">
 
                 <div class="card-header">
 
                     <div>
-                        <h2>Customer Summary</h2>
+                        <h2>Customers Who Ordered</h2>
 
                         <p>
                             Customer activity for the selected period.
@@ -444,8 +451,10 @@
 
                         <thead>
                             <tr>
-                                <th>Metric</th>
-                                <th>Value</th>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
                             </tr>
                         </thead>
 
@@ -453,7 +462,7 @@
 
                             <tr>
                                 <td
-                                    colspan="2"
+                                    colspan="4"
                                     class="table-empty"
                                 >
                                     Generate a report to view customer data.
@@ -469,6 +478,94 @@
             </section>
 
 
+            <!-- =========================
+                 ORDER REGISTER (Orders report)
+            ========================== -->
+            <section class="content-card" id="reportSecOrderRegister" hidden>
+                <div class="card-header">
+                    <div>
+                        <h2>Order Register</h2>
+                        <p id="reportOrderRegisterNote">Every order in the selected period.</p>
+                    </div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order No.</th><th>Date</th><th>Customer</th><th>Dealer</th><th>Method</th><th>Payment</th><th>Status</th><th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportOrderRegisterBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+
+            <!-- =========================
+                 PAYMENT REGISTER (Payments report)
+            ========================== -->
+            <section class="content-card" id="reportSecPaymentRegister" hidden>
+                <div class="card-header">
+                    <div>
+                        <h2>Payment Register</h2>
+                        <p id="reportPaymentRegisterNote">Every payment in the selected period.</p>
+                    </div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th><th>Reference</th><th>Order No.</th><th>Customer</th><th>Method</th><th>Status</th><th>M-Pesa Code</th><th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportPaymentRegisterBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+
+            <!-- =========================
+                 VERIFY A REPORT
+            ========================== -->
+            <section class="content-card" id="reportSecVerify">
+                <div class="card-header">
+                    <div>
+                        <h2>Verify a Report</h2>
+                        <p>Type the report code printed in the footer of any GasHub report (it looks like GHR-000123-ABCD2345). It is checked against the report register, so a forged or edited copy cannot pass.</p>
+                    </div>
+                </div>
+                <form id="reportVerifyForm" class="verify-form">
+                    <input type="text" id="reportVerifyCode" placeholder="GHR-000123-ABCD2345" autocomplete="off" spellcheck="false" maxlength="40">
+                    <button type="submit" class="primary-button" id="reportVerifyButton">Check Code</button>
+                </form>
+                <div class="verify-result" id="reportVerifyResult" hidden></div>
+            </section>
+
+
+            <!-- =========================
+                 REPORT REGISTER
+            ========================== -->
+            <section class="content-card" id="reportSecHistory">
+                <div class="card-header">
+                    <div>
+                        <h2>Report Register</h2>
+                        <p>Every report that was printed or downloaded: who prepared it, when, and its code. The latest 100 are shown.</p>
+                    </div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th><th>Report</th><th>Period</th><th>Copy</th><th>Prepared By</th><th>Date</th><th>Total Sales</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportHistoryBody">
+                            <tr><td colspan="7" class="table-empty">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
         </div>
 
     </main>
@@ -479,6 +576,7 @@
     ========================== -->
     <script src="admin-sidebar.js"></script>
 <script src="admin-main.js"></script>
+    <script src="admin-report-pdf.js"></script>
     <script src="admin-report.js"></script>
 
 </body>

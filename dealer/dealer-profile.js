@@ -34,6 +34,7 @@ const DealerProfileApp = (function () {
     function init() {
         populateFormFromActiveProfile();
         checkAndRenderApprovalStatus();
+        try { renderAccountInfo(JSON.parse(localStorage.getItem("gashub_dealer") || "{}")); } catch (e) { renderAccountInfo({}); }
         refreshAccountStatus();
         setInterval(refreshAccountStatus, 60000);
         initBusinessForm();
@@ -126,6 +127,35 @@ const DealerProfileApp = (function () {
         }
     }
 
+    /* Account Information card: type, status, dealer ID and registration date.
+       Shows what is saved on this device at once, then the server's values once they arrive. */
+    function renderAccountInfo(d) {
+        d = d || {};
+        const code = d.dealer_code || d.dealerCode || d.code || "";
+        const rawId = d.id || localStorage.getItem("gashub_dealer_id") || "";
+        const idText = code || (rawId ? "GH-" + String(rawId).padStart(4, "0") : "—");
+        setText("[data-profile-dealer-id]", idText);
+
+        const created = d.created_at || d.createdAt || d.registeredAt || "";
+        let dateText = "—";
+        if (created) {
+            const dt = new Date(created);
+            if (!isNaN(dt.getTime())) dateText = dt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+        }
+        setText("[data-profile-created-date]", dateText);
+
+        const st = String(d.status || "active").toLowerCase();
+        const label = st === "suspended" ? "Suspended" : (st === "inactive" || st === "disabled") ? "Inactive" : (st === "pending" || st === "pending_approval") ? "Pending approval" : "Active";
+        const pill = document.querySelector("[data-profile-account-status]");
+        if (pill) {
+            const dot = pill.querySelector(".dealer-profile-status-dot");
+            pill.textContent = "";
+            if (dot) pill.appendChild(dot);
+            pill.appendChild(document.createTextNode(" " + label));
+            pill.classList.toggle("is-warn", label !== "Active");
+        }
+    }
+
     /* Ask the server for the dealer's current account status (the admin may have suspended it) */
     async function refreshAccountStatus() {
         const token = localStorage.getItem("gashub_dealer_token");
@@ -139,8 +169,9 @@ const DealerProfileApp = (function () {
             const result = await response.json();
             if (result && result.success && result.dealer) {
                 const cached = JSON.parse(localStorage.getItem("gashub_dealer") || "{}");
-                localStorage.setItem("gashub_dealer", JSON.stringify(Object.assign({}, cached, { status: result.dealer.status })));
+                localStorage.setItem("gashub_dealer", JSON.stringify(Object.assign({}, cached, { status: result.dealer.status, dealer_code: result.dealer.dealer_code, created_at: result.dealer.created_at })));
                 checkAndRenderApprovalStatus();
+                renderAccountInfo(result.dealer);
             }
         } catch (err) { /* keep what is shown */ }
     }
@@ -672,257 +703,18 @@ const DealerProfileApp = (function () {
     }
 
     /* =========================================================
-       7. VERIFICATION REQUEST (BADGE / GET VERIFIED BUTTON + PAYMENT)
+       7. VERIFICATION (BADGE / GET VERIFIED BUTTON + PAYMENT)
        ---------------------------------------------------------
-       Status: none -> pending (paid, waiting for admin) -> verified
-       Fee = the amount the GasHub Admin set for THIS dealer.
+       Handled by dealer-verification.js: the server says whether this dealer is verified, the fee is the one the GasHub
+       Admin set for THIS dealer, and the dealer is verified automatically once the M-Pesa payment is confirmed.
        ========================================================= */
-
-    // Set to true if the badge should be given immediately after payment
-    // (instead of waiting for the GasHub Admin to approve it).
-    const VERIFY_INSTANTLY_AFTER_PAYMENT = false;
-
-    let verificationPaymentBusy = false;
-
     function getDealerId() {
         const p = (window.GasHubCore && GasHubCore.getActiveProfile && GasHubCore.getActiveProfile()) || {};
         return String(p.dealerId || p.dealer_id || p.id || "default");
     }
 
-    /* Fee set by admin for this dealer. Returns a number, or null when not set yet.
-       Reads GasHubCore.getVerificationFee(dealerId) if it exists, otherwise
-       localStorage "gashub_verification_fees" = { "<dealerId>": 2500 } */
-    function getAssignedVerificationFee() {
-        try {
-            if (window.GasHubCore && typeof GasHubCore.getVerificationFee === "function") {
-                const coreFee = Number(GasHubCore.getVerificationFee(getDealerId()));
-                if (coreFee > 0) return coreFee;
-            }
-        } catch (err) { /* continue */ }
-
-        try {
-            const fees = JSON.parse(localStorage.getItem("gashub_verification_fees")) || {};
-            const fee = Number(fees[getDealerId()]);
-            if (fee > 0) return fee;
-        } catch (err) { /* continue */ }
-
-        return null;
-    }
-
-    function formatKsh(amount) {
-        return "KSh " + Number(amount).toLocaleString("en-KE");
-    }
-
-    function getVerificationState() {
-        if (localStorage.getItem("gashub_dealer_verified") === "true") return "verified";
-        try {
-            const rec = JSON.parse(localStorage.getItem("gashub_dealer_verification"));
-            if (rec && rec.status) return rec.status;
-        } catch (err) { /* continue */ }
-        return "none";
-    }
-
-    function renderVerificationState() {
-        const state = getVerificationState();
-        const verified = state === "verified";
-        const pending = state === "pending";
-
-        // Profile card: badge or "Get verified" button next to the business name
-        const profileBadge = document.getElementById("profileVerifiedBadge");
-        const profileBtn = document.getElementById("btnProfileRequestVerification");
-        const profileBtnText = document.getElementById("profileVerificationBtnText");
-
-        if (profileBadge) profileBadge.hidden = !verified;
-        if (profileBtn) {
-            profileBtn.hidden = verified;
-            profileBtn.disabled = pending;
-            profileBtn.classList.toggle("is-pending", pending);
-        }
-        if (profileBtnText) profileBtnText.textContent = pending ? "Verification pending" : "Get verified";
-
-        // Sidebar mini-profile
-        const sidebarBadge = document.getElementById("sidebarVerifiedBadge");
-        const sidebarBtn = document.getElementById("btnRequestVerification");
-        if (sidebarBadge) sidebarBadge.classList.toggle("verified-active", verified);
-        if (sidebarBtn) {
-            if (verified) {
-                sidebarBtn.classList.add("is-verified");
-                sidebarBtn.innerHTML = '<i class="fa-solid fa-circle-check fa-sm text-success"></i> <span>EPRA Verified Outlet</span>';
-                sidebarBtn.disabled = true;
-            } else if (pending) {
-                const label = document.getElementById("verificationBtnText");
-                if (label) label.textContent = "Verification Pending";
-                sidebarBtn.disabled = true;
-            }
-        }
-    }
-
     function initVerificationRequest() {
-        renderVerificationState();
-
-        const modal = document.getElementById("verificationModalBackdrop");
-        const form = document.getElementById("verificationForm");
-        if (!modal || !form) return;
-
-        ["btnProfileRequestVerification", "btnRequestVerification"].forEach(function (id) {
-            const btn = document.getElementById(id);
-            if (btn) {
-                btn.addEventListener("click", function () {
-                    if (getVerificationState() === "none") openVerificationModal();
-                });
-            }
-        });
-
-        const closeM = () => { if (!verificationPaymentBusy) modal.hidden = true; };
-        const closeMBtn = document.getElementById("closeVerificationModalBtn");
-        const cancelBtn = document.getElementById("cancelVerificationBtn");
-        if (closeMBtn) closeMBtn.addEventListener("click", closeM);
-        if (cancelBtn) cancelBtn.addEventListener("click", closeM);
-
-        form.addEventListener("submit", handleVerificationPayment);
-    }
-
-    function openVerificationModal() {
-        const modal = document.getElementById("verificationModalBackdrop");
-        if (!modal) return;
-
-        const profile = (window.GasHubCore && GasHubCore.getActiveProfile && GasHubCore.getActiveProfile()) || {};
-        if (!getVal("verifyOutletName")) setVal("verifyOutletName", profile.businessName || "");
-        if (!getVal("verifyMpesaPhone")) setVal("verifyMpesaPhone", profile.phone || "");
-
-        const fee = getAssignedVerificationFee();
-        const feeAmount = document.getElementById("verificationFeeAmount");
-        const feePill = document.getElementById("verificationFeePill");
-        const submitBtn = document.getElementById("submitVerificationBtn");
-        const payText = document.getElementById("verificationPayBtnText");
-
-        if (fee) {
-            if (feeAmount) feeAmount.textContent = formatKsh(fee);
-            if (feePill) feePill.classList.remove("is-missing");
-            if (submitBtn) submitBtn.disabled = false;
-            if (payText) payText.textContent = "Pay " + formatKsh(fee) + " via M-Pesa";
-            setVerificationStatus("", "");
-        } else {
-            if (feeAmount) feeAmount.textContent = "Not set yet";
-            if (feePill) feePill.classList.add("is-missing");
-            if (submitBtn) submitBtn.disabled = true;
-            if (payText) payText.textContent = "Pay via M-Pesa";
-            setVerificationStatus("GasHub Admin has not set a verification fee for your outlet yet. Please contact GasHub support.", "error");
-        }
-
-        modal.hidden = false;
-    }
-
-    function setVerificationStatus(message, kind) {
-        const box = document.getElementById("verificationPayStatus");
-        if (!box) return;
-        box.className = "verification-pay-status";
-        box.textContent = message || "";
-        if (!message) return;
-        box.classList.add("is-visible");
-        if (kind === "error") box.classList.add("is-error");
-        if (kind === "success") box.classList.add("is-success");
-    }
-
-    /* 07XX / 01XX / +2547XX / 2547XX  ->  2547XXXXXXXX (null when invalid) */
-    function normalizeKenyanPhone(raw) {
-        const digits = String(raw || "").replace(/[\s\-()]/g, "");
-        const m = digits.match(/^(?:\+?254|0)?([17]\d{8})$/);
-        return m ? "254" + m[1] : null;
-    }
-
-    /* Sends the M-Pesa STK push.
-       Connect your backend by defining GasHubCore.initiateMpesaStk({ phone, amount, reference, description })
-       that returns (a Promise of) { success: true/false, receipt, message }.
-       Without it this SIMULATES a successful payment so you can test the screens. */
-    function requestMpesaPayment(payload) {
-        if (window.GasHubCore && typeof GasHubCore.initiateMpesaStk === "function") {
-            return Promise.resolve(GasHubCore.initiateMpesaStk(payload));
-        }
-        console.warn("[DealerProfileApp] GasHubCore.initiateMpesaStk not found - SIMULATING M-Pesa payment.");
-        return new Promise(function (resolve) {
-            setTimeout(function () {
-                resolve({ success: true, receipt: "SIM" + Date.now().toString(36).toUpperCase() });
-            }, 3000);
-        });
-    }
-
-    async function handleVerificationPayment(e) {
-        e.preventDefault();
-        if (verificationPaymentBusy) return;
-
-        const outletName = getVal("verifyOutletName").trim();
-        const license = getVal("verifyEpraLicense").trim();
-        const phone = normalizeKenyanPhone(getVal("verifyMpesaPhone"));
-        const amount = getAssignedVerificationFee();
-
-        if (!amount) {
-            setVerificationStatus("No verification fee has been set for your outlet yet.", "error");
-            return;
-        }
-        if (!outletName || !license) {
-            setVerificationStatus("Enter your outlet name and EPRA license number.", "error");
-            return;
-        }
-        if (!phone) {
-            setVerificationStatus("Enter a valid Safaricom number, e.g. 0712 345 678.", "error");
-            return;
-        }
-
-        const submitBtn = document.getElementById("submitVerificationBtn");
-        const payText = document.getElementById("verificationPayBtnText");
-        const originalLabel = payText ? payText.textContent : "";
-
-        verificationPaymentBusy = true;
-        if (submitBtn) submitBtn.disabled = true;
-        if (payText) payText.textContent = "Waiting for M-Pesa...";
-        setVerificationStatus("M-Pesa prompt sent to " + phone + ". Enter your PIN on your phone to pay " + formatKsh(amount) + ".", "info");
-
-        try {
-            const result = await requestMpesaPayment({
-                phone: phone,
-                amount: amount,
-                reference: "VERIFY-" + getDealerId(),
-                description: "GasHub dealer verification"
-            });
-
-            if (!result || !result.success) {
-                throw new Error((result && result.message) || "Payment was not completed.");
-            }
-
-            const record = {
-                status: VERIFY_INSTANTLY_AFTER_PAYMENT ? "verified" : "pending",
-                dealerId: getDealerId(),
-                outletName: outletName,
-                epraLicense: license,
-                amount: amount,
-                phone: phone,
-                receipt: result.receipt || "",
-                paidAt: new Date().toISOString()
-            };
-            localStorage.setItem("gashub_dealer_verification", JSON.stringify(record));
-            if (VERIFY_INSTANTLY_AFTER_PAYMENT) localStorage.setItem("gashub_dealer_verified", "true");
-
-            if (window.GasHubCore && typeof GasHubCore.submitVerificationRequest === "function") {
-                GasHubCore.submitVerificationRequest(record);
-            }
-
-            verificationPaymentBusy = false;
-            const modal = document.getElementById("verificationModalBackdrop");
-            if (modal) modal.hidden = true;
-            renderVerificationState();
-            GasHubCore.showToast(
-                VERIFY_INSTANTLY_AFTER_PAYMENT
-                    ? "Payment received. Your outlet is now verified!"
-                    : "Payment received. GasHub Admin will review your verification request.",
-                "success"
-            );
-        } catch (err) {
-            verificationPaymentBusy = false;
-            if (submitBtn) submitBtn.disabled = false;
-            if (payText) payText.textContent = originalLabel;
-            setVerificationStatus(err.message || "Payment failed. Please try again.", "error");
-        }
+        if (window.GasHubVerification) window.GasHubVerification.refresh();
     }
 
     /* =========================================================

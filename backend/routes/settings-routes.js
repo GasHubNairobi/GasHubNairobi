@@ -32,4 +32,15 @@ router.get("/platform", async (req, res) => {
     res.json({ success: true, customer_notifications: p.customer_notifications, dealer_availability: p.dealer_availability, maintenance_mode: p.maintenance_mode, maintenance_title: p.maintenance_title, maintenance_message: p.maintenance_message });
 });
 
+/* The "Download the app" link in the customer header. The admin sets it in Settings > GasHub Mobile App (Google Play).
+   Only returned once the app is live on the Play Store (or the admin switched it on by hand). */
+router.get("/app-download", async (req, res) => {
+    try {
+        const g = require("../utils/gashub-settings");
+        const cfg = await g.getAppConfig(), url = g.appLink(cfg);
+        const live = url ? await g.playStoreLive(cfg) : false;
+        res.json({ success: true, live: !!(live && url), url: live && url ? url : "" });
+    } catch (e) { res.json({ success: true, live: false, url: "" }); }
+});
+
 module.exports = router;

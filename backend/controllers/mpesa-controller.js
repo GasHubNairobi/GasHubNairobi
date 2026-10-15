@@ -143,7 +143,11 @@ async function settleFailed(checkoutRequestId, code, desc) {
 /* POST /api/payments/mpesa/callback/:secret  (called by Safaricom, not by browsers). Always answers 200 quickly. */
 async function callback(req, res) {
     if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();   /* look like nothing is here */
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
+    /* a dealer's verification payment? It is finished here BEFORE answering (Netlify may stop the function right after it answers) */
+    try {
+        if (await require("./dealer-verification-controller").handleCallback(req.body)) return res.json({ ResultCode: 0, ResultDesc: "Accepted" });
+    } catch (e) { console.error("Verification callback error:", e && e.message); }
+    /* Netlify stops a function the moment it answers, so the payment is fully processed FIRST and Safaricom is answered last. */
     try {
         await ensureTable();
         const cb = req.body && req.body.Body && req.body.Body.stkCallback;
@@ -172,6 +176,8 @@ async function callback(req, res) {
         /* "pending": leave it, the status check below will settle it */
     } catch (e) {
         console.error("M-Pesa callback processing error:", e && e.message);
+    } finally {
+        if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     }
 }
 
@@ -219,7 +225,6 @@ function c2bValidation(req, res) {
 /* POST /api/payments/mpesa/c2b/confirmation/:secret : saved so the code can be checked later (also works if the customer pays before typing the code) */
 async function c2bConfirmation(req, res) {
     if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     try {
         await ensureTable();
         const b = req.body || {};
@@ -230,6 +235,7 @@ async function c2bConfirmation(req, res) {
             `INSERT INTO mpesa_c2b_payments (trans_id, amount, msisdn, bill_ref, trans_time, raw) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (trans_id) DO NOTHING`,
             [id, amount, clean(b.MSISDN, 40), clean(b.BillRefNumber, 60), clean(b.TransTime, 20), JSON.stringify(b).slice(0, 5000)]);
     } catch (e) { console.error("M-Pesa C2B confirmation error:", e && e.message); }
+    finally { if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" }); }   /* answered AFTER saving: Netlify stops a function once it answers */
 }
 
 /* POST /api/payments/mpesa/verify-code  { order_id, code }
@@ -290,4 +296,23 @@ async function verifyCode(req, res) {
     }
 }
 
-module.exports = { getConfig, stkPush, callback, status, c2bValidation, c2bConfirmation, verifyCode };
+/* Safety net for Netlify (called every minute by netlify/functions/cron-minute.js): a customer may close the page before the
+   callback is processed. Any prompt still "pending" after 20 seconds is checked with Safaricom and settled (paid / failed). */
+async function reconcilePending() {
+    if (!mpesa.isConfigured()) return 0;
+    await ensureTable();
+    const rows = (await pool.query(
+        "SELECT checkout_request_id, created_at FROM mpesa_stk_requests WHERE status = 'pending' AND created_at < NOW() - interval '20 seconds' AND created_at > NOW() - interval '2 hours' ORDER BY created_at LIMIT 10")).rows;
+    let done = 0;
+    for (const r of rows) {
+        try {
+            const q = await mpesa.stkQuery(r.checkout_request_id);
+            if (q.state === "paid") { await settlePaid(r.checkout_request_id, { receipt: null, resultDesc: q.desc }); done++; }
+            else if (q.state === "failed") { await settleFailed(r.checkout_request_id, q.code, q.desc); done++; }
+            else if (Date.now() - new Date(r.created_at).getTime() > PROMPT_LIFETIME_MS) { await settleFailed(r.checkout_request_id, "1037", "The prompt expired before it was paid."); done++; }
+        } catch (e) { console.error("M-Pesa reconcile error:", e && e.message); }
+    }
+    return done;
+}
+
+module.exports = { reconcilePending, getConfig, stkPush, callback, status, c2bValidation, c2bConfirmation, verifyCode };

@@ -162,7 +162,7 @@
     function reorderUrl(p) {
         var q = new URLSearchParams({
             productId: p.productId != null ? p.productId : "", productName: p.productName || "", details: p.details || "",
-            image: (p.image && String(p.image).length <= 300 && String(p.image).indexOf("data:") !== 0) ? p.image : "Images/watermark.png", dealer: p.dealer || "", dealerId: p.dealerId != null ? p.dealerId : "",
+            image: (p.image && String(p.image).length <= 300 && String(p.image).indexOf("data:") !== 0) ? p.image : "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%2080%22%3E%3Crect%20width=%2280%22%20height=%2280%22%20fill=%22%23eaf0ff%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%239db3e8%22%20stroke-width=%223%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Crect%20x=%2226%22%20y=%2226%22%20width=%2228%22%20height=%2236%22%20rx=%2210%22/%3E%3Cpath%20d=%22M34%2026v-5h12v5M40%2021v-5%22/%3E%3C/g%3E%3C/svg%3E", dealer: p.dealer || "", dealerId: p.dealerId != null ? p.dealerId : "",
             quantity: String(p.quantity || 1), price: String(p.price || 0)
         });
         return "customer-checkout.html?" + q.toString();

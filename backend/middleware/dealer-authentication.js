@@ -4,6 +4,12 @@ const { getBearerToken } = require("../utils/assistant");
 /* Stored in the database (not in memory) so sessions work across Netlify function instances. */
 const dealerSessions = require("../utils/session-store").createStore("dealer", 30 * 24 * 60 * 60 * 1000);
 
+/* HttpOnly cookie that lets the server protect the dealer HTML pages (the API itself uses the Bearer token). */
+const DEALER_SESSION_COOKIE = "gashub_dealer_session";
+const dealerCookieOptions = (extra = {}) => ({
+    httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/dealer", ...extra
+});
+
 async function requireDealer(req, res, next) {
     try {
         const token = getBearerToken(req);
@@ -36,3 +42,5 @@ async function requireDealer(req, res, next) {
 module.exports = requireDealer;
 module.exports.requireDealer = requireDealer;
 module.exports.dealerSessions = dealerSessions;
+module.exports.DEALER_SESSION_COOKIE = DEALER_SESSION_COOKIE;
+module.exports.dealerCookieOptions = dealerCookieOptions;

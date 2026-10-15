@@ -158,10 +158,12 @@ async function dealerConversations(req, res) {
        WHERE m.dealer_id = $1
        ORDER BY m.customer_id, m.product_id, m.id DESC`, [dealerId]);
     const rows = r.rows.sort((a, b) => new Date(b.last_at) - new Date(a.last_at));
+    rows.forEach((c) => { c.unreplied = c.last_from === "customer"; });
     res.set("Cache-Control", "no-store");
     return res.json({
       success: true,
       unread_total: rows.reduce((n, c) => n + c.unread, 0),
+      unreplied_total: rows.filter((c) => c.unreplied).length,
       conversations: rows
     });
   } catch (error) {
@@ -243,4 +245,87 @@ async function heartbeat(req, res) {
   }
 }
 
-module.exports = { customerSend, customerThread, customerUnread, dealerConversations, dealerThread, dealerSend, heartbeat };
+
+/* GET /api/dealers/alerts -> the real numbers behind the sidebar badges, the bell and the reminder that repeats every minute
+     pending_orders      orders still waiting for this dealer to confirm (status "pending")
+     unreplied_messages  conversations whose last message is from the customer (the dealer has not answered yet) */
+async function dealerAlerts(req, res) {
+  try {
+    await ensureTable();
+    const dealerId = String(req.dealer.dealer_id);
+    const o = await pool.query(
+      `SELECT COUNT(*)::int AS n, MIN(created_at) AS oldest,
+              (ARRAY_AGG(order_number ORDER BY created_at ASC))[1] AS oldest_number
+         FROM orders WHERE dealer_id::text = $1 AND status::text = 'pending'`, [dealerId]);
+    const m = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM (
+         SELECT DISTINCT ON (customer_id, product_id) sender
+           FROM dealer_messages WHERE dealer_id = $1
+          ORDER BY customer_id, product_id, id DESC) last WHERE sender = 'customer'`, [dealerId]);
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      success: true,
+      pending_orders: o.rows[0].n,
+      oldest_pending_at: o.rows[0].oldest,
+      oldest_pending_number: o.rows[0].oldest_number,
+      unreplied_messages: m.rows[0].n
+    });
+  } catch (error) {
+    console.error("Dealer alerts error:", error);
+    return res.status(500).json({ success: false, message: "Unable to load your alerts." });
+  }
+}
+
+/* GET /api/my/notifications -> what the customer should be told about right now:
+     orders      the dealer confirmed and the customer still has to pay  (click -> that order's checkout)
+     messages    dealer replies the customer has not opened yet           (click -> that exact chat)
+   Each item has a stable "key" so the page shows it once. */
+async function customerNotifications(req, res) {
+  try {
+    await ensureTable();
+    await require("../utils/payment-flow").ensurePaymentFlowColumns();
+    const customerId = String(req.user.id);
+    const orders = await pool.query(
+      `SELECT o.order_number, o.total_amount, o.amount_paid, o.dealer_name_snapshot, o.updated_at
+         FROM orders o
+        WHERE o.customer_id = $1
+          AND o.status::text IN ('confirmed','processing')
+          AND o.payment_status::text <> 'paid'
+          AND NOT (o.payment_method_chosen IS NOT FALSE AND LOWER(COALESCE(o.payment_method::text,'')) = 'cash')
+          AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id AND p.status::text = 'pending' AND COALESCE(p.mpesa_receipt_number,'') <> '')
+          AND COALESCE(o.total_amount,0) - COALESCE(o.amount_paid,0) > 0
+        ORDER BY o.updated_at DESC LIMIT 10`, [customerId]);
+    const msgs = await pool.query(
+      `SELECT m.dealer_id, m.product_id, COUNT(*)::int AS unread, MAX(m.id) AS last_id,
+              (ARRAY_AGG(m.body ORDER BY m.id DESC))[1] AS last_text,
+              d.business_name AS dealer_name, p.name AS product_name, p.image AS product_image
+         FROM dealer_messages m
+         LEFT JOIN dealers d ON d.id::text = m.dealer_id
+         LEFT JOIN products p ON p.id::text = m.product_id
+        WHERE m.customer_id = $1 AND m.sender = 'dealer' AND m.read_at IS NULL
+        GROUP BY m.dealer_id, m.product_id, d.business_name, p.name, p.image
+        ORDER BY MAX(m.id) DESC LIMIT 10`, [customerId]);
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      success: true,
+      orders: orders.rows.map((o) => ({
+        key: "order:" + o.order_number,
+        order_number: o.order_number,
+        dealer_name: o.dealer_name_snapshot || "Your dealer",
+        due: Math.max(0, Number(o.total_amount || 0) - Number(o.amount_paid || 0)),
+        at: o.updated_at
+      })),
+      messages: msgs.rows.map((x) => ({
+        key: "msg:" + x.dealer_id + ":" + (x.product_id || "") + ":" + Number(x.last_id),
+        dealer_id: x.dealer_id, product_id: x.product_id || "", unread: x.unread, last_id: Number(x.last_id),
+        last_text: x.last_text, dealer_name: x.dealer_name || "A dealer",
+        product_name: x.product_name || "", product_image: x.product_image || ""
+      }))
+    });
+  } catch (error) {
+    console.error("Customer notifications error:", error);
+    return res.status(500).json({ success: false, message: "Unable to check your notifications." });
+  }
+}
+
+module.exports = { customerSend, customerThread, customerUnread, customerNotifications, dealerAlerts, dealerConversations, dealerThread, dealerSend, heartbeat };

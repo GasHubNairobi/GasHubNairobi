@@ -12,7 +12,7 @@
   NODE_VERSION = "20"
   # Netlify's secrets scan matches text, not meaning: harmless words such as "postgres" or "http://localhost:3000" in the
   # example/docs files look like values set in the dashboard. No real secrets are in the repo.
-  SECRETS_SCAN_OMIT_PATHS = ".env.example,NETLIFY-SUPABASE-DEPLOY.md,README.md,ADMIN-SECURITY-FIX.txt,backend/package-lock.json"
+  SECRETS_SCAN_OMIT_PATHS = ".env.example,NETLIFY-SUPABASE-DEPLOY.md,README.md,package-lock.json"
   SECRETS_SCAN_OMIT_KEYS = "APP_BASE_URL,PUBLIC_URL,DB_HOST,DB_NAME,DB_PORT,PORT,NODE_ENV"
 
 [functions]
@@ -21,6 +21,7 @@
   # Files the backend reads at run time (the admin pages are private, so they ship with the function instead of the CDN)
   included_files = [
     "admin/*.html",
+    "dealer/*.html",
     "frontend/customer-home.html",
     "backend/assets/email/*",
     "backend/allow-customer-and-dealer-same-email.sql"
@@ -37,6 +38,13 @@
   schedule = "0 * * * *"        # delete customer accounts after their 7-day wait
 
 # ---- routing ----
+# 0) The bare address opens the customer home page straight from the CDN (no function wake-up, no "Opening GasHub..." screen)
+[[redirects]]
+  from = "/"
+  to = "/customer-home.html"
+  status = 200
+  force = true
+
 # 1) The API
 [[redirects]]
   from = "/api/*"
@@ -49,6 +57,13 @@
 [[redirects]]
   from = "/admin/*"
   to = "/.netlify/functions/api/admin/:splat"
+  status = 200
+
+# 2b) Private dealer pages: same idea. Only dealer-login.html / dealer-application.html are on the CDN; every other
+#     dealer .html page is served by the function after it checks the dealer's login cookie.
+[[redirects]]
+  from = "/dealer/*"
+  to = "/.netlify/functions/api/dealer/:splat"
   status = 200
 
 # 3) Anything else that is not a real file: same behaviour as server.js
@@ -65,6 +80,7 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     Permissions-Policy = "geolocation=(self), camera=(self), microphone=()"
 
 # images are kept by the phone for a week; pages, scripts and styles are re-checked each visit
@@ -84,3 +100,16 @@
   for = "/admin/images/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#d97706">
@@ -62,7 +63,7 @@
             <a href="dealer-orders.html" class="nav-item">
                 <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
                 <span>Orders</span>
-                <span class="nav-badge" id="sidebarOrdersBadge">4</span>
+                <span class="nav-badge" id="sidebarOrdersBadge" hidden>0</span>
             </a>
 
             <a href="dealer-messengers.html" class="nav-item">
@@ -98,7 +99,7 @@
             <a href="dealer-messages.html" class="nav-item">
                 <i class="fa-solid fa-comments nav-icon" aria-hidden="true"></i>
                 <span>Messages</span>
-                <span class="nav-badge info" id="sidebarMessagesBadge">3</span>
+                <span class="nav-badge info" id="sidebarMessagesBadge" hidden>0</span>
             </a>
 
             <a href="dealer-profile.html" class="nav-item active" aria-current="page">
@@ -981,6 +982,8 @@
 
                         <div class="dealer-profile-account-item">
 
+                            <i class="fa-solid fa-user-tie dealer-profile-account-icon" aria-hidden="true"></i>
+
                             <span>
                                 Account Type
                             </span>
@@ -994,11 +997,13 @@
 
                         <div class="dealer-profile-account-item">
 
+                            <i class="fa-solid fa-shield-halved dealer-profile-account-icon" aria-hidden="true"></i>
+
                             <span>
                                 Account Status
                             </span>
 
-                            <strong class="dealer-profile-account-active">
+                            <strong class="dealer-profile-account-active" data-profile-account-status>
                                 <span class="dealer-profile-status-dot"></span>
                                 Active
                             </strong>
@@ -1007,6 +1012,8 @@
 
 
                         <div class="dealer-profile-account-item">
+
+                            <i class="fa-solid fa-id-badge dealer-profile-account-icon" aria-hidden="true"></i>
 
                             <span>
                                 Dealer ID
@@ -1022,6 +1029,8 @@
 
 
                         <div class="dealer-profile-account-item">
+
+                            <i class="fa-solid fa-calendar-check dealer-profile-account-icon" aria-hidden="true"></i>
 
                             <span>
                                 Date Registered
@@ -1098,62 +1107,6 @@
 
 </div>
 
-    <!-- Verification Modal -->
-    <div class="modal-backdrop" id="verificationModalBackdrop" hidden>
-        <div class="modal-dialog modal-dialog-sm" role="dialog" aria-modal="true" aria-labelledby="verificationModalTitle">
-            <div class="modal-header">
-                <div class="modal-header-title">
-                    <div class="modal-icon-badge verified">
-                        <svg viewBox="0 0 24 24" class="tiktok-badge-svg-modal" aria-hidden="true">
-                            <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
-                            <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 id="verificationModalTitle">Request Blue Badge Verification</h2>
-                        <span class="modal-subtitle">Official GasHub &amp; EPRA Dealer Badge</span>
-                    </div>
-                </div>
-                <button type="button" class="btn-modal-close" id="closeVerificationModalBtn" aria-label="Close dialog">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <form id="verificationForm">
-                <div class="modal-body">
-                    <div class="verification-perks-box">
-                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Official TikTok-style Blue Check Badge on your outlet profile</span></div>
-                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Top ranking in customer cylinder searches on GasHub App</span></div>
-                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>EPRA Safety Compliance digital certificate seal</span></div>
-                    </div>
-                    <div class="verification-fee-pill" id="verificationFeePill">
-                        <span>Admin Verification Fee:</span>
-                        <strong id="verificationFeeAmount">—</strong>
-                    </div>
-                    <div class="form-group">
-                        <label for="verifyOutletName" class="form-label required">Depot / Outlet Name</label>
-                        <input type="text" id="verifyOutletName" class="form-control" required placeholder="e.g. GasHub Nairobi Central Depot">
-                    </div>
-                    <div class="form-group">
-                        <label for="verifyEpraLicense" class="form-label required">EPRA License Number</label>
-                        <input type="text" id="verifyEpraLicense" class="form-control" required placeholder="e.g. EPRA/LPG/2026/8942">
-                    </div>
-                    <div class="form-group">
-                        <label for="verifyMpesaPhone" class="form-label required">M-Pesa Phone Number (for STK Prompt)</label>
-                        <input type="tel" id="verifyMpesaPhone" class="form-control" required placeholder="07XX XXX XXX or 2547XX XXX XXX">
-                    </div>
-                    <div class="verification-pay-status" id="verificationPayStatus" role="status" aria-live="polite"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" id="cancelVerificationBtn">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="submitVerificationBtn">
-                        <i class="fa-solid fa-mobile-screen-button fa-sm"></i>
-                        <span id="verificationPayBtnText">Pay via M-Pesa</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- =====================================================
          INTERACTIVE MAP LOCATION PICKER MODAL (PIN GPS OR CHOOSE)
          ===================================================== -->
@@ -1220,11 +1173,12 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="gashub-core.js"></script>
+    <script src="dealer-verification.js" defer></script>
     <script src="dealer-logout.js"></script>
+    <script src="dealer-alerts.js" defer></script>
 <script src="dealer-main.js"></script>
 <script src="dealer-profile.js"></script>
 
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="dealer-mobile.js" defer></script>
 </body>
 </html>

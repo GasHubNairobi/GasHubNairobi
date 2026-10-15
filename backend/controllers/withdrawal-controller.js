@@ -367,7 +367,6 @@ async function settleAutoPaid(row, receipt) {
 /* POST /api/payments/mpesa/b2c/result/:secret  and  /timeout/:secret   (Safaricom calls these) */
 async function b2cResult(req, res) {
     if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     try {
         await ensureSchema();
         const r = req.body && req.body.Result;
@@ -387,10 +386,10 @@ async function b2cResult(req, res) {
             await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2 WHERE id = $1 AND payout_origin_id = $3 AND status IN ('pending','approved')", [row.id, why, origin]);
         }
     } catch (e) { console.error("M-Pesa payout result error:", e && e.message); }
+    finally { if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" }); }   /* answered AFTER saving (Netlify stops a function once it answers) */
 }
 async function b2cTimeout(req, res) {
     if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     try {
         await ensureSchema();
         const r = req.body && req.body.Result;
@@ -399,6 +398,7 @@ async function b2cTimeout(req, res) {
         await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2 WHERE payout_origin_id = $1 AND payout_state = 'sending'",
             [origin, "M-Pesa did not answer in time. Check your M-Pesa statement before sending again."]);
     } catch (e) { console.error("M-Pesa payout timeout error:", e && e.message); }
+    finally { if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" }); }
 }
 
 /* the scheduled payout: when the time arrives, every waiting / approved request that has not been tried yet is sent.

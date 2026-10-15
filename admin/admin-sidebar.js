@@ -93,9 +93,10 @@
             '</div>' +
             '<nav class="gh-sb-nav" aria-label="Admin navigation">' + links + '</nav>' +
             '<div class="gh-sb-footer">' +
-            '<div class="gh-sb-user"><div class="gh-sb-avatar">' + esc(initials(name)) + '</div>' +
-            '<div class="gh-sb-user-meta"><strong>' + esc(name) + '</strong><small>' + esc(role) + '</small></div></div>' +
-            '<div class="gh-sb-status"><span class="gh-sb-dot"></span><span>System Online</span></div>' +
+            '<div class="gh-sb-account" title="' + esc(name) + ' - ' + esc(role) + '">' +
+            '<div class="gh-sb-user"><div class="gh-sb-avatar">' + esc(initials(name)) + '<i class="gh-sb-avatar-dot"></i></div>' +
+            '<div class="gh-sb-user-meta"><span class="gh-sb-user-label">Signed in as</span><strong>' + esc(name) + '</strong><small class="gh-sb-role">' + esc(role) + '</small></div></div>' +
+            '<div class="gh-sb-status"><span class="gh-sb-dot"></span><span>System Online</span></div></div>' +
             '<button type="button" class="gh-sb-logout" id="ghLogoutButton" title="Log out">' +
             '<span aria-hidden="true">↪</span><span class="gh-sb-logout-label">Log out</span></button>' +
             '</div>';
