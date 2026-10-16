@@ -1,7 +1,7 @@
 const paymentModel = require("../models/payment-model");
 const { formatPaymentStatus } = require("../utils/assistant");
 const { markOrderPaid, isCash } = require("../utils/order-fulfilment");
-const { ensureRefundColumns, recordMoneyForCancelledOrder, completeRefund, listRefunds } = require("../utils/refunds");
+const { ensureRefundColumns, recordMoneyForCancelledOrder, completeRefund, listRefunds, startRefundPayout, notifyRefundSent } = require("../utils/refunds");
 
 async function getPayments(req, res) {
         try {
@@ -167,6 +167,7 @@ async function confirmPayment(req, res) {
         }
         const out = await markOrderPaid(client, p.order_id, { amount: p.amount, method: p.method, mpesaReceipt: receipt || null, confirmedBy: `Money received in GasHub account, confirmed by ${adminName(req)}` });
         await client.query("COMMIT");
+        if (!out.alreadyPaid) await require("../utils/push-service").orderPaid(out.order);
         res.json({ success: true, message: out.completed ? "Payment confirmed. The order was already delivered, so it is now completed." : "Payment confirmed. The order now shows as paid.", order: out.order, pointsAwarded: out.pointsAwarded, completed: out.completed });
     } catch (error) {
         try { await client.query("ROLLBACK"); } catch (e) { /* ignore */ }
@@ -199,6 +200,7 @@ async function confirmOrderPayment(req, res) {
         }
         const out = await markOrderPaid(client, o.id, { method: o.payment_method, mpesaReceipt: receipt, confirmedBy: `Money received in GasHub account, confirmed by ${adminName(req)}` });
         await client.query("COMMIT");
+        if (!out.alreadyPaid) await require("../utils/push-service").orderPaid(out.order);
         res.json({ success: true, message: "Payment confirmed. The order now shows as paid.", order: out.order, pointsAwarded: out.pointsAwarded, completed: out.completed });
     } catch (error) {
         try { await client.query("ROLLBACK"); } catch (e) { /* ignore */ }
@@ -231,11 +233,20 @@ async function rejectPayment(req, res) {
 async function getRefunds(req, res) {
     try {
         const rows = await listRefunds();
-        res.json({ success: true, pending: rows.filter((r) => r.refund_status === "pending"), done: rows.filter((r) => r.refund_status === "refunded") });
+        res.json({ success: true, auto_enabled: require("../utils/mpesa-service").b2cConfigured(),
+            pending: rows.filter((r) => r.refund_status === "pending"), done: rows.filter((r) => r.refund_status === "refunded") });
     } catch (error) {
         console.error("List refunds error:", error);
         res.status(500).json({ success: false, message: "Unable to load refunds." });
     }
+}
+
+/* POST /api/admin/payments/refunds/:orderId/send
+   "Refund now": sends the money back to the M-Pesa number the customer paid with, automatically (Safaricom B2C). */
+async function sendOrderRefund(req, res) {
+    const out = await startRefundPayout(req.params.orderId, adminName(req));
+    if (!out.ok) return res.status(out.code || 500).json({ success: false, message: out.message });
+    res.json({ success: true, message: `Refund of KSh ${out.send.toLocaleString("en-KE")} sent to M-Pesa ${out.phone}. It will show as refunded as soon as Safaricom confirms.` });
 }
 
 /* POST /api/admin/payments/refunds/:orderId/complete   { mpesa_receipt, note? }
@@ -249,7 +260,8 @@ async function completeOrderRefund(req, res) {
         await client.query("BEGIN");
         const order = await completeRefund(client, req.params.orderId, { receipt, note: (req.body || {}).note, by: adminName(req) });
         await client.query("COMMIT");
-        res.json({ success: true, message: "Refund recorded. The customer now sees it as refunded.", order });
+        notifyRefundSent(order.id);   /* SMS + email to the customer, never throws */
+        res.json({ success: true, message: "Refund recorded. The customer now sees it as refunded and has been notified.", order });
     } catch (error) {
         try { await client.query("ROLLBACK"); } catch (e) { /* ignore */ }
         if (error.status) return res.status(error.status).json({ success: false, message: error.message });
@@ -263,6 +275,7 @@ async function completeOrderRefund(req, res) {
 module.exports = {
     getRefunds,
     completeOrderRefund,
+    sendOrderRefund,
     getPayments,
     getPaymentById,
     confirmPayment,

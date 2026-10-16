@@ -361,23 +361,143 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         /* ================================================
-           FORGOT PASSWORD
+           FORGOT / RESET PASSWORD
            ================================================ */
 
+        const $ = id => document.getElementById(id);
+        const panelMessage = $("panelMessage");
+        const panels = {
+            signin: { el: $("panelSignin"), title: "Welcome back", sub: "Sign in to manage your dealer account.", focus: loginIdentifier },
+            forgot: { el: $("panelForgot"), title: "Reset your password", sub: "Enter how you sign in and we'll email you a reset link.", focus: $("forgotIdentifier") },
+            sent: { el: $("panelSent"), title: "Check your email", sub: "Open the link we sent to choose a new password." },
+            reset: { el: $("panelReset"), title: "Choose a new password", sub: "Pick a password you don't use anywhere else.", focus: $("resetPassword") }
+        };
+        function showPanel(name, keepMessage) {
+            Object.keys(panels).forEach(k => { panels[k].el.hidden = k !== name; });
+            $("panelTitle").textContent = panels[name].title;
+            $("panelSub").textContent = panels[name].sub;
+            if (!keepMessage) clearMessage(panelMessage);
+            if (name !== "signin") clearMessage(loginMessage);
+            if (panels[name].focus) setTimeout(() => panels[name].focus.focus(), 50);
+        }
+        function say(text, type, action) {
+            panelMessage.textContent = text;
+            panelMessage.className = `auth-message ${type || "error"}`;
+            if (action) {
+                panelMessage.appendChild(document.createElement("br"));
+                const b = document.createElement("button");
+                b.type = "button"; b.className = "msg-action"; b.textContent = action.label;
+                b.addEventListener("click", action.run);
+                panelMessage.appendChild(b);
+            }
+        }
+        async function post(url, body) {
+            try {
+                const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body) });
+                const data = await r.json().catch(() => ({}));
+                return { ok: r.ok, status: r.status, data, retryAfter: Number(r.headers.get("Retry-After")) || 0 };
+            } catch (e) { return { network: true, status: 0, data: {} }; }
+        }
+
+        document.querySelectorAll("[data-panel]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); showPanel(a.dataset.panel); }));
+        document.querySelectorAll(".password-toggle[data-target]").forEach(btn => btn.addEventListener("click", () => {
+            const input = $(btn.dataset.target), show = input.type === "password";
+            input.type = show ? "text" : "password";
+            btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+            const i = btn.querySelector("i"); if (i) { i.classList.toggle("fa-eye", !show); i.classList.toggle("fa-eye-slash", show); }
+        }));
+
+        /* "Send again" waits a minute so the inbox is not flooded */
+        let cooldownTimer = null;
+        function startCooldown(btn, seconds) {
+            clearInterval(cooldownTimer);
+            const label = btn.querySelector(".button-text"), text = label.textContent.replace(/ \(\d+s\)$/, "");
+            let left = seconds; btn.disabled = true; label.textContent = `${text} (${left}s)`;
+            cooldownTimer = setInterval(() => {
+                left--;
+                if (left <= 0) { clearInterval(cooldownTimer); btn.disabled = false; label.textContent = text; }
+                else label.textContent = `${text} (${left}s)`;
+            }, 1000);
+        }
+
+        let lastIdentifier = "";
+        async function sendLink(button) {
+            if (button.disabled) return;
+            const identifier = lastIdentifier;
+            if (!identifier) { say("Please enter your email, phone number, username or dealer code."); $("forgotIdentifier").focus(); return; }
+            setButtonLoading(button, true);
+            const res = await post("/api/dealers/forgot-password", { identifier });
+            setButtonLoading(button, false);
+            if (res.network) { say("We can't reach GasHub right now. Check your connection and try again."); return; }
+            if (res.status === 429) { const s = res.retryAfter || 60; say(`Too many requests. Please wait ${s >= 60 ? Math.ceil(s / 60) + " minute(s)" : s + " seconds"} and try again.`); startCooldown(button, Math.min(s, 900)); return; }
+            if (res.status === 503) { say("Password reset isn't available right now. Please contact GasHub support."); return; }
+            if (!res.ok) { say(res.data.message || "Something went wrong on our side. Please try again in a moment."); return; }
+            showPanel("sent");
+            startCooldown($("resendButton"), 60);
+        }
+        $("forgotForm").addEventListener("submit", e => {
+            e.preventDefault(); clearMessage(panelMessage);
+            lastIdentifier = $("forgotIdentifier").value.trim();
+            sendLink($("forgotButton"));
+        });
+        $("resendButton").addEventListener("click", () => sendLink($("resendButton")));
+
         if (forgotPassword) {
+            forgotPassword.addEventListener("click", event => {
+                event.preventDefault();
+                $("forgotIdentifier").value = loginIdentifier ? loginIdentifier.value.trim() : "";
+                showPanel("forgot");
+            });
+        }
 
-            forgotPassword.addEventListener(
-                "click",
-                event => {
+        /* ---- new password (the link from the email: dealer-login.html?reset=TOKEN) ---- */
+        const strengthOf = pw => {
+            let n = 0;
+            if (pw.length >= 8) n++;
+            if (pw.length >= 12 || (/[a-z]/.test(pw) && /[A-Z]/.test(pw))) n++;
+            if ((/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) || pw.length >= 14) n++;
+            return pw.length < 8 ? Math.min(n, 1) : Math.max(n, 1);
+        };
+        $("resetPassword").addEventListener("input", () => {
+            const pw = $("resetPassword").value, lvl = pw ? strengthOf(pw) : 0;
+            $("strength").dataset.level = String(lvl);
+            $("strengthText").textContent = !pw ? "" : pw.length < 8 ? "Too short" : ["", "Weak", "Okay", "Strong"][lvl];
+        });
 
-                    event.preventDefault();
+        let resetToken = new URLSearchParams(location.search).get("reset");
+        if (resetToken) history.replaceState(null, "", location.pathname);   /* keep the secret token out of the address bar and history */
+        const askNewLink = { label: "Get a new link", run: () => showPanel("forgot") };
 
-                    showMessage(
-                        loginMessage,
-                        "Password recovery will be connected when the dealer authentication backend is ready."
-                    );
-                }
-            );
+        $("resetForm").addEventListener("submit", async e => {
+            e.preventDefault(); clearMessage(panelMessage);
+            const pw = $("resetPassword").value, cf = $("resetConfirm").value, button = $("resetButton");
+            if (button.disabled) return;
+            if (pw.length < 8) { say("Your new password must be at least 8 characters."); $("resetPassword").focus(); return; }
+            if (pw.length > 128) { say("That password is too long."); return; }
+            if (pw !== cf) { say("The two passwords don't match."); $("resetConfirm").focus(); return; }
+            if (!resetToken) { say("This reset link isn't valid. Please ask for a new one.", "error", askNewLink); return; }
+            setButtonLoading(button, true);
+            const res = await post("/api/dealers/reset-password", { token: resetToken, password: pw });
+            setButtonLoading(button, false);
+            if (res.ok) {
+                resetToken = null; $("resetPassword").value = ""; $("resetConfirm").value = "";
+                showPanel("signin");
+                say("Your password has been changed. Sign in with your new password.", "success");
+                return;
+            }
+            if (res.network) { say("We can't reach GasHub right now. Please try again."); return; }
+            if (res.status === 400) { say(res.data.message || "Please choose a different password."); return; }
+            if (res.status === 410) { say("This link has expired or was already used.", "error", askNewLink); return; }
+            if (res.status === 429) { say("Too many attempts. Please wait a few minutes and try again."); return; }
+            say("Something went wrong on our side. Please try again in a moment.");
+        });
+
+        /* opened from the email: check the link first so an expired one is explained straight away */
+        if (resetToken) {
+            showPanel("reset", true);
+            post("/api/dealers/reset-password/check", { token: resetToken }).then(res => {
+                if (res.status === 410) { showPanel("forgot", true); say("This reset link has expired or was already used. Enter your details to get a new one.", "error"); }
+            });
         }
 
 

@@ -21,10 +21,17 @@
     document.head.appendChild(hold);
     var released = false;
     function release() { if (released) return; released = true; if (hold.parentNode) hold.parentNode.removeChild(hold); }
-    var css = document.createElement("link"); css.rel = "stylesheet"; css.href = base + "customer-nav.css";
-    css.onload = release; css.onerror = release;
-    document.head.appendChild(css);
-    setTimeout(release, 4000);   /* never leave the menu hidden if the stylesheet is slow */
+    /* Reveal ONLY once the stylesheet has really loaded (a slow connection used to show the menu unstyled after 4 seconds).
+       If the request fails it is retried, so the menu is never shown without its styling. */
+    var tries = 0;
+    function loadNavCss() {
+        var css = document.createElement("link"); css.rel = "stylesheet";
+        css.href = base + "customer-nav.css" + (tries ? "?r=" + tries + "-" + Date.now() : "");
+        css.onload = release;
+        css.onerror = function () { if (css.parentNode) css.parentNode.removeChild(css); if (++tries <= 5) setTimeout(loadNavCss, 800 * tries); };
+        document.head.appendChild(css);
+    }
+    loadNavCss();
 
     var I = {
         home: '<path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/>',

@@ -85,6 +85,7 @@ async function customerSend(req, res) {
       `INSERT INTO dealer_messages (dealer_id, customer_id, product_id, sender, body)
        VALUES ($1, $2, $3, 'customer', $4) RETURNING *`,
       [dealerId, String(req.user.id), productId, text]);
+    await require("../utils/push-service").chatToDealer(dealerId, text);
     return res.status(201).json({ success: true, message: shape(r.rows[0]) });
   } catch (error) {
     console.error("Customer send message error:", error);
@@ -227,6 +228,7 @@ async function dealerSend(req, res) {
     const r = await pool.query(
       `INSERT INTO dealer_messages (dealer_id, customer_id, product_id, sender, body)
        VALUES ($1, $2, $3, 'dealer', $4) RETURNING *`, [dealerId, customerId, productId, text]);
+    await require("../utils/push-service").chatToCustomer(customerId, dealerId, text);
     return res.status(201).json({ success: true, message: shape(r.rows[0]) });
   } catch (error) {
     console.error("Dealer send message error:", error);

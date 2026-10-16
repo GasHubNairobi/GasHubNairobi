@@ -400,6 +400,7 @@
 
             fillCommercial(result.settings);
             notify("Commercial settings saved.", "success");
+            closeCommercial(false);
         } catch (error) {
             console.error("Unable to save commercial settings:", error);
             notify(`Could not save commercial settings: ${error.message}`, "error");
@@ -419,23 +420,23 @@
         if (method === "paybill") html += f("poPaybill", "Paybill number", s.paybill, "e.g. 247247") + f("poAccount", "Account number", s.account, "Account");
         else if (method === "till") html += f("poTill", "Till number", s.till, "e.g. 5123456");
         else html += f("poPhone", "M-Pesa phone number", s.phone, "0712345678", "tel");
-        html += `<label>Pay out<select id="poFrequency"><option value="weekly">Weekly</option><option value="daily">Daily</option><option value="manual">Only when I schedule it</option></select></label>`;
-        html += `<label>Payout day (weekly)<select id="poDay">${DAYS.map((d, i) => `<option value="${i}">${d}</option>`).join("")}</select></label>`;
-        html += f("poTime", "Payout time", s.pay_time || "10:00", "", "time");
         html += f("poHold", "Hold completed orders for (hours)", s.hold_hours ?? 24, "24", "number");
         html += f("poMin", "Minimum payout (KSh)", s.min_payout ?? 0, "0", "number");
         $("payoutFields").innerHTML = html;
-        if ($("poFrequency")) $("poFrequency").value = s.frequency || "weekly";
-        if ($("poDay")) $("poDay").value = String(s.pay_day ?? 5);
     }
 
     function statusPill(status) {
-        const cls = { paid: "pill-paid", scheduled: "pill-processing", held: "pill-pending", failed: "pill-failed" }[status] || "pill-pending";
+        const cls = { paid: "pill-paid", scheduled: "pill-processing", held: "pill-pending", sending: "pill-processing", failed: "pill-failed" }[status] || "pill-pending";
         return `<span class="pill ${cls}">${escapeHtml(status)}</span>`;
     }
 
     const base = () => `/api/admin/dealers/${encodeURIComponent(dealerId)}`;
 
+    /* "Send now" is offered for M-Pesa phone payouts once the B2C setup exists on the server */
+    function canSend(p, r) {
+        const phone = p.dest_method ? p.dest_method === "phone" : /^M-Pesa\s/i.test(String(p.destination || ""));
+        return Boolean(r && r.automation && r.automation.configured && phone && p.status !== "held" && p.status !== "paid");
+    }
     async function loadPayouts() {
         if (!dealerId) return;
         try {
@@ -447,17 +448,19 @@
             $("poOnline").textContent = currency(b.online_amount);
             $("poCash").textContent = "- " + currency(b.cash_commission);
             $("poNet").textContent = currency(b.net);
-            $("poHold").textContent = `${b.on_hold_orders || 0} orders (${currency(b.on_hold_amount)})`;
+            $("poOnHold").textContent = `${b.on_hold_orders || 0} orders (${currency(b.on_hold_amount)})`;
             $("poHint").textContent = `Commission rate ${b.commission_rate}%. ${b.orders || 0} completed orders ready` +
-                (b.net <= 0 && b.orders ? " - nothing to pay yet; cash commission carries forward." : ".");
+                (b.net <= 0 && b.orders ? " - nothing to pay yet; cash commission carries forward." : ".") +
+                (r.automation && r.automation.automatic ? " Automatic payouts are ON for all dealers." : "");
+            if (window.GasHubPlannerBanner) GasHubPlannerBanner.render($("poPlannerBanner"), r.schedule);
             const rows = r.payouts || [];
             $("poBody").innerHTML = rows.length ? rows.map(p => {
                 const open = p.status !== "paid";
                 return `<tr><td><span class="order-number">${escapeHtml(p.reference)}</span>${p.mpesa_receipt ? `<span class="cell-sub">${escapeHtml(p.mpesa_receipt)}</span>` : ""}</td>
                     <td>${escapeHtml(new Date(p.scheduled_for).toLocaleString("en-GB"))}${new Date(p.scheduled_for) <= new Date() && p.status === "scheduled" ? '<span class="cell-sub">Due now</span>' : ""}</td>
                     <td class="money">${currency(p.online_amount)}</td><td class="money commission-money">- ${currency(p.cash_commission)}</td>
-                    <td class="money net-money">${currency(p.amount)}</td><td>${escapeHtml(p.destination || "")}</td><td>${statusPill(p.status)}</td>
-                    <td>${open ? `<button class="row-action" data-po="paid" data-id="${p.id}">Mark paid</button> ${p.status === "held" ? `<button class="row-action" data-po="release" data-id="${p.id}">Release</button>` : `<button class="row-action" data-po="hold" data-id="${p.id}">Hold</button>`} <button class="row-action" data-po="cancel" data-id="${p.id}">Cancel</button>` : ""}</td></tr>`;
+                    <td class="money net-money">${currency(p.amount)}</td><td>${escapeHtml(p.destination || "")}</td><td>${statusPill(p.status)}${p.status === "sending" ? '<span class="cell-sub">Waiting for M-Pesa...</span>' : ""}${p.auto && p.status === "scheduled" ? '<span class="cell-sub">Automatic</span>' : ""}${p.error && p.status !== "paid" ? `<span class="cell-sub" style="white-space:normal;max-width:260px;color:#b42318">${escapeHtml(p.error)}</span>` : ""}</td>
+                    <td>${open && p.status === "sending" && Date.now() - new Date(p.started_at || 0).getTime() < 60 * 60000 ? '<span class="cell-sub">Locked while M-Pesa answers</span>' : open ? `${canSend(p, r) ? `<button class="row-action" data-po="send_now" data-id="${p.id}">${p.status === "failed" ? "Send again" : "Send now"}</button> ` : ""}${p.status === "failed" ? `<button class="row-action" data-po="release" data-id="${p.id}">Release</button> ` : ""}<button class="row-action" data-po="paid" data-id="${p.id}">Mark paid</button> ${p.status === "held" ? `<button class="row-action" data-po="release" data-id="${p.id}">Release</button>` : `<button class="row-action" data-po="hold" data-id="${p.id}">Hold</button>`} <button class="row-action" data-po="cancel" data-id="${p.id}">Cancel</button>` : ""}</td></tr>`;
             }).join("") : '<tr><td colspan="8" class="empty-row">No payouts yet.</td></tr>';
         } catch (error) {
             console.error("Unable to load payouts:", error);
@@ -479,11 +482,12 @@
                 method: "PUT",
                 body: JSON.stringify({
                     method: v("payoutMethod"), phone: v("poPhone"), paybill: v("poPaybill"), account: v("poAccount"), till: v("poTill"),
-                    frequency: v("poFrequency"), pay_day: v("poDay"), pay_time: v("poTime"), hold_hours: v("poHold"), min_payout: v("poMin")
+                    hold_hours: v("poHold"), min_payout: v("poMin")
                 })
             });
             payoutSettings = r.settings;
             notify("Payout settings saved.", "success");
+            closePayoutDestination(false);
             loadPayouts();
         } catch (error) {
             notify(`Could not save payout settings: ${error.message}`, "error");
@@ -491,11 +495,9 @@
     });
 
     $("poSchedule")?.addEventListener("click", async () => {
-        const value = $("poWhen")?.value;
-        if (!value) { notify("Choose the date and time the money should be sent.", "error"); return; }
         try {
-            await apiRequest(`${base()}/payouts`, { method: "POST", body: JSON.stringify({ scheduled_for: new Date(value).toISOString() }) });
-            notify("Payout scheduled.", "success");
+            const made = await apiRequest(`${base()}/payouts`, { method: "POST", body: JSON.stringify({}) });
+            notify(made.message || "Payout created.", "success");
             loadPayouts();
         } catch (error) {
             notify(error.message, "error");
@@ -512,6 +514,7 @@
             if (!code) return;
             body.mpesa_receipt = code;
         }
+        if (action === "send_now" && !(await GasHubDialog.confirm({ title: "Send this payout to M-Pesa now?", message: "The money is sent to the dealer's M-Pesa number straight away. It turns Paid when Safaricom confirms. Check your M-Pesa statement first if an earlier attempt gave no answer.", confirmText: "Send now", cancelText: "Not yet", tone: "warning" }))) return;
         if (action === "cancel" && !(await GasHubDialog.confirm({ title: "Cancel this payout?", message: "Its orders go back into the next payout.", confirmText: "Cancel payout", cancelText: "Keep it", tone: "warning" }))) return;
         try {
             await apiRequest(`${base()}/payouts/${encodeURIComponent(btn.dataset.id)}`, { method: "PATCH", body: JSON.stringify(body) });
@@ -656,8 +659,9 @@
         });
 
         const sum = (key) => rows.reduce((t, o) => t + (Number(o[key]) || 0), 0);
-        const counted = rows.filter(o => String(o.status).toLowerCase() !== "cancelled");
-        const gross = counted.reduce((t, o) => t + (Number(o.total_amount) || 0), 0);
+        const counted = rows.filter(o => !["cancelled", "canceled", "rejected"].includes(String(o.status).toLowerCase()) && !o.refund_status && String(o.payment_status || "").toLowerCase() !== "refunded");
+        /* goods + delivery fee before commission, so gross - commission = dealer net (total_amount is after coin discounts, which GasHub pays) */
+        const gross = counted.reduce((t, o) => t + (Number(o.dealer_gross ?? o.total_amount) || 0), 0);
         const commission = counted.reduce((t, o) => t + (Number(o.commission_amount) || 0), 0);
         const net = counted.reduce((t, o) => t + (Number(o.dealer_payout) || 0), 0);
         if ($("grossSalesTotal")) $("grossSalesTotal").textContent = currency(gross);
@@ -789,6 +793,38 @@
             if (dialog) dialog.close();
         });
     });
+
+    /* ---------------- Collapsible cards (closed by default, so nothing is changed by accident) ---------------- */
+    function makeCollapsible(formId) {
+        const form = $(formId);
+        const card = form && form.closest(".section-card");
+        const heading = card && card.querySelector(".section-heading");
+        if (!card || !heading || card.dataset.collapsible) return null;
+        card.dataset.collapsible = "1";
+        const body = document.createElement("div");
+        body.className = "collapse-body";
+        while (heading.nextSibling) body.appendChild(heading.nextSibling);   /* moving nodes keeps their event handlers */
+        card.appendChild(body);
+        const chevron = document.createElement("span");
+        chevron.className = "collapse-chevron";
+        chevron.setAttribute("aria-hidden", "true");
+        heading.appendChild(chevron);
+        heading.classList.add("collapsible");
+        heading.setAttribute("role", "button");
+        heading.setAttribute("tabindex", "0");
+        const set = open => {
+            card.classList.toggle("is-collapsed", !open);
+            body.hidden = !open;
+            heading.setAttribute("aria-expanded", String(open));
+            heading.title = open ? "Click to hide" : "Click to view or edit";
+        };
+        heading.addEventListener("click", () => set(body.hidden));
+        heading.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); set(body.hidden); } });
+        set(false);
+        return set;
+    }
+    const closeCommercial = makeCollapsible("commercialForm") || (() => {});
+    const closePayoutDestination = makeCollapsible("payoutForm") || (() => {});
 
     loadDealer();
     loadOrders();

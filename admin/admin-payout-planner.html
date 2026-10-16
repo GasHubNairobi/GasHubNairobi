@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payout Planner | GasHub Admin</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="admin-complaints.css">
+    <link rel="stylesheet" href="admin-payout-planner.css">
+    <link rel="stylesheet" href="admin-shared.css">
+    <link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+<body>
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">☰</button>
+                <div>
+                    <h2>Payout Planner</h2>
+                    <p>How much to put in the Paybill, and when customers and dealers get paid.</p>
+                </div>
+            </div>
+            <div class="admin-user-area">
+                <div class="admin-user-info"><strong id="adminUserName">Administrator</strong><span id="adminUserRole">Admin</span></div>
+            </div>
+        </header>
+
+        <section class="admin-content">
+            <div class="admin-message" id="ppMessage" role="alert"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Deposit needed (KSh)</span><strong class="stat-value" id="ppNeeded">0</strong></div><div class="stat-icon">KSh</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Paybill now (estimate)</span><strong class="stat-value" id="ppBalance">-</strong></div><div class="stat-icon">▣</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Still to deposit (KSh)</span><strong class="stat-value" id="ppShort">0</strong></div><div class="stat-icon">⇧</div></div>
+                <div class="stat-card"><div class="stat-card-content"><span class="stat-label">Payments</span><strong class="stat-value" id="ppCount">0</strong></div><div class="stat-icon">✓</div></div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header"><div>
+                    <h3>Money routes <span class="pp-tag" id="ppRouteTag"></span></h3>
+                    <p id="ppRoutes">Checking...</p>
+                </div></div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header"><div>
+                    <h3>1. How much must be in the Paybill <span class="pp-tag" id="ppFundTag"></span></h3>
+                    <p>Customers pay into the Till. Payouts go out from the Paybill, which you top up by hand. This is exactly what the next payouts will take, at today&rsquo;s coin rate and withdrawal charges, in whole shillings (M-Pesa sends whole shillings).</p>
+                </div></div>
+                <div class="pp-body">
+                    <table class="pp-sum"><tbody id="ppSum"></tbody></table>
+                    <form class="pp-funds" id="ppFundsForm">
+                        <div><label for="ppBal">Paybill balance now (KSh)</label><input id="ppBal" type="number" min="0" step="1" inputmode="numeric" placeholder="From your M-Pesa portal"><small id="ppBalNote"></small></div>
+                        <div><label for="ppFee">M-Pesa charge per payment (KSh)</label><input id="ppFee" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0"><small>What Safaricom charges your Paybill for each payment sent.</small></div>
+                        <div><label for="ppBuf">Safety extra (%)</label><input id="ppBuf" type="number" min="0" max="50" step="1" inputmode="numeric" placeholder="0"><small>Added on top so a rate change cannot leave you short.</small></div>
+                        <button type="submit" class="link-button ok" id="ppFundsSave">Save</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="pp-two">
+                <div class="content-card" id="ppCardCustomers">
+                    <div class="card-header"><div>
+                        <h3>2a. Customer withdrawals <span class="pp-tag" id="ppTagCustomers"></span></h3>
+                        <p>Customers who turned GasHub Coins into money.</p>
+                    </div></div>
+                    <form class="pp-sched" data-who="customers"></form>
+                </div>
+                <div class="content-card" id="ppCardDealers">
+                    <div class="card-header"><div>
+                        <h3>2b. Dealer payouts <span class="pp-tag" id="ppTagDealers"></span></h3>
+                        <p>Dealers&rsquo; sales minus GasHub&rsquo;s commission, after the hold period.</p>
+                    </div></div>
+                    <form class="pp-sched" data-who="dealers"></form>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header"><div><h3>Customer withdrawals in this calculation</h3>
+                    <p>&ldquo;Confirmed&rdquo; means you approved it. Waiting ones are counted only if the schedule is not set to &ldquo;approved only&rdquo;.</p></div></div>
+                <div class="admin-table-wrapper"><table class="admin-table"><thead><tr><th>Reference</th><th>Customer</th><th>M-Pesa</th><th>Status</th><th>Coins value</th><th>Charge</th><th>To send</th></tr></thead>
+                    <tbody id="ppCustBody"><tr><td colspan="7" class="table-loading">Loading...</td></tr></tbody></table></div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header"><div><h3>Dealer payouts in this calculation</h3>
+                    <p>&ldquo;Payout&rdquo; already exists. &ldquo;Earned&rdquo; is money not in a payout yet; the next run turns it into one. Paybill/Till destinations are paid by hand and are not in the deposit total.</p></div></div>
+                <div class="admin-table-wrapper"><table class="admin-table"><thead><tr><th>Dealer</th><th>Type</th><th>Goes to</th><th>How</th><th>Status</th><th>To send</th></tr></thead>
+                    <tbody id="ppDealBody"><tr><td colspan="6" class="table-loading">Loading...</td></tr></tbody></table></div>
+            </div>
+        </section>
+    </main>
+    <script src="admin-sidebar.js"></script>
+    <script src="admin-main.js"></script>
+    <script src="admin-payout-planner.js"></script>
+</body>
+</html>

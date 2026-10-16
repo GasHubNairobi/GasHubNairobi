@@ -34,13 +34,12 @@
 
     <main class="wd-wrap">
         <h1 class="wd-title">Withdraw GasHub Coins</h1>
-        <p class="wd-sub" id="wdSub" hidden>Turn your GasHub Coins into money, sent to your M-Pesa.</p>
+        <p class="wd-sub" id="wdSub" hidden>Turn your GasHub Coins into money.</p>
 
         <!-- loading / not signed in / error -->
         <section class="wd-card wd-state" id="wdLoading"><div class="wd-spin"></div><p>Loading your GasHub Coins...</p></section>
         <section class="wd-card wd-state" id="wdGuest" hidden>
             <h2>Sign in to withdraw</h2>
-            <p>Your GasHub Coins belong to your GasHub account.</p>
             <a class="wd-btn" href="customer-login.html?next=customer-withdraw.html">Sign in</a>
         </section>
         <section class="wd-card wd-state" id="wdError" hidden>
@@ -121,7 +120,6 @@
                     </div>
 
                     <button type="submit" class="wd-btn wd-send" id="wdSend">Send withdrawal request</button>
-                    <p class="wd-hint wd-center">Your GasHub Coins are held as soon as you send, and we email and text you the details. If the request is rejected the coins come back.</p>
                 </form>
             </section>
 
@@ -150,5 +148,7 @@
     <script src="customer-pay-prompt.js" defer></script>
     <script src="customer-notifications.js" defer></script>
     <script src="customer-download.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
+    <script src="/gashub-app-banner.js" defer></script>
 </body>
 </html>

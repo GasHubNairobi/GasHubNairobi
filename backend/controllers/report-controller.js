@@ -42,7 +42,7 @@ async function buildReport(start, end, type, registers) {
         q(`SELECT
                 COUNT(DISTINCT o.id)::INTEGER AS total_orders,
                 COALESCE(SUM(CASE WHEN o.status NOT IN ('cancelled', 'rejected') THEN o.total_amount ELSE 0 END), 0) AS total_sales,
-                (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE ${inRange("p.created_at")} AND p.status = 'paid') AS total_payments,
+                (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE ${inRange("p.created_at")} AND p.status = 'paid' AND NOT EXISTS (SELECT 1 FROM orders ro WHERE ro.id = p.order_id AND ro.status::text IN ('cancelled', 'rejected'))) AS total_payments,
                 (SELECT COUNT(*)::INTEGER FROM users u WHERE u.role = 'customer' AND ${inRange("u.created_at")}) AS new_customers,
                 (SELECT COUNT(*)::INTEGER FROM users u WHERE u.role = 'customer') AS total_customers
              FROM orders o WHERE ${inRange("o.created_at")}`),

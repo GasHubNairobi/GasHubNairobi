@@ -439,3 +439,14 @@
     object-fit: cover !important;
     display: block !important;
 }
+/* live sales page additions */
+.sales-period-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 16px; }
+.sales-period-bar label { font-weight: 600; font-size: 13px; color: #334155; }
+.sales-note { font-size: 12px; color: #64748b; }
+.sales-error { margin: 0 0 16px; padding: 12px 14px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 13px; }
+.sales-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 0 0 20px; }
+.sales-totals div { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; }
+.sales-totals span { display: block; font-size: 12px; color: #64748b; }
+.sales-totals strong { display: block; margin-top: 4px; font-size: 16px; color: #0f172a; }
+.sales-pay-cash { color: #b45309; }
+.sales-sub { display: block; font-size: 11px; color: #64748b; }

@@ -27,6 +27,11 @@ function initDealerDashboard() {
     checkVerificationStatus();
     loadDealerProfileData();
     renderDynamicSalesChart("30days");
+    /* keep the graph and today's revenue fresh while the page stays open */
+    window.setInterval(() => {
+        const sel = document.getElementById("salesPeriod");
+        renderDynamicSalesChart(sel ? sel.value : "30days");
+    }, 60000);
     renderDynamicInventoryData();
     setupInventorySync();
     loadRecentOrdersLive();
@@ -85,36 +90,24 @@ function setupMobileSidebarDrawer() {
 /* =========================================================
    3. DYNAMIC INTERACTIVE SVG SALES CHART
    ========================================================= */
-const SALES_DATASETS = {
-    "7days": {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        values: [18000, 24500, 31000, 22000, 48000, 52000, 45000],
-        revenue: "KSh 240,500",
-        orders: "68 Units",
-        rate: "99.1%"
-    },
-    "30days": {
-        labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-        values: [185000, 240000, 290000, 230000],
-        revenue: "KSh 945,000",
-        orders: "342 Units",
-        rate: "98.4%"
-    },
-    "90days": {
-        labels: ["Month 1", "Month 2", "Month 3"],
-        values: [780000, 920000, 1140000],
-        revenue: "KSh 2,840,000",
-        orders: "1,080 Units",
-        rate: "98.8%"
-    },
-    "year": {
-        labels: ["Q1", "Q2", "Q3", "Q4"],
-        values: [2600000, 3100000, 3450000, 3950000],
-        revenue: "KSh 13,100,000",
-        orders: "4,920 Units",
-        rate: "99.2%"
-    }
-};
+/* Real figures from the server (GET /api/dealers/sales/mine): completed, paid, not-refunded orders.
+   The same numbers are on the Sales and Payouts pages. Nothing here is sample data. */
+let salesRequestId = 0;
+
+function dealerToken() {
+    return localStorage.getItem("gashub_dealer_token") || localStorage.getItem("dealerToken") || "";
+}
+
+async function fetchSales(period) {
+    const response = await fetch(`/api/dealers/sales/mine?period=${encodeURIComponent(period)}`, {
+        headers: Object.assign({ Accept: "application/json" }, dealerToken() ? { Authorization: `Bearer ${dealerToken()}` } : {}),
+        cache: "no-store"
+    });
+    if (!response.ok) throw new Error("Sales unavailable");
+    const data = await response.json();
+    if (!data || !data.success) throw new Error("Sales unavailable");
+    return data;
+}
 
 function setupSalesPeriodAnalytics() {
     const periodSelect = document.getElementById("salesPeriod");
@@ -127,22 +120,54 @@ function setupSalesPeriodAnalytics() {
     });
 }
 
-function renderDynamicSalesChart(period = "30days") {
+/* the headline cards: today's revenue (with the real change vs yesterday) and refills / new sets sold (last 30 days) */
+function updateTodayCards(data) {
+    setText("totalSales", `KSh ${formatCurrency(data.today.revenue)}`);
+    const pill = document.getElementById("salesTrendPill");
+    if (pill) {
+        const pct = data.today.change_pct;
+        const down = pct !== null && pct < 0;
+        pill.className = `stat-trend ${down ? "negative" : "positive"}`;
+        pill.innerHTML = `<i class="fa-solid fa-arrow-${down ? "down" : "up"}" aria-hidden="true"></i>
+            <span>${pct === null ? "New" : (pct > 0 ? "+" : "") + pct + "%"}</span><small>vs yesterday</small>`;
+    }
+    setText("ordersRefillsCount", formatCurrency(data.totals.refills_sold));
+    setText("ordersNewSetsCount", formatCurrency(data.totals.new_cylinders_sold));
+}
+
+async function renderDynamicSalesChart(period = "30days") {
     const chartSvg = document.getElementById("dynamicSalesChart");
     const axisContainer = document.getElementById("chartAxisLabels");
-    const dataset = SALES_DATASETS[period] || SALES_DATASETS["30days"];
-
     if (!chartSvg) return;
 
-    // Update KPI ribbon
-    setText("periodRevenue", dataset.revenue);
-    setText("periodOrders", dataset.orders);
-    setText("periodCompletedOrders", dataset.rate);
+    const myRequest = ++salesRequestId;
+    let data;
+    try {
+        data = await fetchSales(period);
+    } catch (e) {
+        if (myRequest !== salesRequestId) return;
+        chartSvg.innerHTML = `<text x="350" y="120" text-anchor="middle" fill="#64748b" font-size="14">Sales could not be loaded.</text>`;
+        if (axisContainer) axisContainer.innerHTML = "";
+        return;
+    }
+    if (myRequest !== salesRequestId) return;   /* a newer period was chosen while this one loaded */
 
-    // Update Axis labels
+    const labels = data.chart.labels;
+    const values = data.chart.values.map(Number);
+    const summary = data.period_summary;
+
+    // KPI ribbon
+    setText("periodRevenue", `KSh ${formatCurrency(summary.revenue)}`);
+    setText("periodOrders", `${formatCurrency(summary.cylinders)} Units`);
+    setText("periodCompletedOrders", summary.completion_rate === null ? "-" : `${summary.completion_rate}%`);
+    if (period === "30days") updateTodayCards(data);
+    else fetchSales("30days").then(updateTodayCards).catch(() => {});
+
+    // Axis labels: with many points only every few are named, so they never overlap
     if (axisContainer) {
-        axisContainer.innerHTML = dataset.labels
-            .map((label) => `<span>${escapeHtml(label)}</span>`)
+        const every = labels.length > 14 ? 5 : labels.length > 8 ? 2 : 1;
+        axisContainer.innerHTML = labels
+            .map((label, i) => `<span>${i % every === 0 || i === labels.length - 1 ? escapeHtml(label) : "&nbsp;"}</span>`)
             .join("");
     }
 
@@ -151,24 +176,20 @@ function renderDynamicSalesChart(period = "30days") {
     const paddingX = 40;
     const paddingY = 30;
 
-    const values = dataset.values;
-    const minVal = Math.min(...values) * 0.85;
-    const maxVal = Math.max(...values) * 1.15;
-
-    const stepX = (width - paddingX * 2) / (values.length - 1);
+    /* the chart starts at KSh 0, so the height of a point is honest (no stretched scale) */
+    const maxVal = Math.max(...values, 0) || 1;
+    const stepX = values.length > 1 ? (width - paddingX * 2) / (values.length - 1) : 0;
 
     const points = values.map((val, idx) => {
-        const x = paddingX + idx * stepX;
-        const normalized = (val - minVal) / (maxVal - minVal);
-        const y = height - paddingY - normalized * (height - paddingY * 2);
-        return { x: Math.round(x), y: Math.round(y), val };
+        const x = values.length > 1 ? paddingX + idx * stepX : width / 2;
+        const y = height - paddingY - (val / maxVal) * (height - paddingY * 2);
+        return { x: Math.round(x), y: Math.round(y), val, label: labels[idx] };
     });
 
-    // Build SVG paths
     const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
     const areaPath = `${linePath} L ${points[points.length - 1].x} ${height - paddingY} L ${points[0].x} ${height - paddingY} Z`;
+    const empty = values.every((v) => v === 0);
 
-    // Render Grid Lines, Area, Line, Points
     chartSvg.innerHTML = `
         <defs>
             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -177,22 +198,18 @@ function renderDynamicSalesChart(period = "30days") {
             </linearGradient>
         </defs>
 
-        <!-- Subtle Grid Baseline -->
         <line x1="${paddingX}" y1="${height - paddingY}" x2="${width - paddingX}" y2="${height - paddingY}" stroke="#e2e8f0" stroke-width="1" />
         <line x1="${paddingX}" y1="${height / 2}" x2="${width - paddingX}" y2="${height / 2}" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="4" />
 
-        <!-- Area Fill -->
         <path d="${areaPath}" class="chart-area" />
-
-        <!-- Line Stroke -->
         <path d="${linePath}" class="chart-line" />
 
-        <!-- Interactive Points -->
         ${points.map((p) => `
             <circle cx="${p.x}" cy="${p.y}" r="4.5" class="chart-point">
-                <title>KSh ${formatCurrency(p.val)}</title>
+                <title>${escapeHtml(p.label)}: KSh ${formatCurrency(p.val)}</title>
             </circle>
         `).join("")}
+        ${empty ? `<text x="${width / 2}" y="${height / 2 - 14}" text-anchor="middle" fill="#64748b" font-size="14">No completed sales in this period yet.</text>` : ""}
     `;
 }
 
@@ -560,8 +577,9 @@ async function loadRecentOrdersLive() {
 
         // Update stats
         setText("totalOrders", orders.length);
-        const revenue = orders.filter(o => (o.payment_status === "paid" || o.paymentStatus === "paid")).reduce((s, o) => s + (Number(o.total_amount || o.amount || 0)), 0);
-        setText("totalSales", `KSh ${revenue.toLocaleString("en-KE")}`);
+        /* a cancelled / rejected order, or one whose money was refunded, is not income any more */
+        const notReturned = o => !["cancelled", "canceled", "rejected"].includes(String(o.status || o.order_status || "").toLowerCase()) && !o.refund_status && String(o.payment_status || o.paymentStatus || "").toLowerCase() !== "refunded";
+        /* today revenue and the graph come from /api/dealers/sales/mine (completed sales only), so they match Sales and Payouts */
         const statusOf = o => String(o.status || o.order_status || "pending").toLowerCase();
         /* Pending Delivery = delivery orders that are not finished yet: waiting for the dealer to confirm, confirmed/being prepared, or out with the messenger */
         const pending = orders.filter(o => o.fulfilment !== "pickup" && ["pending", "confirmed", "processing", "out_for_delivery"].includes(statusOf(o)));

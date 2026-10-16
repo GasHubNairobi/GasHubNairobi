@@ -5,6 +5,7 @@ const requireAdmin = require("../middleware/admin-authentication");
 
 router.get("/", requireAdmin, controller.getPayments);
 router.get("/refunds", requireAdmin, controller.getRefunds);                      /* before "/:id" */
+router.post("/refunds/:orderId/send", requireAdmin, controller.sendOrderRefund);
 router.post("/refunds/:orderId/complete", requireAdmin, controller.completeOrderRefund);
 router.post("/orders/:orderId/confirm", requireAdmin, controller.confirmOrderPayment);
 router.post("/:id/confirm", requireAdmin, controller.confirmPayment);

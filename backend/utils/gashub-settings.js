@@ -3,7 +3,9 @@
      support       - WhatsApp / phone / hours / website shown to customers
      points        - what a GasHub point is worth (coin rate) and points per paid order
      earn          - "Earn GasHub Points": points per invited friend and per social follow
-     payment_account - the GasHub M-Pesa account customers pay to (paybill / till / phone number)
+     payment_account - the backup (manual) M-Pesa Till; shown only after the phone prompt failed twice
+     payment_methods - on/off switches: M-Pesa prompt, Bank, manual Till (Super Admin area)
+     bank_account    - the GasHub bank details customers see for Bank payments (Super Admin area)
      app_download  - the GasHub Android app: Play Store package/link, points for installing it
    Used by the admin settings routes, the public settings routes and the customer rewards routes. */
 const { pool } = require("../config/database-config");
@@ -120,7 +122,7 @@ async function getEarnConfig(db = pool) {
 
 /* ---------- GasHub payment account (where customers send M-Pesa money) ---------- */
 const PAYMENT_ACCOUNT_TYPES = ["paybill", "till", "phone"];
-const DEFAULT_PAYMENT_ACCOUNT = { type: "paybill", number: "", account_number: "", account_name: "", instructions: "" };
+const DEFAULT_PAYMENT_ACCOUNT = { type: "till", number: "", account_number: "", account_name: "", instructions: "" };
 
 function normalizePaymentAccount(input = {}, current = DEFAULT_PAYMENT_ACCOUNT) {
     const out = { ...DEFAULT_PAYMENT_ACCOUNT, ...current }, errors = [];
@@ -149,6 +151,48 @@ function normalizePaymentAccount(input = {}, current = DEFAULT_PAYMENT_ACCOUNT) 
 
 async function getPaymentAccount(db = pool) {
     return { ...DEFAULT_PAYMENT_ACCOUNT, ...(await getSetting("payment_account", DEFAULT_PAYMENT_ACCOUNT, db)) };
+}
+
+/* ---------- online payment switches (Super Admin area) ----------
+   mpesa_prompt - the M-Pesa phone prompt (STK push)
+   bank         - paying by bank transfer
+   manual_till  - the backup Till shown only after the phone prompt failed twice (or when the prompt is off)
+   Everything is ON until the super admin switches it off. */
+const PAYMENT_METHOD_KEYS = ["mpesa_prompt", "bank", "manual_till"];
+const DEFAULT_PAYMENT_METHODS = { mpesa_prompt: true, bank: true, manual_till: true };
+const pickMethods = (o) => { const out = {}; for (const k of PAYMENT_METHOD_KEYS) out[k] = o[k] === undefined ? DEFAULT_PAYMENT_METHODS[k] : (o[k] === true || o[k] === "true"); return out; };
+
+function normalizePaymentMethods(input = {}, current = DEFAULT_PAYMENT_METHODS) {
+    const out = pickMethods({ ...DEFAULT_PAYMENT_METHODS, ...current });
+    for (const k of PAYMENT_METHOD_KEYS) if (input[k] !== undefined) out[k] = input[k] === true || input[k] === "true";
+    return { value: out, errors: [] };
+}
+
+async function getPaymentMethods(db = pool) {
+    return pickMethods(await getSetting("payment_methods", DEFAULT_PAYMENT_METHODS, db));
+}
+
+/* ---------- GasHub bank account (what customers see when they choose Bank) ---------- */
+const DEFAULT_BANK_ACCOUNT = { bank_name: "", account_name: "", account_number: "", branch: "", paybill: "", instructions: "" };
+
+function normalizeBankAccount(input = {}, current = DEFAULT_BANK_ACCOUNT) {
+    const out = { ...DEFAULT_BANK_ACCOUNT, ...current }, errors = [];
+    if (input.bank_name !== undefined) out.bank_name = text(input.bank_name, 80);
+    if (input.account_name !== undefined) out.account_name = text(input.account_name, 80);
+    if (input.account_number !== undefined) out.account_number = text(input.account_number, 40);
+    if (input.branch !== undefined) out.branch = text(input.branch, 80);
+    if (input.paybill !== undefined) out.paybill = text(input.paybill, 20).replace(/\s+/g, "");
+    if (input.instructions !== undefined) out.instructions = text(input.instructions, 300);
+    if (out.account_number && !/^[A-Za-z0-9][A-Za-z0-9 \-\/]{2,39}$/.test(out.account_number)) errors.push("The bank account number can only have letters, numbers, spaces and dashes.");
+    if (out.paybill && !/^\d{5,7}$/.test(out.paybill)) errors.push("A bank Paybill number is 5 to 7 digits.");
+    if ((out.bank_name || out.account_number) && !(out.bank_name && out.account_number && out.account_name)) errors.push("Enter the bank name, the account name and the account number together (or clear all three).");
+    return { value: out, errors };
+}
+
+/* "saved" = the super admin has saved bank details here. Until then the old BANK_* values in .env are used, so nothing breaks. */
+async function getBankAccount(db = pool) {
+    const s = await getSetting("bank_account", {}, db);
+    return { ...DEFAULT_BANK_ACCOUNT, ...s, saved: Boolean(s && s.updated_at) };
 }
 
 /* ---------- the GasHub Android app (Play Store) ---------- */
@@ -203,5 +247,6 @@ module.exports = {
     PLATFORMS, PLATFORM_NAMES, DEFAULT_EARN,
     getSetting, putSetting, cleanUrl, normalizeSocial, normalizeSupport, normalizeEarn, getEarnConfig,
     PAYMENT_ACCOUNT_TYPES, DEFAULT_PAYMENT_ACCOUNT, normalizePaymentAccount, getPaymentAccount,
+    DEFAULT_PAYMENT_METHODS, normalizePaymentMethods, getPaymentMethods, DEFAULT_BANK_ACCOUNT, normalizeBankAccount, getBankAccount,
     activeSocialLinks, DEFAULT_APP, normalizeApp, getAppConfig, appLink, playStoreLive, forgetLiveCheck
 };

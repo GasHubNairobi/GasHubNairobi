@@ -69,43 +69,13 @@
             <div class="content-card">
                 <div class="card-header">
                     <div>
-                        <h3>GasHub Withdrawal Account</h3>
-                        <p>The GasHub account the money is sent from when you pay customers. It can also be set in the .env file (GASHUB_WITHDRAWAL_ACCOUNT_* lines); what you save here takes priority. It is shown with the exact amount each time you mark a request as paid. Only admins see it.</p>
+                        <h3>When customers are paid <span class="wd-state off" id="wdAutoTag">Checking...</span></h3>
+                        <p>All payouts are scheduled in one place, <b>Payout Planner</b>, and always sent from your Paybill. This is the same schedule you see there. To pay one customer straight away, press <b>Send now</b> next to their request below.</p>
                     </div>
                 </div>
-                <form class="wd-settings" id="wdPayoutForm">
-                    <div class="wd-grid">
-                        <div><label for="wdPayMethod">Send from</label>
-                            <select id="wdPayMethod"><option value="mpesa_phone">M-Pesa phone number</option><option value="paybill">M-Pesa Paybill</option><option value="till">M-Pesa Till</option><option value="bank">Bank account</option></select></div>
-                        <div><label for="wdPayNumber" id="wdPayNumberLabel">Phone number</label><input type="text" id="wdPayNumber" autocomplete="off" placeholder="0712345678"></div>
-                        <div id="wdPayRefBox" hidden><label for="wdPayRef">Account reference</label><input type="text" id="wdPayRef" autocomplete="off" placeholder="Optional"></div>
-                        <div><label for="wdPayName">Account name</label><input type="text" id="wdPayName" autocomplete="off" placeholder="e.g. GasHub Payouts"></div>
-                    </div>
-                    <button type="submit" class="link-button ok" id="wdPaySave">Save withdrawal account</button>
-                </form>
-                <p class="wd-rate-note" id="wdAccSource" hidden></p>
-                <p class="wd-rate-note" id="wdRateNote" hidden></p>
-            </div>
-
-            <div class="content-card">
-                <div class="card-header">
-                    <div>
-                        <h3>Schedule Payouts <span class="wd-state off" id="wdAutoTag">Checking...</span></h3>
-                        <p>Choose the date and time when the money is sent to customers. At that time every waiting or approved request is sent to the customer&rsquo;s M-Pesa automatically and marked Paid once M-Pesa confirms. To pay one customer straight away, press <b>Send now</b> next to their request below. Time is Nairobi time. Automatic payouts need the MPESA_B2C_* lines in the .env file (see ENV-AUTO-PAYOUT.txt).</p>
-                    </div>
-                </div>
-                <form class="wd-settings" id="wdSchedForm">
-                    <div class="wd-sched">
-                        <label for="wdPayAt">Send the money to customers on</label>
-                        <input type="datetime-local" id="wdPayAt">
-                        <small id="wdSchedHint">No payout scheduled.</small>
-                    </div>
-                    <div class="wd-tier-actions">
-                        <button type="submit" class="link-button ok" id="wdSchedSave">Save schedule</button>
-                        <button type="button" class="link-button no" id="wdSchedClear" hidden>Clear schedule</button>
-                    </div>
-                </form>
+                <div id="wdPlannerBanner"></div>
                 <p class="wd-rate-note" id="wdSchedNote" hidden></p>
+                <p class="wd-rate-note" id="wdRateNote" hidden></p>
             </div>
 
             <div class="content-card">
@@ -198,6 +168,7 @@
 
     <script src="admin-sidebar.js"></script>
 <script src="admin-main.js"></script>
+    <script src="admin-planner-banner.js"></script>
     <script src="admin-withdrawals.js"></script>
 </body>
 </html>

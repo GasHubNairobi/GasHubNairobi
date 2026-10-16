@@ -11,9 +11,7 @@ const cache = new Map(); // file -> { mtime, html }
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 function originOf(req) {
-    const base = String(process.env.APP_BASE_URL || "").trim().replace(/\/+$/, "");
-    if (/^https?:\/\//i.test(base)) return base;
-    return `${req.protocol}://${req.get("host")}`;
+    return require("./site-url").siteUrl(req);
 }
 
 function tagsFor(html, origin, pageUrl) {

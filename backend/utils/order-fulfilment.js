@@ -3,7 +3,7 @@
    and ready for an M-Pesa callback later. */
 const { pool } = require("../config/database-config");
 
-const DEFAULT_POINTS = { enabled: true, pointsPerOrder: 50, pointValueKsh: 1, minRedeem: 301, onlineEnabled: true, onlinePoints: 50, cashEnabled: true, cashPoints: 50 };
+const DEFAULT_POINTS = { enabled: true, pointsPerOrder: 50, pointValueKsh: 1, minRedeem: 30, onlineEnabled: true, onlinePoints: 50, cashEnabled: true, cashPoints: 50 };
 
 /* Points settings from gashub_settings ("points"), falling back to 50 points per paid order. */
 async function getPointsConfig(db = pool) {
@@ -119,7 +119,7 @@ async function markOrderPaid(client, orderId, { amount, method, mpesaReceipt, ph
     const pointsAwarded = await awardPointsForPaidOrder(client, { ...order, payment_status: "paid", payment_method: payMethod });
     const completedOrder = await completeIfDone(client, order.id);
     const fresh = await client.query("SELECT * FROM orders WHERE id = $1", [order.id]);
-    return { order: fresh.rows[0], pointsAwarded, completed: !!completedOrder };
+    return { order: fresh.rows[0], pointsAwarded, completed: !!completedOrder, alreadyPaid: order.payment_status === "paid" };
 }
 
 module.exports = { getPointsConfig, awardPointsForPaidOrder, markOrderPaid, completeIfDone, isCash, DEFAULT_POINTS };

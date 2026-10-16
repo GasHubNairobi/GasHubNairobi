@@ -319,12 +319,12 @@ function updateOrderSummary() {
              points (change the two numbers below if the rule
              changes).
 
-   REDEEMING A customer with 301 points or more can use them as
+   REDEEMING A customer with 30 points or more can use them as
              a discount. What one point is worth is the exchange
              rate the admin sets in admin-settings (Exchange rate).
              It is read from the server every time checkout opens:
 
-                 GET /api/rewards/settings   ->  { points: 100, ksh: 10, min_redeem: 301 }
+                 GET /api/rewards/settings   ->  { points: 100, ksh: 10, min_redeem: 30 }
                                                  (or { ksh_per_point } / { points_per_ksh })
                  GET /api/points/config      ->  { pointValueKsh: 1 }   (used if the first is missing)
 
@@ -334,7 +334,7 @@ function updateOrderSummary() {
 
 const EARN_ABOVE_KSH = 1000;
 const EARN_POINTS = 100;
-const MIN_REDEEM_POINTS = 301;
+const MIN_REDEEM_POINTS = 30;
 
 const GH = window.GasHubRewards || null;
 
@@ -500,7 +500,7 @@ async function loadRewards() {
     }
     if (found) {
         rewards.rate = found.rate;
-        /* the admin can ask for more than 301, never less */
+        /* the admin sets the minimum (default 30) */
         rewards.min = Math.max(MIN_REDEEM_POINTS, Math.ceil(found.min || 0));
     }
 
@@ -549,9 +549,7 @@ function renderRewards() {
     box.hidden = false;
     const wrap = $id("pointsToggleWrap"), sliderWrap = $id("pointsSliderWrap"), locked = $id("pointsLocked");
     $id("pointsBalanceChip").innerHTML = rewards.signedIn ? flame(rewards.balance) : "";
-    $id("pointsRate").textContent = rewards.rate > 0
-        ? "1 coin = KSh " + rewards.rate.toLocaleString("en-KE", { maximumFractionDigits: 4 }) + ". Use " + rewards.min.toLocaleString("en-KE") + " coins or more for a discount."
-        : "Coin discounts are not available right now.";
+    $id("pointsRate").textContent = "";
 
     wrap.hidden = true; sliderWrap.hidden = true; locked.hidden = true;
 
@@ -570,7 +568,7 @@ function renderRewards() {
 
     if (rewards.balance < rewards.min) {
         locked.hidden = false;
-        locked.textContent = "You need " + (rewards.min - rewards.balance).toLocaleString("en-KE") + " more coins to unlock a discount.";
+        locked.textContent = "";
         return;
     }
     if (maxUsablePoints() < rewards.min) {
@@ -1413,7 +1411,7 @@ placeOrderButton.addEventListener(
                     points_to_redeem (whole number, 0 if none)
         returns:    { order: { orderId, payable, pointsUsed, discount, ... } }
         The server re-checks the points balance, the admin exchange rate
-        and the 301-point minimum, and works out the real "payable".
+        and the 30-point minimum, and works out the real "payable".
         Points should only be taken off the customer once the payment
         is confirmed (or held and given back if the payment fails).
 

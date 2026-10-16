@@ -6,9 +6,7 @@
 const { sign, verify } = require("./session");
 
 function siteOrigin(req) {
-    if (req && typeof req.get === "function" && req.get("host")) return `${req.protocol}://${req.get("host")}`;
-    const url = process.env.URL || process.env.APP_BASE_URL || process.env.PUBLIC_URL || "";
-    return String(url).replace(/\/+$/, "");
+    return require("./site-url").siteUrl(req);
 }
 
 /* Starts a background job. Resolves true when Netlify accepted it. */

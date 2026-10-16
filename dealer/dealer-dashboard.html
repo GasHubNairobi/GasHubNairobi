@@ -285,9 +285,9 @@
                         <div class="stat-body">
                             <h3 class="stat-value" id="totalOrders">0</h3>
                             <div class="stat-breakdown">
-                                <span><strong>0</strong> Refills</span>
+                                <span><strong id="ordersRefillsCount">0</strong> Refills</span>
                                 <span class="breakdown-dot">&bull;</span>
-                                <span><strong>0</strong> New Sets</span>
+                                <span><strong id="ordersNewSetsCount">0</strong> New Sets</span>
                             </div>
                         </div>
                     </article>
@@ -347,7 +347,7 @@
                                     <option value="7days">Last 7 Days</option>
                                     <option value="30days" selected>Last 30 Days</option>
                                     <option value="90days">Last 90 Days</option>
-                                    <option value="year">Full Year</option>
+                                    <option value="year">Last 12 Months</option>
                                 </select>
                             </div>
                         </div>
@@ -357,15 +357,15 @@
                             <div class="analytics-metrics-ribbon">
                                 <div class="metric-pill">
                                     <span class="pill-label">Period Revenue</span>
-                                    <strong class="pill-value" id="periodRevenue">KSh 945,000</strong>
+                                    <strong class="pill-value" id="periodRevenue">KSh 0</strong>
                                 </div>
                                 <div class="metric-pill">
                                     <span class="pill-label">Total Cylinders</span>
-                                    <strong class="pill-value" id="periodOrders">342 Units</strong>
+                                    <strong class="pill-value" id="periodOrders">0 Units</strong>
                                 </div>
                                 <div class="metric-pill">
                                     <span class="pill-label">Completion Rate</span>
-                                    <strong class="pill-value success" id="periodCompletedOrders">98.4%</strong>
+                                    <strong class="pill-value success" id="periodCompletedOrders">-</strong>
                                 </div>
                             </div>
 
@@ -586,5 +586,6 @@
         })();
     </script>
     <script src="dealer-mobile.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
 </body>
 </html>

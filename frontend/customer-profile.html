@@ -47,7 +47,7 @@
                     </div>
                     <div class="who-text">
                         <h1 id="profileName">Welcome to GasHub</h1>
-                        <p id="profileSub">Sign in to see your orders, rewards and favourites.</p>
+                        <p id="profileSub"></p>
                         <span class="since" id="memberSince" hidden></span>
                     </div>
                 </div>
@@ -68,7 +68,6 @@
                 <!-- not logged in -->
                 <div class="guest-cta" id="guestCta">
                     <a href="customer-login.html" class="btn yellow block">Sign in or log in</a>
-                    <p>New to GasHub? You can create your account on the same page.</p>
                 </div>
 
                 <!-- logged in -->
@@ -141,7 +140,6 @@
                 </button>
                 <div class="panel" id="rewardsPanel" hidden>
                     <div id="rewardsGuest" hidden>
-                        <p class="hint" style="margin-bottom:10px">Sign in to see your GasHub points.</p>
                         <a href="customer-login.html" class="btn yellow block">Sign in or log in</a>
                     </div>
                     <div id="rewardsBody" hidden>
@@ -199,7 +197,6 @@
                             <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>Auto
                         </button>
                     </div>
-                    <p class="hint" style="margin-top:6px">Auto switches between light and dark to match your phone's setting.</p>
                 </div>
             </section>
 
@@ -251,7 +248,6 @@
         <div class="sheet-card" role="dialog" aria-label="Change password">
             <button type="button" class="sheet-x" data-close aria-label="Close">×</button>
             <h2>Change password</h2>
-            <p>Enter your current password and choose a new one.</p>
             <form id="passwordForm" novalidate>
                 <div class="form-message" id="passwordMessage"></div>
                 <div class="field"><label for="currentPassword">Current password</label><input type="password" id="currentPassword" autocomplete="current-password"><span class="err" id="currentPasswordError"></span></div>
@@ -288,7 +284,6 @@
         <div class="sheet-card" role="dialog" aria-label="Edit delivery pin">
             <button type="button" class="sheet-x" data-close aria-label="Close">×</button>
             <h2>Edit delivery pin</h2>
-            <p>Use your current location, or tap the map to drop a pin. Drag the pin to adjust it. Your delivery address stays the same.</p>
             <button type="button" class="btn primary block" id="pinCurrentBtn">Use my current location</button>
             <div class="map-box"><div id="pinMap"></div><div class="map-msg" id="pinMapMsg" hidden></div></div>
             <p class="hint" id="pinStatus" style="margin-bottom:10px">No pin selected.</p>
@@ -331,5 +326,7 @@
     <script src="customer-pay-prompt.js" defer></script>
     <script src="customer-notifications.js" defer></script>
     <script src="customer-download.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
+    <script src="/gashub-app-banner.js" defer></script>
 </body>
 </html>

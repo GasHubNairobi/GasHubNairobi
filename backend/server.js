@@ -53,7 +53,7 @@ const { projectPath } = require("./utils/paths");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-if (process.env.TRUST_PROXY || isServerless) {
+if (process.env.TRUST_PROXY || isServerless || process.env.RENDER) {   /* Render sets RENDER=true and puts its proxy in front of the app */
     app.set(
         "trust proxy",
         Number(process.env.TRUST_PROXY) || 1
@@ -159,6 +159,32 @@ const staticCache = {
         }
     }
 };
+
+/* ---- Android app links: lets https links to this site open the GasHub app when it is installed ----
+   /.well-known/assetlinks.json is built from the package name saved in Admin > Settings > GasHub Mobile App and the
+   ANDROID_SHA256_CERT_FINGERPRINTS setting (comma separated; copy it from Play Console > App integrity > App signing). */
+app.get("/.well-known/assetlinks.json", async (req, res) => {
+    try {
+        const g = require("./utils/gashub-settings");
+        const pkg = String(process.env.ANDROID_PACKAGE_NAME || (await g.getAppConfig()).packageId || "").trim();
+        const prints = String(process.env.ANDROID_SHA256_CERT_FINGERPRINTS || "").split(/[\s,;]+/).map((x) => x.trim().toUpperCase()).filter((x) => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(x));
+        res.set("Cache-Control", "public, max-age=300").type("application/json");
+        if (!pkg || !prints.length) return res.send("[]");
+        res.send(JSON.stringify([{ relation: ["delegate_permission/common.handle_all_urls"], target: { namespace: "android_app", package_name: pkg, sha256_cert_fingerprints: prints } }]));
+    } catch (e) { res.status(200).type("application/json").send("[]"); }
+});
+
+/* The install manifest. Once the app is live on Google Play it names the Android app, so Chrome can tell the page whether it is installed. */
+app.get("/manifest.webmanifest", async (req, res) => {
+    try {
+        const m = JSON.parse(require("fs").readFileSync(require("path").join(frontendPath, "manifest.webmanifest"), "utf8"));
+        try {
+            const g = require("./utils/gashub-settings"), cfg = await g.getAppConfig(), url = g.appLink(cfg);
+            if (cfg.packageId && url && (await g.playStoreLive(cfg))) { m.related_applications = [{ platform: "play", url, id: cfg.packageId }]; m.prefer_related_applications = false; }
+        } catch (e) { /* keep the plain manifest */ }
+        res.set("Cache-Control", "public, max-age=300").type("application/manifest+json").send(JSON.stringify(m));
+    } catch (e) { res.status(404).end(); }
+});
 
 app.use(express.static(frontendPath, staticCache));
 
@@ -459,6 +485,8 @@ app.use(
 // Customer <-> dealer chat
 const messageRoutes = require("./routes/message-routes");
 app.use("/api/messages", messageRoutes);
+app.use("/api/push", require("./routes/push-routes"));   /* phone push notifications */
+app.use("/api/cron", require("./routes/cron-routes"));       /* lets an outside pinger run the minute jobs (keeps Render free awake) */
 
 app.use(
     "/api/admin/complaints",
@@ -674,6 +702,9 @@ async function startServer() {
 
         // Automated customer reminders (selected item, restock) - the admin sets the timing
         require("./utils/messaging-scheduler").start();
+
+        // Every minute: automatic dealer payouts + M-Pesa prompts whose callback never arrived (always-on server only)
+        require("./utils/background").start();
 
         server.on("error", (error) => {
             if (error && error.code === "EADDRINUSE") {

@@ -17,6 +17,7 @@
         { href: "admin-complaints.html", icon: "!", label: "Complaints" },
         { href: "admin-reviews.html", icon: "★", label: "Reviews" },
         { href: "admin-payment.html", icon: "KSh", label: "Payments" },
+        { href: "admin-payout-planner.html", icon: "◷", label: "Payout Planner" },
         { href: "admin-withdrawals.html", icon: "⇩", label: "Point Withdrawals" },
         { href: "admin-report.html", icon: "▥", label: "Reports" },
         { href: "admin-email-broadcast.html", icon: "✉", label: "Email Broadcast" },

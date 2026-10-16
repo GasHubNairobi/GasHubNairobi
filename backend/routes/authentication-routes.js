@@ -7,6 +7,10 @@ const { rateLimit } = require("../utils/rate-limit");
 /* every attempt counts, right or wrong: stops password guessing from one address */
 const loginLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
 const registerLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 20 });
+const resetController = require("../controllers/password-reset-controller");
+/* asking for a link sends an email, so it is limited harder than login */
+const forgotLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 8 });
+const resetLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 
 
 router.get("/status", auth.getStatus);
@@ -31,9 +35,13 @@ a.post("/login", loginLimit, requireCsrf, auth.loginCustomer);
 a.post("/logout", auth.logout);
 a.post("/complete-profile", requireCsrf, social.completeProfile);
 
+a.post("/forgot-password", forgotLimit, requireCsrf, resetController.customerForgot);
+a.post("/reset-password/check", resetLimit, requireCsrf, resetController.customerCheck);
+a.post("/reset-password", resetLimit, requireCsrf, resetController.customerReset);
+
 /* Not built yet: the login page shows "isn't available right now" when it gets 501 */
 const notReady = (req, res) => res.status(501).json({ success: false, message: "Not available yet." });
-["forgot-password", "reset-password", "verify-email", "resend-verification"].forEach((p) => a.post(`/${p}`, notReady));
+["verify-email", "resend-verification"].forEach((p) => a.post(`/${p}`, notReady));
 
 /* Google / Facebook / X  (must stay LAST: ":provider" matches anything) */
 a.get("/:provider/callback", social.callback);

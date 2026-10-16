@@ -333,14 +333,35 @@
     function paymentsOf(o) { return Array.isArray(o.raw && o.raw.payments) ? o.raw.payments : []; }
     function pendingPayment() { return paymentsOf(order).filter(function (p) { return /pending/i.test(String(p.status)) && p.code; })[0] || null; }
     function rejectedPayment() { return !pendingPayment() && paymentsOf(order).filter(function (p) { return /fail/i.test(String(p.status)); }).length > 0; }
-    async function getPayAccount() {
-        if (payAccount !== undefined) return payAccount;
+    /* which online methods the super admin switched on (Admin > Settings > Super Admin Area > Online Payment Methods) */
+    async function methodsConfig() {
+        try { var r = await fetch("/api/settings/payment-methods", { cache: "no-store", credentials: "same-origin" }); var j = await r.json(); return { mpesa: !(j && j.mpesa === false), bank: !(j && j.bank === false) }; }
+        catch (e) { return { mpesa: true, bank: true }; }
+    }
+    /* GasHub's bank details, saved by the super admin (always fresh) */
+    async function bankConfig() {
+        try { var r = await fetch("/api/payments/bank/config", { cache: "no-store", credentials: "same-origin" }); var j = await r.json(); return j && j.configured ? j : null; } catch (e) { return null; }
+    }
+    /* The backup Till. The server gives it out only after the phone prompt failed twice (or when the prompt is switched off). */
+    async function manualInfo() {
         try {
-            var r = await fetch("/api/settings/payment-account", { cache: "no-store", credentials: "same-origin" });
+            var r = await fetch("/api/payments/mpesa/manual?order_id=" + encodeURIComponent(order.id), { cache: "no-store", credentials: "same-origin", headers: R.authHeaders(false) });
             var j = await r.json();
-            payAccount = j && j.configured ? j : null;
-        } catch (e) { payAccount = null; }
-        return payAccount;
+            return j && j.available ? j : null;
+        } catch (e) { return null; }
+    }
+    function manualHTML(m, amount) {
+        var how = m.type === "paybill" ? "Lipa na M-Pesa > Pay Bill" : (m.type === "till" ? "Lipa na M-Pesa > Buy Goods and Services" : "Send Money");
+        var line = m.type === "paybill" ? [["Paybill number", m.number], ["Account number", m.account_number]]
+            : (m.type === "till" ? [["Till number", m.number]] : [["Send Money to", m.number]]);
+        return '<div class="banner" style="margin-top:10px"><b>Prompt not reaching your phone?</b> Pay manually: on your phone open M-Pesa, choose <b>' + esc(how) + '</b> and pay the exact amount below. Then type the M-Pesa code from the confirmation message in the box under this.</div>' +
+            rows(line.concat([["Name", m.account_name], ["Amount to pay", amount, "", "tot"]]).filter(function (l) { return l[1]; })) +
+            (m.instructions ? '<p class="rf-note" style="margin-top:8px">' + esc(m.instructions) + '</p>' : "");
+    }
+    async function refreshManual() {
+        var area = $("manualArea"); if (!area || !/mpesa/i.test(order.method)) return;
+        var m = await manualInfo();
+        if (m && !area.innerHTML) area.innerHTML = manualHTML(m, money(Math.max(0, order.total - (order.amountPaid || 0))));
     }
     /* ================= GASHUB COINS (used at the payment stage) =================
        After the dealer confirms the order the customer can turn coins into a discount, then pay the smaller amount
@@ -352,17 +373,17 @@
         return '<div style="margin-bottom:12px">' + rows([
             ["Products", money(o.productTotal)],
             ["Delivery", o.pickup ? "Pickup (free)" : money(o.deliveryFee)],
-            o.discount > 0 ? ["GasHub Coins discount", "\u2212 " + money(o.discount)] : null,
+            o.discount > 0 ? ["GasHub Coins discount" + (o.pointsUsed > 0 ? " (" + Number(o.pointsUsed).toLocaleString("en-KE") + " coins" + (coins.rate > 0 ? " \u00d7 " + money(coins.rate) : "") + ")" : ""), "\u2212 " + money(o.discount)] : null,
             ["Total to pay", money(due), "", "tot"]
         ]) + '</div>';
     }
-    var coins = { loaded: false, at: 0, enabled: false, rate: 0, min: 301, balance: null };
+    var coins = { loaded: false, at: 0, enabled: false, rate: 0, min: 30, balance: null };
     async function refreshCoins(force) {
-        if (!force && coins.loaded && Date.now() - coins.at < 60000) return coins;
+        if (!force && coins.loaded && Date.now() - coins.at < 15000) return coins;
         try {
             var r = await fetch("/api/points/config", { cache: "no-store", credentials: "same-origin" });
             var j = r.ok ? await r.json() : null;
-            if (j) { coins.enabled = j.enabled !== false; coins.rate = Number(j.pointValueKsh) || 0; coins.min = Number(j.minRedeem) > 0 ? Number(j.minRedeem) : 301; }
+            if (j) { coins.enabled = j.enabled !== false; coins.rate = Number(j.pointValueKsh) || 0; coins.min = Number(j.minRedeem) > 0 ? Number(j.minRedeem) : 30; }
         } catch (e) { /* keep the last known values */ }
         coins.balance = await R.balance();
         coins.loaded = true; coins.at = Date.now();
@@ -376,47 +397,34 @@
         var maxByBill = Math.max(0, Math.floor((Math.ceil(gross) - 1) / coins.rate));      /* keep at least KSh 1 to pay */
         return { available: available, max: Math.min(available, maxByBill), gross: gross };
     }
+    /* How many coins to turn into money when the switch goes on: as many as the order allows (always leaving KSh 1 to pay),
+       trimmed so no part of a coin is wasted at the admin's exchange rate. */
+    function coinsToUse(st) {
+        var d = Math.floor(st.max * coins.rate);
+        var n = Math.ceil(d / coins.rate - 1e-9);
+        if (!(n >= coins.min) || n > st.max) n = st.max;
+        return n;
+    }
     function coinsHTML(o) {
         var st = coinState(o);
         if (!st) return "";
-        var min = coins.min, on = o.pointsUsed > 0, start = on ? o.pointsUsed : st.max;
-        var html = '<div id="coinBox" style="border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:12px;background:#fff">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:14px">Use my GasHub Coins</b><span>' + R.chip(st.available, "credited") + '</span></div>' +
-            '<p class="rf-note" style="margin-top:4px">1 coin = ' + esc(money(coins.rate)) + '. Use ' + min.toLocaleString("en-KE") + ' coins or more for a discount. Coins work on online payments (M-Pesa or Bank), not cash on delivery.</p>';
-        if (st.available < min) {
-            html += '<p class="rf-note" style="margin-top:8px"><b>You need ' + (min - st.available).toLocaleString("en-KE") + ' more coins to unlock a discount.</b></p>';
-        } else if (st.max < min) {
-            html += '<p class="rf-note" style="margin-top:8px"><b>This order is too small to use ' + min.toLocaleString("en-KE") + ' coins on.</b></p>';
-        } else {
-            html += '<label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:13px"><input type="checkbox" id="coinUse"' + (on ? " checked" : "") + '><span>' +
-                (on ? "Using my GasHub Coins" : "Use my coins for a discount (up to " + esc(money(Math.floor(st.max * coins.rate))) + " off)") + '</span></label>' +
-                '<div id="coinWrap"' + (on ? "" : " hidden") + ' style="margin-top:8px">' +
-                '<input type="range" id="coinSlider" min="' + min + '" max="' + st.max + '" step="1" value="' + start + '" style="width:100%"' + (st.max <= min ? " disabled" : "") + '>' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px"><span>' + min.toLocaleString("en-KE") + '</span><strong id="coinNow"></strong><span>' + st.max.toLocaleString("en-KE") + '</span></div>' +
-                '<button type="button" class="btn y" id="coinApply" style="margin-top:8px;grid-column:auto">' + (on ? "Update coins" : "Apply coins") + '</button></div>';
-        }
-        return html + '<p class="msg" id="coinMsg" role="status"></p></div>';
+        var on = o.pointsUsed > 0, can = on || (st.available >= coins.min && st.max >= coins.min);
+        return '<div id="coinBox" class="coin-switch-row">' +
+            '<span class="csr-label">' + R.chip(st.available, "credited") + '<b>Use my coins</b></span>' +
+            '<label class="csr-sw' + (can ? "" : " off") + '" title="' + (can ? "Turn coins into a discount" : "Not enough coins yet") + '">' +
+            '<input type="checkbox" id="coinUse"' + (on ? " checked" : "") + (can ? "" : " disabled") + ' aria-label="Use my GasHub Coins"><i></i></label>' +
+            '<p class="msg" id="coinMsg" role="status"></p></div>';
     }
     function bindCoins(o) {
-        var cb = $("coinUse"), sl = $("coinSlider"), st = coinState(o);
-        if (!cb || !sl || !st) return;
-        var now = $("coinNow");
-        function label() {
-            var n = Number(sl.value) || 0, d = Math.floor(n * coins.rate);
-            now.textContent = n.toLocaleString("en-KE") + " coins = " + money(d) + " off · you pay " + money(Math.max(1, st.gross - d));
-        }
-        label();
-        sl.addEventListener("input", label);
+        var cb = $("coinUse"), st = coinState(o);
+        if (!cb || !st) return;
         cb.addEventListener("change", function () {
-            if (cb.checked) { $("coinWrap").hidden = false; return; }
-            $("coinWrap").hidden = true;
-            if (o.pointsUsed > 0) setCoins(0);                       /* switching it off removes the coins from the order */
+            /* on = turn the coins into money and take it off this order; off = give the coins back */
+            if (cb.checked) setCoins(coinsToUse(st)); else if (o.pointsUsed > 0) setCoins(0);
         });
-        $("coinApply").addEventListener("click", function () { setCoins(Number(sl.value) || 0); });
     }
     async function setCoins(n) {
-        var msg = $("coinMsg"), btn = $("coinApply"), cb = $("coinUse");
-        if (btn) btn.disabled = true;
+        var msg = $("coinMsg"), btn = null, cb = $("coinUse");
         if (cb) cb.disabled = true;
         if (msg) { msg.className = "msg"; msg.textContent = "Saving..."; }
         try {
@@ -426,7 +434,7 @@
             if (!r.ok || j.success === false) {
                 if (msg) { msg.className = "msg err"; msg.textContent = j.message || "We could not update your coins. Please try again."; }
                 if (btn) btn.disabled = false;
-                if (cb) { cb.disabled = false; if (n === 0) cb.checked = true; }
+                if (cb) { cb.disabled = false; cb.checked = n === 0; }
                 return;
             }
             await refreshCoins(true);
@@ -482,14 +490,15 @@
         /* 2. confirmed, but the customer has not chosen how to pay */
         if (!o.methodChosen) {
             await refreshCoins();
-            var k1 = "choose|" + o.cashAllowed + "|" + o.total + "|" + o.pointsUsed + "|" + coins.balance + "|" + coins.enabled + "|" + o.discount;
+            var sw = await methodsConfig();
+            var k1 = "choose|" + sw.mpesa + "|" + sw.bank + "|" + o.cashAllowed + "|" + o.total + "|" + o.pointsUsed + "|" + coins.balance + "|" + coins.enabled + "|" + o.discount;
             if (k1 === payKey) return;
             payKey = k1;
             box.innerHTML = checkoutSummary(o) + coinsHTML(o) + '<p class="rf-note">Your dealer confirmed this order. Choose how you want to pay <b>' + esc(amount0) + '</b>:</p>' +
                 (o.cashAllowed ? '<button type="button" class="pm" data-m="cash" style="' + METHOD_BTN + '"><b>Cash on delivery</b><span class="rf-note">Pay the messenger when your gas ' + (o.pickup ? "is ready" : "arrives") + '.</span></button>'
                     : '<div class="rf-note" style="margin-top:8px">Cash on delivery is not available because you used GasHub coins on this order. Pay online instead.</div>') +
-                '<button type="button" class="pm" data-m="mpesa" style="' + METHOD_BTN + '"><b>M-Pesa</b><span class="rf-note">Pay to the GasHub M-Pesa account.</span></button>' +
-                '<button type="button" class="pm" data-m="bank" style="' + METHOD_BTN + '"><b>Bank</b><span class="rf-note">Pay by bank transfer to GasHub.</span></button>' +
+                (sw.mpesa ? '<button type="button" class="pm" data-m="mpesa" style="' + METHOD_BTN + '"><b>M-Pesa</b><span class="rf-note">Get a prompt on your phone and enter your PIN.</span></button>' : "") +
+                (sw.bank ? '<button type="button" class="pm" data-m="bank" style="' + METHOD_BTN + '"><b>Bank</b><span class="rf-note">Pay by bank transfer to GasHub.</span></button>' : "") +
                 '<p class="msg" id="pmMsg" role="status"></p>';
             Array.prototype.forEach.call(box.querySelectorAll(".pm"), function (b) { b.addEventListener("click", function () { chooseMethod(b.getAttribute("data-m")); }); });
             bindCoins(o);
@@ -513,41 +522,54 @@
         /* 4. M-Pesa or bank: paid to the GasHub account */
         var isBank = /bank/i.test(o.method);
         $("payCardTitle").textContent = isBank ? "Checkout \u00B7 Pay by bank" : "Checkout \u00B7 Pay with M-Pesa";
-        var acc = await getPayAccount();
+        var sw4 = await methodsConfig();
         var pend = pendingPayment(), rej = rejectedPayment();
         if (!pend) await refreshCoins();
-        var key = ["pay", o.method, !!acc, pend ? pend.code : "", rej, o.total, o.pointsUsed, pend ? "" : coins.balance].join("|");
         card.hidden = false;
+        var amount = money(Math.max(0, o.total - (o.amountPaid || 0)));
+
+        /* the super admin switched this method off: the customer picks another one (unless a payment is already being confirmed) */
+        if (!pend && ((isBank && !sw4.bank) || (!isBank && !sw4.mpesa))) {
+            var koff = "off|" + o.method + "|" + sw4.mpesa + "|" + sw4.bank;
+            if (koff === payKey) return;
+            payKey = koff;
+            box.innerHTML = '<p class="rf-note"><b>' + (isBank ? "Bank payment" : "M-Pesa payment") + '</b> is not available right now. Please choose another way to pay.</p>' +
+                '<p class="rf-note" style="margin-top:10px"><a href="#" id="changeMethod" style="color:var(--blue);text-decoration:underline">Choose another payment method</a></p>';
+            bindChange();
+            return;
+        }
+
+        var bk = isBank ? await bankConfig() : null;
+        var stk = !isBank && await stkEnabled();
+        var man = !isBank ? await manualInfo() : null;
+        var key = ["pay", o.method, bk ? [bk.bank_name, bk.account_number, bk.account_name, bk.branch, bk.paybill, bk.instructions].join("~") : "", stk, man ? "m" : "", pend ? pend.code : "", rej, o.total, o.pointsUsed, pend ? "" : coins.balance].join("|");
         if (key === payKey) return;                 /* nothing changed: keep what the customer is typing */
         payKey = key;
 
-        var amount = money(Math.max(0, o.total - (o.amountPaid || 0)));
         var html = "";
-        var stk = !isBank && await stkEnabled();
-        if (stk) {
-            html += '<p class="rf-note">Pay <b>' + esc(amount) + '</b> with M-Pesa. We send a prompt to your phone and your order shows as paid as soon as you enter your PIN.</p>' +
-                '<form id="stkForm" autocomplete="off" style="display:flex;gap:8px;margin-top:10px">' +
-                '<input id="stkPhone" type="tel" inputmode="numeric" maxlength="14" placeholder="M-Pesa number, e.g. 0712345678" value="' + esc(String(o.deliveryPhone || "").replace(/[^\d+]/g, "")) + '" style="flex:1;min-width:0;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:13px">' +
-                '<button type="submit" class="btn y" id="stkBtn" style="grid-column:auto">Pay with M-Pesa</button></form>' +
-                '<p class="msg" id="stkMsg" role="status"></p>' +
-                '<details style="margin-top:12px"><summary class="rf-note" style="cursor:pointer">Paid another way? Send your M-Pesa code instead</summary>';
-        }
-        if (!acc) {
-            html = '<p class="rf-note">GasHub\'s payment details are not available right now. Please contact GasHub support to pay for this order.</p>';
+        if (isBank) {
+            html += '<p class="rf-note">Pay <b>' + esc(amount) + '</b> to the GasHub bank account below. Use <b>' + esc(o.id) + '</b> as the payment reference, then type the bank reference you receive.</p>';
+            html += bk ? rows([["Bank", bk.bank_name], ["Account name", bk.account_name], ["Account number", bk.account_number], ["Branch", bk.branch], ["Paybill", bk.paybill], ["Amount to pay", amount, "", "tot"]].filter(function (l) { return l[1]; })) + (bk.instructions ? '<p class="rf-note" style="margin-top:8px">' + esc(bk.instructions) + '</p>' : "")
+                : '<div class="banner">GasHub\'s bank details are being set up and will show here. Please choose M-Pesa or Cash on delivery if you need to pay now.</div>';
         } else {
-            var line = acc.type === "paybill" ? [["Paybill number", acc.number], ["Account number", acc.account_number]]
-                : (acc.type === "till" ? [["Till number (Buy Goods)", acc.number]] : [["Send Money to", acc.number]]);
-            html += rows(line.concat([["Name", acc.account_name], ["Amount to pay", amount, "", "tot"]]));
-            if (acc.instructions) html += '<p class="rf-note" style="margin-top:8px">' + esc(acc.instructions) + '</p>';
-            html += '<p class="rf-note" style="margin-top:8px">Pay this amount to the GasHub account above, then type the M-Pesa code from your confirmation message. Your order shows as paid once GasHub confirms the money.</p>';
+            if (stk) {
+                html += '<p class="rf-note">Pay <b>' + esc(amount) + '</b> with M-Pesa. We send a prompt to your phone and your order shows as paid as soon as you enter your PIN.</p>' +
+                    '<form id="stkForm" autocomplete="off" style="display:flex;gap:8px;margin-top:10px">' +
+                    '<input id="stkPhone" type="tel" inputmode="numeric" maxlength="14" placeholder="M-Pesa number, e.g. 0712345678" value="' + esc(String(o.deliveryPhone || "").replace(/[^\d+]/g, "")) + '" style="flex:1;min-width:0;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:13px">' +
+                    '<button type="submit" class="btn y" id="stkBtn" style="grid-column:auto">Pay with M-Pesa</button></form>' +
+                    '<p class="msg" id="stkMsg" role="status"></p>';
+            } else if (!man) {
+                html += '<div class="banner">M-Pesa payment is not available right now. Please choose another way to pay.</div>';
+            }
+            html += '<div id="manualArea">' + (man ? manualHTML(man, amount) : "") + '</div>';
         }
         if (pend) html += '<div style="margin-top:10px;padding:8px 10px;border-radius:9px;background:#e8f0ff;color:#1f4fd8;font-size:12px;font-weight:600">We received your code <b>' + esc(pend.code) + '</b>. GasHub is confirming your payment.</div>';
-        if (rej) html += '<div class="banner" style="margin-top:10px">GasHub could not find that payment. Check the M-Pesa code and send it again.</div>';
-        html += '<form id="payCodeForm" autocomplete="off" style="display:flex;gap:8px;margin-top:10px">' +
-            '<input id="payCodeInput" type="text" maxlength="12" placeholder="' + (isBank ? "Bank reference / transaction code" : "M-Pesa code, e.g. QGH7XK2LMN") + '" value="' + esc(pend ? pend.code : "") + '" style="flex:1;min-width:0;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:13px;text-transform:uppercase">' +
+        if (rej) html += '<div class="banner" style="margin-top:10px">GasHub could not find that payment. Check the ' + (isBank ? "bank reference" : "M-Pesa code") + ' and send it again.</div>';
+        html += '<p class="rf-note" style="margin-top:10px"><b>' + (isBank ? "Paid by bank?" : "Already paid?") + '</b> Type your ' + (isBank ? "bank reference" : "M-Pesa code") + ' below. Your order shows as paid once GasHub confirms the money.</p>' +
+            '<form id="payCodeForm" autocomplete="off" style="display:flex;gap:8px;margin-top:10px">' +
+            '<input id="payCodeInput" type="text" maxlength="' + (isBank ? 30 : 12) + '" placeholder="' + (isBank ? "Bank reference / transaction code" : "M-Pesa code, e.g. QGH7XK2LMN") + '" value="' + esc(pend ? pend.code : "") + '" style="flex:1;min-width:0;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:13px;text-transform:uppercase">' +
             '<button type="submit" class="btn y" id="payCodeBtn" style="grid-column:auto">' + (pend ? "Update code" : "I have paid") + '</button></form>' +
             '<p class="msg" id="payMsg" role="status"></p>';
-        if (stk) html += "</details>";
         html += changeLink;
         box.innerHTML = checkoutSummary(o) + (pend ? "" : coinsHTML(o)) + html;
         bindChange();
@@ -574,7 +596,7 @@
             var tok = await R.csrf(), hdrs = R.authHeaders(true); if (tok) hdrs["X-CSRF-Token"] = tok;
             var r = await fetch("/api/payments/mpesa/stk-push", { method: "POST", headers: hdrs, credentials: "same-origin", body: JSON.stringify({ order_id: order.id, phone: phone }) });
             var j = {}; try { j = await r.json(); } catch (x) { }
-            if (!r.ok || !j.checkoutRequestId) { msg.className = "msg err"; msg.textContent = j.message || "We could not send the prompt. Please try again."; btn.disabled = false; return; }
+            if (!r.ok || !j.checkoutRequestId) { msg.className = "msg err"; msg.textContent = j.message || "We could not send the prompt. Please try again."; btn.disabled = false; refreshManual(); return; }
             msg.textContent = "Check your phone and enter your M-Pesa PIN...";
             var started = Date.now();
             while (Date.now() - started < 130000) {
@@ -588,10 +610,10 @@
                     flash("Payment received. Thank you!");
                     return;
                 }
-                if (sj.status && sj.status !== "pending") { msg.className = "msg err"; msg.textContent = sj.message || "The payment did not go through."; btn.disabled = false; return; }
+                if (sj.status && sj.status !== "pending") { msg.className = "msg err"; msg.textContent = sj.message || "The payment did not go through."; btn.disabled = false; refreshManual(); return; }
             }
             msg.className = "msg err"; msg.textContent = "No confirmation yet. If M-Pesa took the money it will show on this order shortly.";
-            btn.disabled = false;
+            btn.disabled = false; refreshManual();
         } catch (e) { msg.className = "msg err"; msg.textContent = "No connection. Please try again."; btn.disabled = false; }
     }
     /* the customer picks Cash on delivery / M-Pesa / Bank (only possible after the dealer confirmed the order) */
@@ -621,7 +643,8 @@
         ev.preventDefault();
         var code = $("payCodeInput").value.trim().toUpperCase().replace(/\s+/g, ""), btn = $("payCodeBtn"), msg = $("payMsg");
         msg.className = "msg";
-        if (!/^[A-Z0-9]{8,12}$/.test(code)) { msg.className = "msg err"; msg.textContent = "Enter the M-Pesa code from your confirmation message."; return; }
+        var isBankPay = /bank/i.test(order.method);
+        if (isBankPay ? !/^[A-Z0-9\-]{5,30}$/.test(code) : !/^[A-Z0-9]{8,12}$/.test(code)) { msg.className = "msg err"; msg.textContent = isBankPay ? "Enter the bank reference from your bank confirmation." : "Enter the M-Pesa code from your confirmation message."; return; }
         btn.disabled = true;
         try {
             var tok = await R.csrf(), hdrs = R.authHeaders(true); if (tok) hdrs["X-CSRF-Token"] = tok;
@@ -707,14 +730,11 @@
     function renderRefill() {
         var card = $("refillCard"), body = $("refillBody"), g = gasItem();
         if (!g || order.stage === -1) { card.hidden = true; return; }
+        /* nothing to say until the gas is delivered: the countdown starts then */
+        if (order.stage < 3) { card.hidden = true; return; }
         card.hidden = false;
         $("refillSize").textContent = g.kg + "kg cylinder";
         card.className = "card refill";
-        if (order.stage < 3) {
-            var c0 = R.cycle(g.kg);
-            body.innerHTML = '<p class="rf-note">We start counting once this gas is delivered. A ' + esc(String(g.kg)) + 'kg cylinder usually lasts about <b>' + c0.days + ' days</b>, and we will remind you in the app before it runs out.</p>';
-            return;
-        }
         var start = order.deliveredAt || order.placedAt || Date.now();
         R.recordDelivery({ orderId: order.id, kg: g.kg, deliveredAt: start });
         var s = R.schedule({

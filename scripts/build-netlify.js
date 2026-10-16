@@ -16,7 +16,7 @@ const path = require("path");
 const root = path.join(__dirname, "..");
 const dist = path.join(root, "dist");
 
-const HIDDEN = /\.(md|sql|txt|lnk|env|map)$/i;
+const HIDDEN = /\.(md|sql|txt|lnk|env|map|rej|orig|bak)$/i;   /* .rej / .orig / .bak are leftovers from patching: never published */
 const LEFTOVER = /\.\d+css$/i;
 
 function copyDir(from, to, keep) {

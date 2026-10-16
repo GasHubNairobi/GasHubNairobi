@@ -1,0 +1,38 @@
+ONLINE PAYMENT SWITCHES, BANK DETAILS AND BACKUP TILL  (all in the locked Super Admin area)
+
+WHERE
+Admin > Settings > unlock "Super Admin Area" (super admin password). Three cards:
+  1. Online Payment Methods  - on/off for: M-Pesa phone prompt, Bank payment, Backup M-Pesa Till.
+  2. Bank Account Details    - bank name, account name, account number, branch, bank paybill, extra instructions.
+  3. Backup M-Pesa Till      - the Till (or paybill / phone) used for the manual way.
+Everything is ON by default, so nothing changes until you switch something off.
+
+WHAT CUSTOMERS SEE
+- "Choose how to pay" lists only the methods that are on. M-Pesa is offered while the phone prompt OR the backup Till is on.
+  Bank is offered while Bank is on. Cash on delivery is not affected by these switches.
+- The server refuses a switched-off method (choose method, phone prompt). A customer who already sent money can still send their code/reference.
+- BANK: the customer sees the bank details you saved (live, no restart). Until you save them in Settings, the old BANK_* values in .env are used.
+- BACKUP TILL: never public. GET /api/payments/mpesa/manual?order_id=... gives it to the customer's OWN M-Pesa order only when
+    * the Backup Till switch is on and a Till is saved, and
+    * the phone prompt failed twice for that order (could not be sent, expired / no answer, or failed). A prompt the customer cancelled
+      on their phone, or one that was paid, does not count. (MANUAL_AFTER_FAILED_PROMPTS = 2 in controllers/mpesa-controller.js), or
+    * the phone prompt is switched off / not set up (then there is no prompt to fail, so the Till shows straight away).
+  The customer pays the Till, then types the M-Pesa code in the code box.
+- /api/settings/payment-account (the old public address) now always answers "not configured".
+
+HOW YOU CONFIRM PAYMENTS (Admin > Payments)
+- BANK: the customer sends the bank reference -> a PENDING payment with method "bank" appears. Check your bank statement for the money
+  (full amount, reference = order number), open the payment, press "Confirm money received". The order becomes Paid and the customer gets points.
+  Not found? Press Reject; the customer is asked to check the reference. (Automatic checking needs your bank's API: BANK_API_* in .env and
+  lookupTransaction() in backend/utils/bank-service.js. Until then it is always confirmed by hand.)
+- MANUAL TILL / M-PESA CODE: if MPESA_C2B_ENABLED=true and the Till is your MPESA_SHORTCODE, the code is checked automatically against
+  real Till payments. Otherwise it shows as a PENDING payment: check the M-Pesa statement, then "Confirm money received".
+  A manual Till that is NOT your MPESA_SHORTCODE cannot be checked automatically (Safaricom only reports the shortcode registered for C2B).
+
+CHANGED FILES
+backend: utils/gashub-settings.js, utils/bank-service.js, controllers/{admin-settings,bank,mpesa,customer-order}-controller.js,
+         routes/{admin,settings,mpesa}-routes.js
+frontend: customer-checkout-pay.js, customer-orders.js
+admin: admin-settings.html, admin-settings.js
+No database migration: the three new settings are stored in the existing gashub_settings table
+(payment_methods, bank_account, and the existing payment_account).

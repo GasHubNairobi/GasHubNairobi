@@ -12,7 +12,7 @@ exports.handler = async () => {
     }
     try {
         const { hasMinuteWork } = require("../../backend/controllers/withdrawal-controller");
-        if (await hasMinuteWork()) {
+        if ((await hasMinuteWork()) || (await require("../../backend/utils/dealer-payouts").hasWork()) || (await require("../../backend/controllers/payout-planner-controller").hasWork())) {
             await require("../../backend/utils/jobs").triggerJob("minute");
         }
     } catch (error) {

@@ -153,7 +153,7 @@
     function renderHero() {
         const li = loggedIn(), c = info();
         $("#profileName").textContent = li ? (c.name || "Customer") : "Welcome to GasHub";
-        $("#profileSub").textContent = li ? (c.email || c.phone || "Signed in") : "Sign in to see your orders, rewards and favourites.";
+        $("#profileSub").textContent = li ? (c.email || c.phone || "Signed in") : "";
         $("#guestCta").hidden = li;
         $("#statsRow").hidden = !li;
         const ms = $("#memberSince"), d = c.since ? new Date(c.since) : null;
@@ -218,6 +218,7 @@
         orders.forEach(o => {
             const s = String(o.status || o.orderStatus || "").trim().toLowerCase().replace(/\s+/g, "");
             if (s === "completed" || s === "complete" || s === "delivered") done++;
+            if (["cancelled", "canceled", "rejected"].includes(s) || o.refund_status || String(o.paymentStatus || o.payment_status || "").toLowerCase() === "refunded") return;   /* refunded money is not "spent" */
             spent += Number(o.total || o.totalAmount || o.amount || o.price || 0);
         });
         paintStats(orders.length, done, spent);

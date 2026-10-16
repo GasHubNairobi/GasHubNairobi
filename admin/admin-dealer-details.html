@@ -81,16 +81,16 @@
     </section>
 
     <section class="panel section-card payout-card" id="payoutsCard">
-      <div class="section-heading"><div><p class="eyebrow">DEALER PAYOUTS</p><h3>Payout schedule &amp; history</h3><p class="section-subtitle">Money is sent after the time you schedule: product price minus GasHub commission. Points discounts are paid by GasHub, and commission on cash orders is taken off the next payout.</p></div><span class="heading-icon">KSh</span></div>
+      <div class="section-heading"><div><p class="eyebrow">DEALER PAYOUTS</p><h3>Payout schedule &amp; history</h3><p class="section-subtitle">When dealers are paid is set once for everyone in Payout Planner (always sent from the Paybill). Each payout is the product price minus GasHub commission. Points discounts are paid by GasHub, and commission on cash orders is taken off the next payout.</p></div><span class="heading-icon">KSh</span></div>
       <div class="order-summary" id="payoutBalance" style="margin-bottom:16px">
         <div><span>Online earnings (after commission)</span><strong id="poOnline">KSh 0.00</strong></div>
         <div><span>Cash commission to deduct</span><strong id="poCash">KSh 0.00</strong></div>
         <div><span>Ready to pay out</span><strong id="poNet">KSh 0.00</strong></div>
-        <div><span>Still on hold</span><strong id="poHold">0 orders</strong></div>
+        <div><span>Still on hold</span><strong id="poOnHold">0 orders</strong></div>
       </div>
+      <div id="poPlannerBanner" style="margin:0 -20px 8px"></div>
       <div class="payout-form" style="margin-bottom:18px">
-        <label class="field-label">Send the money on<input type="datetime-local" id="poWhen"></label>
-        <div class="payout-footer" style="border-top:0;padding-top:0"><p id="poHint">Only completed orders past the hold period are included.</p><button class="button button-primary" type="button" id="poSchedule">Schedule payout</button></div>
+        <div class="payout-footer" style="border-top:0;padding-top:0"><p id="poHint">Only completed orders past the hold period are included.</p><button class="button button-primary" type="button" id="poSchedule">Create this dealer&rsquo;s payout</button></div>
       </div>
       <div class="table-scroll"><table class="orders-table"><thead><tr><th>Reference</th><th>Send on</th><th>Online</th><th>Cash commission</th><th>Amount</th><th>Destination</th><th>Status</th><th>Action</th></tr></thead><tbody id="poBody"><tr><td colspan="8" class="empty-row">Loading payouts...</td></tr></tbody></table></div>
     </section>
@@ -115,6 +115,7 @@
   </dialog>
   <dialog id="orderDialog" class="modal"><form method="dialog"><div class="modal-header"><div><p class="eyebrow">ORDER DETAILS</p><h3 id="orderDialogTitle">Order</h3></div><button type="button" class="modal-close" data-close-dialog="orderDialog">×</button></div><div id="orderDialogBody" class="order-dialog-body"></div><div class="modal-actions"><button type="button" class="button button-light" data-close-dialog="orderDialog">Close</button></div></form></dialog>
   <script src="admin-sidebar.js"></script>
+<script src="admin-planner-banner.js"></script>
 <script src="admin-dealer-details.js"></script>
 </body>
 </html>

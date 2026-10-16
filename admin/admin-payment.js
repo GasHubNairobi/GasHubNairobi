@@ -276,9 +276,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateStatistics() {
         const payments = state.payments;
 
+        /* only completed payments count: a refunded (or failed / pending) payment is not money received */
         const totalAmount = payments.reduce(
             (total, payment) =>
-                total + getAmount(payment),
+                normalizeStatus(payment.status) === "completed" ? total + getAmount(payment) : total,
             0
         );
 
@@ -1002,6 +1003,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const r = await GasHubAdmin.adminApiRequest("/api/admin/payments/refunds");
             const pending = Array.isArray(r && r.pending) ? r.pending : [];
             const done = Array.isArray(r && r.done) ? r.done : [];
+            const auto = !!(r && r.auto_enabled);
+            const stale = o => !o.refund_payout_started_at || (Date.now() - new Date(o.refund_payout_started_at).getTime()) > 30 * 60 * 1000;
+            const isSending = o => o.refund_payout_state === "sending" && !stale(o);
+            const actionCell = o => {
+                const ref = escapeHtml(o.order_number || o.id);
+                const amt = escapeHtml(formatAmount(o.refund_amount));
+                const ph = escapeHtml(o.refund_phone || o.customer_phone || "");
+                const manual = `<button type="button" class="secondary-button" data-refund-done="${ref}" data-refund-amount="${amt}" data-refund-phone="${ph}">Mark as refunded</button>`;
+                if (!auto) return manual;
+                if (isSending(o)) return `<span class="refund-state">Sending to M-Pesa...</span>`;
+                const failed = o.refund_payout_state === "failed" || (o.refund_payout_state === "sending" && stale(o));
+                const why = failed ? `<small class="refund-error">${escapeHtml(o.refund_payout_error || "M-Pesa did not answer. Check your M-Pesa statement before sending again.")}</small><br>` : "";
+                return `${why}<button type="button" class="primary-button" data-refund-send="${ref}" data-refund-amount="${amt}" data-refund-phone="${ph}" data-refund-name="${escapeHtml(o.customer_name || "")}">${failed ? "Refund again" : "Refund now"}</button> ${manual}`;
+            };
+            if (pending.some(isSending)) { clearTimeout(window.__refundPoll); window.__refundPoll = setTimeout(loadRefunds, 6000); }
             const count = document.getElementById("refundCount");
             if (count) { count.textContent = pending.length; count.hidden = !pending.length; }
             body.innerHTML = pending.length ? pending.map(o => `
@@ -1012,7 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td><strong>${escapeHtml(formatAmount(o.refund_amount))}</strong></td>
                     <td>${escapeHtml(o.refund_note || o.cancellation_reason || "Cancelled")}</td>
                     <td>${escapeHtml(formatDateTime(o.refund_requested_at))}</td>
-                    <td><button type="button" class="primary-button" data-refund-done="${escapeHtml(o.order_number || o.id)}" data-refund-amount="${escapeHtml(formatAmount(o.refund_amount))}" data-refund-phone="${escapeHtml(o.refund_phone || o.customer_phone || "")}">Mark as refunded</button></td>
+                    <td>${actionCell(o)}</td>
                 </tr>`).join("")
                 : `<tr><td colspan="7" class="table-loading">No refunds waiting. Nothing is owed back to customers.</td></tr>`;
             const box = document.getElementById("refundDoneBox");
@@ -1062,7 +1078,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    /* "Refund now": the money goes back automatically to the M-Pesa number the customer paid with */
+    async function sendRefundFor(orderRef, amount, phone, name, button) {
+        const ok = await GasHubDialog.confirm({
+            title: "Refund this customer now?",
+            message: `${amount} will be sent automatically from the GasHub M-Pesa account to ${phone || "the number the customer paid with"}${name ? " (" + name + ")" : ""}. This sends real money and cannot be undone.`,
+            confirmText: "Refund now",
+            cancelText: "Cancel",
+            tone: "warning"
+        });
+        if (!ok) return;
+        button.disabled = true;
+        try {
+            const result = await GasHubAdmin.adminApiRequest(`/api/admin/payments/refunds/${encodeURIComponent(orderRef)}/send`, { method: "POST", body: {} });
+            showMessage(result.message || "Refund sent.", "success");
+        } catch (error) {
+            showMessage(error.message || "Could not send this refund.");
+        }
+        await loadRefunds();
+    }
+
     document.getElementById("refundsTableBody")?.addEventListener("click", event => {
+        const s = event.target.closest("[data-refund-send]");
+        if (s) return sendRefundFor(s.dataset.refundSend, s.dataset.refundAmount, s.dataset.refundPhone, s.dataset.refundName, s);
         const b = event.target.closest("[data-refund-done]");
         if (b) completeRefundFor(b.dataset.refundDone, b.dataset.refundAmount, b.dataset.refundPhone, b);
     });

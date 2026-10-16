@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var d = new Date(v);
         return isNaN(d.getTime()) ? "" : d.toLocaleString("en-KE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     }
-    var LABEL = { paid: "Paid", scheduled: "Scheduled", on_hold: "On hold", failed: "Failed" };
+    var LABEL = { paid: "Paid", scheduled: "Scheduled", on_hold: "On hold", sending: "Sending to M-Pesa", failed: "Delayed" };
 
     function render(data) {
         var s = data.summary || {};
@@ -23,13 +23,24 @@ document.addEventListener("DOMContentLoaded", function () {
             $("poNextWhen").textContent = (s.next.status === "on_hold" || s.next.status === "held" ? "On hold - " : "Due ") + when(s.next.scheduled_for);
         } else {
             $("poNextAmount").textContent = "-";
-            $("poNextWhen").textContent = "Nothing scheduled";
+            $("poNextWhen").textContent = (data.schedule && data.schedule.next_text) ? "Next payout run: " + data.schedule.next_text : (data.schedule && data.schedule.mode !== "off" ? data.schedule.text : "Nothing scheduled");
+        }
+        var b = data.balance;
+        if (b) {
+            $("poReady").textContent = kes(b.ready_amount);
+            $("poReadyNote").textContent = b.ready_orders + (b.ready_orders === 1 ? " order" : " orders") +
+                (Number(b.cash_commission) > 0 ? " - cash commission of " + kes(b.cash_commission) + " already deducted" : "") +
+                " (commission " + b.commission_rate + "%)";
+            $("poHold").textContent = kes(b.on_hold_amount);
+            $("poHoldNote").textContent = b.on_hold_orders + (b.on_hold_orders === 1 ? " order" : " orders") + " released " + b.hold_hours + "h after completion";
         }
         var list = data.payouts || [];
         if (!list.length) { $("poList").innerHTML = '<div class="po-empty">No payouts yet. They appear here once GasHub schedules your earnings.</div>'; return; }
         $("poList").innerHTML = list.map(function (p) {
             var meta = [];
             if (p.status === "paid") meta.push("Paid " + when(p.paid_at));
+            else if (p.status === "sending") meta.push("Being sent to your M-Pesa now");
+            else if (p.status === "failed") meta.push("GasHub is sorting out this payment. You do not need to do anything.");
             else meta.push("Scheduled for " + when(p.scheduled_for));
             meta.push("Sent to: " + esc(p.destination || "-"));
             if (p.mpesa_receipt) meta.push("M-Pesa receipt: <strong>" + esc(p.mpesa_receipt) + "</strong>");

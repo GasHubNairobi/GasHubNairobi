@@ -952,7 +952,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function relock(message) {
         superToken = "";
         /* the payment account is only shown while unlocked, so clear what was loaded */
-        ["payAccNumber", "payAccAccountNumber", "payAccName", "payAccInstructions"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        ["payAccNumber", "payAccAccountNumber", "payAccName", "payAccInstructions", "bankName", "bankAccountName", "bankAccountNumber", "bankBranch", "bankPaybill", "bankInstructions"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
         applyLockState();
         if (message) showMessage(message);
     }
@@ -977,6 +977,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 loadAdmins();
                 loadPlatformSettings();
                 loadPaymentAccount();
+                loadPaymentMethods();
+                loadBankAccount();
             } catch (error) {
                 input.value = "";
                 showMessage(error.message || "Could not unlock.");
@@ -1046,7 +1048,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const number = payAcc.number.value.trim();
         if (!number) {
             payAcc.preview.textContent = "Not set yet";
-            payAcc.hint.textContent = "Until this is saved, customers are told to contact support to pay.";
+            payAcc.hint.textContent = "Until this is saved, customers who cannot get the prompt are told to contact support.";
             return;
         }
         const parts = {
@@ -1055,7 +1057,7 @@ document.addEventListener("DOMContentLoaded", () => {
             phone: `Send Money to ${number}`
         };
         payAcc.preview.textContent = parts[type] + (payAcc.name.value.trim() ? ` · ${payAcc.name.value.trim()}` : "");
-        payAcc.hint.textContent = "Customers see this after they place an M-Pesa order and are asked for the M-Pesa code.";
+        payAcc.hint.textContent = "Customers see this only after the M-Pesa phone prompt failed to reach them twice (or when the prompt is switched off).";
     }
 
     async function loadPaymentAccount() {
@@ -1063,7 +1065,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const data = await superRequest("/api/admin/settings/payment-account");
             const s = data.settings || {};
-            payAcc.type.value = s.type || "paybill";
+            payAcc.type.value = s.type || "till";
             payAcc.number.value = s.number || "";
             payAcc.account.value = s.account_number || "";
             payAcc.name.value = s.account_name || "";
@@ -1098,11 +1100,96 @@ document.addEventListener("DOMContentLoaded", () => {
                 payAcc.number.value = result.settings.number || "";
                 updatePaymentAccountPreview();
             }
-            showMessage(result.message || "GasHub payment account saved.", "success");
+            showMessage(result.message || "Backup Till saved.", "success");
         } catch (error) {
             showMessage(error.message || "Could not save the payment account.");
         } finally {
-            if (button) { button.disabled = false; button.textContent = "Save Payment Account"; }
+            if (button) { button.disabled = false; button.textContent = "Save Backup Till"; }
+        }
+    });
+
+    /* ---------- online payment methods: on / off switches ---------- */
+    const pm = { prompt: document.getElementById("pmMpesaPrompt"), bank: document.getElementById("pmBank"), till: document.getElementById("pmManualTill"), warn: document.getElementById("pmWarning") };
+    function updatePmWarning() { if (pm.warn && pm.prompt) pm.warn.hidden = pm.prompt.checked || pm.till.checked; }
+    [pm.prompt, pm.till].forEach(el => el?.addEventListener("change", updatePmWarning));
+
+    async function loadPaymentMethods() {
+        if (!pm.prompt) return;
+        try {
+            const data = await superRequest("/api/admin/settings/payment-methods");
+            const s = data.settings || {};
+            pm.prompt.checked = s.mpesa_prompt !== false;
+            pm.bank.checked = s.bank !== false;
+            pm.till.checked = s.manual_till !== false;
+        } catch (error) {
+            console.info("Could not load the payment switches:", error.message);
+        }
+        updatePmWarning();
+    }
+
+    document.getElementById("paymentMethodsForm")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const button = document.getElementById("savePaymentMethodsButton");
+        try {
+            if (button) { button.disabled = true; button.textContent = "Saving…"; }
+            const result = await superRequest("/api/admin/settings/payment-methods", {
+                method: "PUT",
+                body: { mpesa_prompt: pm.prompt.checked, bank: pm.bank.checked, manual_till: pm.till.checked }
+            });
+            showMessage(result.message || "Payment methods saved.", "success");
+        } catch (error) {
+            showMessage(error.message || "Could not save the payment methods.");
+        } finally {
+            if (button) { button.disabled = false; button.textContent = "Save Payment Methods"; }
+        }
+    });
+
+    /* ---------- bank account shown to customers ---------- */
+    const bankF = {
+        name: document.getElementById("bankName"), accName: document.getElementById("bankAccountName"), number: document.getElementById("bankAccountNumber"),
+        branch: document.getElementById("bankBranch"), paybill: document.getElementById("bankPaybill"), instructions: document.getElementById("bankInstructions"),
+        preview: document.getElementById("bankPreview"), hint: document.getElementById("bankPreviewHint")
+    };
+    function updateBankPreview() {
+        if (!bankF.name) return;
+        const n = bankF.name.value.trim(), a = bankF.number.value.trim();
+        if (!n || !a) { bankF.preview.textContent = "Not set yet"; bankF.hint.textContent = "Until this is saved, customers who choose Bank are told the bank details are being set up."; return; }
+        bankF.preview.textContent = `${n} · Account ${a}` + (bankF.accName.value.trim() ? ` · ${bankF.accName.value.trim()}` : "");
+        bankF.hint.textContent = "Customers see these details (and your instructions) when they choose Bank.";
+    }
+    async function loadBankAccount() {
+        if (!bankF.name) return;
+        try {
+            const data = await superRequest("/api/admin/settings/bank-account");
+            const s = data.settings || {};
+            bankF.name.value = s.bank_name || ""; bankF.accName.value = s.account_name || ""; bankF.number.value = s.account_number || "";
+            bankF.branch.value = s.branch || ""; bankF.paybill.value = s.paybill || ""; bankF.instructions.value = s.instructions || "";
+            if (data.using_env) bankF.hint.textContent = "These details came from the server .env file. Press Save to keep them here from now on.";
+        } catch (error) {
+            console.info("Could not load the bank account:", error.message);
+        }
+        if (!(document.getElementById("bankPreviewHint")?.textContent || "").startsWith("These details came")) updateBankPreview();
+    }
+    [bankF.name, bankF.accName, bankF.number].forEach(el => el?.addEventListener("input", updateBankPreview));
+
+    document.getElementById("bankAccountForm")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const button = document.getElementById("saveBankAccountButton");
+        try {
+            if (button) { button.disabled = true; button.textContent = "Saving…"; }
+            const result = await superRequest("/api/admin/settings/bank-account", {
+                method: "PUT",
+                body: {
+                    bank_name: bankF.name.value.trim(), account_name: bankF.accName.value.trim(), account_number: bankF.number.value.trim(),
+                    branch: bankF.branch.value.trim(), paybill: bankF.paybill.value.trim(), instructions: bankF.instructions.value.trim()
+                }
+            });
+            updateBankPreview();
+            showMessage(result.message || "Bank details saved.", "success");
+        } catch (error) {
+            showMessage(error.message || "Could not save the bank details.");
+        } finally {
+            if (button) { button.disabled = false; button.textContent = "Save Bank Details"; }
         }
     });
 
@@ -1168,6 +1255,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadEarnSettings();
     loadPurchasePoints();
     updatePaymentAccountPreview();   /* the account itself is loaded after the super admin unlock */
+    updateBankPreview();
 
     /* ---------- collapsible settings cards ---------- */
     (function setupCollapsibleCards() {

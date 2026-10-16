@@ -450,10 +450,10 @@
 
                 <td class="customer-cell">
                     <strong>${escapeHtml(order.customerName)}</strong>
-                    <a href="tel:${escapeHtml(order.customerPhone)}" class="customer-phone" title="Call customer">
+                    ${order.customerPhone ? `<span class="customer-phone" title="Customer number (partly hidden for privacy)">
                         <i class="fa-solid fa-phone" aria-hidden="true"></i>
                         <span>${escapeHtml(order.customerPhone)}</span>
-                    </a>
+                    </span>` : ""}
                 </td>
 
                 <td>
@@ -744,7 +744,7 @@
                 <div>
                     <label style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Customer Information</label>
                     <p style="margin: 4px 0 0; font-size: 14px; font-weight: 700; color: #0f172a;">${escapeHtml(order.customerName)}</p>
-                    <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">${escapeHtml(order.customerPhone)}</p>
+                    ${order.customerPhone ? `<p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">${escapeHtml(order.customerPhone)}</p>` : ""}
                     <p style="margin: 4px 0 0; font-size: 12px; color: #334155;"><strong>Address:</strong> ${escapeHtml(order.deliveryAddress || "Depot Counter")}${order.pinUrl ? ` &middot; <a href="${order.pinUrl}" target="_blank" rel="noopener">Pinned location</a>` : ""}</p>
                 </div>
                 <div>
@@ -1093,7 +1093,7 @@
                 <tr>
                     <td>${escapeHtml(o.id)}</td>
                     <td>${formatDateTime(o.orderDate)}</td>
-                    <td>${escapeHtml(o.customerName)} (${escapeHtml(o.customerPhone)})</td>
+                    <td>${escapeHtml(o.customerName)}${o.customerPhone ? ` (${escapeHtml(o.customerPhone)})` : ""}</td>
                     <td>${escapeHtml(o.productName)}</td>
                     <td style="text-align: right;">${formatCurrency(fin.gross)}</td>
                     <td style="text-align: right; color: #6366f1;">${formatCurrency(fin.gashubFee)}</td>

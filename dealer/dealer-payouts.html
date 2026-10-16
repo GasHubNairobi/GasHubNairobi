@@ -152,12 +152,13 @@
                     <div class="stock-intro-text">
                         <div class="stock-eyebrow"><i class="fa-solid fa-money-bill-transfer fa-xs"></i><span>YOUR EARNINGS</span></div>
                         <h1>Payouts</h1>
-                        <p>Money GasHub sends to you: product price minus GasHub commission, plus the delivery fee you charged (no commission is taken on delivery fees). This page is for viewing only.</p>
                     </div>
                 </div>
 
                 <div class="po-summary">
                     <div class="po-card"><span>Next payout</span><strong id="poNextAmount">-</strong><small id="poNextWhen">Nothing scheduled</small></div>
+                    <div class="po-card"><span>Earned, ready for next payout</span><strong id="poReady">KSh 0.00</strong><small id="poReadyNote">Completed orders past the hold period</small></div>
+                    <div class="po-card"><span>Still on hold</span><strong id="poHold">KSh 0.00</strong><small id="poHoldNote">Recently completed orders</small></div>
                     <div class="po-card"><span>Total received</span><strong id="poTotalPaid">KSh 0.00</strong><small id="poPaidCount">0 payouts</small></div>
                 </div>
 
@@ -196,5 +197,6 @@
 });
     </script>
     <script src="dealer-mobile.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
 </body>
 </html>

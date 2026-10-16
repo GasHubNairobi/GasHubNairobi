@@ -1,0 +1,10 @@
+GasHub app links (Google Play)
+
+1. Links in emails/SMS: they use the address the request came in on, then Netlify's site address (your custom domain once set),
+   then APP_BASE_URL / PUBLIC_URL. Change the domain in Netlify and links follow. For scheduled emails (no visitor), Netlify's URL
+   is used; if you still have APP_BASE_URL / PUBLIC_URL set in Netlify, update or delete them when you change domain.
+2. After publishing the app: Admin > Settings > GasHub Mobile App: save the package name (e.g. ke.co.gashub.app).
+3. In Netlify > Environment variables add ANDROID_SHA256_CERT_FINGERPRINTS = the SHA-256 from Google Play Console >
+   App integrity > App signing (also add your upload key's if testing). Separate several with commas. Redeploy.
+   https://YOURSITE/.well-known/assetlinks.json must then list your package. This is what makes links open the app.
+4. Phones: app installed -> bar says "Open GasHub in the app"; not installed -> website works and the bar says "Get the GasHub app".

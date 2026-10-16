@@ -701,6 +701,10 @@ button, input, select {
     font-weight: 600;
 }
 
+.stat-trend.negative {
+    color: var(--color-danger, #dc2626);
+}
+
 .stat-trend.positive {
     color: var(--color-success);
 }

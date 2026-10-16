@@ -11,5 +11,6 @@ These files add features on top. Each one is safe to run again. Run any you have
 | `order-times-migration.sql`, `live-tracking-migration.sql`, `delivery-messengers-migration.sql`, `messenger-email-and-link-security-migration.sql` | order times, live tracking, messengers |
 | `dealer-purchases-migration.sql`, `dealer-verification-migration.sql` | dealer purchases and verification payments |
 | `messaging-migration.sql`, `reviews-migration.sql`, `social-settings-and-product-views-migration.sql` | chat, reviews, social settings |
+| `push-notifications-migration.sql` | phone push notification subscriptions (also created automatically) |
 | `migration-006-serverless.sql` | session and rate-limit tables for Netlify (optional: created automatically) |
 | **`migration-007-enable-rls.sql`** | **locks every table against Supabase's public REST API. Run it.** |

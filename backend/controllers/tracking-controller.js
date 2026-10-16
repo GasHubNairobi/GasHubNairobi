@@ -82,9 +82,7 @@ function arrival(o, lat, lng, speedMs) {
 const tokenOk = (t) => typeof t === "string" && /^[a-f0-9]{48}$/.test(t);
 
 function baseUrl(req) {
-    const env = (process.env.APP_BASE_URL || "").replace(/\/$/, "");
-    if (env && !/localhost|127\.0\.0\.1/.test(env)) return env;
-    return `${req.protocol}://${req.get("host")}`;
+    return require("../utils/site-url").siteUrl(req);
 }
 
 /* ------------------------------------------------------------------ dealer */

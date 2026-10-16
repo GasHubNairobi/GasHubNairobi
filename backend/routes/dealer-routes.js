@@ -13,6 +13,16 @@ const { requireUser } = require("../middleware/user-authentication");
 
 // Canonical endpoint used by dealer pages that call /api/dealers/login.
 router.post("/login", require("../utils/rate-limit").rateLimit({ windowMs: 15 * 60 * 1000, max: 30 }), authenticationController.loginDealer);
+// Forgot / reset password (public: the dealer is signed out when they need these)
+{
+    const reset = require("../controllers/password-reset-controller");
+    const { rateLimit: rl } = require("../utils/rate-limit");
+    const forgotLimit = rl({ windowMs: 15 * 60 * 1000, max: 8 });
+    const resetLimit = rl({ windowMs: 15 * 60 * 1000, max: 20 });
+    router.post("/forgot-password", forgotLimit, reset.dealerForgot);
+    router.post("/reset-password/check", resetLimit, reset.dealerCheck);
+    router.post("/reset-password", resetLimit, reset.dealerReset);
+}
 // Ends the dealer session on the server (always succeeds, even if the token is already gone).
 router.post("/logout", async (req, res) => {
     try {
@@ -55,6 +65,7 @@ router.put("/riders/mine/:id", requireDealer, dealerOrderController.updateRider)
 router.delete("/riders/mine/:id", requireDealer, dealerOrderController.removeRider);
 router.get("/reviews/mine", requireDealer, reviewController.getMyDealerReviews);
 router.get("/orders/mine", requireDealer, dealerOrderController.listOrders);
+router.get("/sales/mine", requireDealer, require("../controllers/dealer-sales-controller").getMySales);
 router.get("/orders/:orderId/route", requireDealer, dealerOrderController.getOrderRoute);
 router.patch("/orders/:orderId", requireDealer, dealerOrderController.updateOrder);
 router.post("/orders/:orderId/tracking-link", requireDealer, trackingController.createTrackingLink);

@@ -112,7 +112,7 @@
         var f = info.fees || { ranges: [] };
         var unit = f.unit === "ksh" ? "KSh " : "";
         var suffix = f.unit === "ksh" ? "" : " coins";
-        $("wdFeesCard").hidden = closed || !f.ranges.length;
+        $("wdFeesCard").hidden = true;
         if (!f.ranges.length) return;
         $("wdFeesIntro").textContent = "A small transaction charge is taken off each withdrawal. What is left is sent to your M-Pesa.";
         $("wdFees").innerHTML = f.ranges.map(function (r) {

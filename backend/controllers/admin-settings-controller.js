@@ -4,6 +4,7 @@ const { pool } = require("../config/database-config");
 const {
     PLATFORMS, getSetting, putSetting, normalizeSocial, normalizeSupport, normalizeEarn, getEarnConfig,
     normalizePaymentAccount, getPaymentAccount,
+    normalizePaymentMethods, getPaymentMethods, normalizeBankAccount, getBankAccount,
     normalizeApp, getAppConfig, appLink, playStoreLive, forgetLiveCheck
 } = require("../utils/gashub-settings");
 const lock = require("../utils/super-lock");
@@ -41,7 +42,7 @@ async function getCoins(req, res) {
         const points = await getSetting("points", {});
         const rate = Number(points.pointValueKsh);
         const history = (await getSetting("coin_rate_history", { items: [] })).items || [];
-        res.json({ success: true, settings: { coin_rate_ksh: Number.isFinite(rate) && rate > 0 ? rate : 1, min_redeem_points: Number(points.minRedeem) >= 1 ? Math.floor(Number(points.minRedeem)) : 301 }, history });
+        res.json({ success: true, settings: { coin_rate_ksh: Number.isFinite(rate) && rate > 0 ? rate : 1, min_redeem_points: Number(points.minRedeem) >= 1 ? Math.floor(Number(points.minRedeem)) : 30 }, history });
     } catch (e) { fail(res, e, "load the coin rate"); }
 }
 
@@ -53,7 +54,7 @@ async function putCoins(req, res) {
         const previous = Number(points.pointValueKsh);
         const rounded = Math.round(rate * 100) / 100;
         /* the least coins a customer must have to spend them (optional in the request: keeps the old value when not sent) */
-        let minRedeem = Number(points.minRedeem) >= 1 ? Math.floor(Number(points.minRedeem)) : 301;
+        let minRedeem = Number(points.minRedeem) >= 1 ? Math.floor(Number(points.minRedeem)) : 30;
         if ((req.body || {}).min_redeem_points !== undefined) {
             const m = Number(req.body.min_redeem_points);
             if (!Number.isFinite(m) || m < 1 || m > 1000000 || Math.floor(m) !== m) return res.status(400).json({ success: false, message: "Enter a whole number of coins, 1 or more, for the minimum needed to spend coins." });
@@ -134,6 +135,42 @@ async function putAppSetting(req, res) {
     } catch (e) { fail(res, e, "save the app settings"); }
 }
 
+/* ---------- online payment switches (on / off for M-Pesa prompt, Bank and the backup Till) ---------- */
+async function getPaymentMethodsSetting(req, res) {
+    try { res.json({ success: true, settings: await getPaymentMethods() }); }
+    catch (e) { fail(res, e, "load the payment switches"); }
+}
+async function putPaymentMethodsSetting(req, res) {
+    try {
+        const { value } = normalizePaymentMethods(req.body || {}, await getPaymentMethods());
+        await putSetting("payment_methods", { ...value, updated_by: who(req), updated_at: new Date().toISOString() });
+        const names = { mpesa_prompt: "M-Pesa phone prompt", bank: "Bank payment", manual_till: "Backup Till" };
+        const off = Object.keys(names).filter((k) => !value[k]).map((k) => names[k]);
+        res.json({ success: true, message: off.length ? `Saved. Switched off for customers: ${off.join(", ")}.` : "Saved. All online payment methods are on.", settings: value });
+    } catch (e) { fail(res, e, "save the payment switches"); }
+}
+
+/* ---------- GasHub bank account shown to customers who pay by bank ---------- */
+async function getBankAccountSetting(req, res) {
+    try {
+        const b = await getBankAccount();
+        let usingEnv = false;
+        if (!b.saved) { const d = await require("../utils/bank-service").details(); usingEnv = Boolean(d.bank_name || d.account_number); Object.assign(b, d); }
+        res.json({ success: true, settings: b, using_env: usingEnv });
+    } catch (e) { fail(res, e, "load the bank account"); }
+}
+async function putBankAccountSetting(req, res) {
+    try {
+        const current = await getBankAccount();
+        const base = current.saved ? current : { ...current, ...(await require("../utils/bank-service").details()) };
+        const { value, errors } = normalizeBankAccount(req.body || {}, base);
+        if (errors.length) return res.status(400).json({ success: false, message: errors[0], errors });
+        const { saved, ...clean } = value;
+        await putSetting("bank_account", { ...clean, updated_by: who(req), updated_at: new Date().toISOString() });
+        res.json({ success: true, message: clean.account_number ? "Bank details saved. Customers who choose Bank now see these details." : "Bank details cleared. Customers will be told the bank details are being set up.", settings: clean });
+    } catch (e) { fail(res, e, "save the bank account"); }
+}
+
 /* ---------- GasHub payment account: where customers send M-Pesa money ---------- */
 async function getPaymentAccountSetting(req, res) {
     try { res.json({ success: true, settings: await getPaymentAccount() }); }
@@ -143,6 +180,7 @@ async function getPaymentAccountSetting(req, res) {
 async function putPaymentAccountSetting(req, res) {
     try {
         const { value, errors } = normalizePaymentAccount(req.body || {}, await getPaymentAccount());
+        if (value.number && !require("../utils/mpesa-service").allowSameShortcode() && value.number === require("../utils/mpesa-service").b2cShortcode()) errors.push("That number is your payout Paybill. Customers must pay the Till, never the account payouts are sent from.");
         if (errors.length) return res.status(400).json({ success: false, message: errors[0], errors });
         await putSetting("payment_account", { ...value, updated_by: who(req), updated_at: new Date().toISOString() });
         res.json({ success: true, message: value.number ? "GasHub payment account saved. Customers now pay to this account." : "Payment account cleared. Customers will be told to contact support to pay.", settings: value });
@@ -210,4 +248,4 @@ async function putPlatform(req, res) {
     } catch (e) { fail(res, e, "save the platform settings"); }
 }
 
-module.exports = { getSocial, putSocial, getCoins, putCoins, getPurchasePoints, putPurchasePoints, getEarn, putEarn, lockStatus, lockUnlock, lockRelock, lockChangePassword, getPlatform, putPlatform, getPaymentAccountSetting, putPaymentAccountSetting, getAppSetting, putAppSetting };
+module.exports = { getPaymentMethodsSetting, putPaymentMethodsSetting, getBankAccountSetting, putBankAccountSetting, getSocial, putSocial, getCoins, putCoins, getPurchasePoints, putPurchasePoints, getEarn, putEarn, lockStatus, lockUnlock, lockRelock, lockChangePassword, getPlatform, putPlatform, getPaymentAccountSetting, putPaymentAccountSetting, getAppSetting, putAppSetting };

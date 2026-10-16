@@ -169,51 +169,65 @@
                     </div>
                 </div>
 
+                <!-- Period -->
+                <div class="sales-period-bar">
+                    <label for="salesPeriodSelect">Show sales for</label>
+                    <select id="salesPeriodSelect" class="form-select-sm">
+                        <option value="7days">Last 7 days</option>
+                        <option value="30days" selected>Last 30 days</option>
+                        <option value="90days">Last 90 days</option>
+                        <option value="year">Last 12 months</option>
+                    </select>
+                    <span class="sales-note" id="salesRateNote">Sales are completed, paid orders. Commission is taken on the goods only.</span>
+                </div>
+
+                <div class="sales-error" id="salesError" hidden></div>
+
                 <!-- Metrics Grid -->
                 <div class="stock-metrics-grid">
                     <article class="stock-metric-card">
-                        <div class="metric-icon total">
-                            <i class="fa-solid fa-coins"></i>
-                        </div>
+                        <div class="metric-icon total"><i class="fa-solid fa-coins"></i></div>
                         <div class="metric-data">
                             <span class="metric-label">Today's Revenue</span>
-                            <strong class="metric-value">KSh 0</strong>
-                            <span class="metric-subtext text-success">0% vs yesterday</span>
+                            <strong class="metric-value" id="salesToday">KSh 0</strong>
+                            <span class="metric-subtext" id="salesTodayChange">No sales yesterday</span>
                         </div>
                     </article>
 
                     <article class="stock-metric-card">
-                        <div class="metric-icon full">
-                            <i class="fa-solid fa-fire-flame-simple"></i>
-                        </div>
+                        <div class="metric-icon full"><i class="fa-solid fa-fire-flame-simple"></i></div>
                         <div class="metric-data">
                             <span class="metric-label">Refills Sold</span>
-                            <strong class="metric-value">0 Cylinders</strong>
-                            <span class="metric-subtext">6kg &amp; 13kg Swaps</span>
+                            <strong class="metric-value" id="salesRefills">0 Cylinders</strong>
+                            <span class="metric-subtext">Gas refills and swaps</span>
                         </div>
                     </article>
 
                     <article class="stock-metric-card">
-                        <div class="metric-icon warning">
-                            <i class="fa-solid fa-box-open"></i>
-                        </div>
+                        <div class="metric-icon warning"><i class="fa-solid fa-box-open"></i></div>
                         <div class="metric-data">
                             <span class="metric-label">New Cylinders Sold</span>
-                            <strong class="metric-value">0 Units</strong>
+                            <strong class="metric-value" id="salesNew">0 Units</strong>
                             <span class="metric-subtext">Complete packages</span>
                         </div>
                     </article>
 
                     <article class="stock-metric-card">
-                        <div class="metric-icon empty">
-                            <i class="fa-solid fa-wallet"></i>
-                        </div>
+                        <div class="metric-icon empty"><i class="fa-solid fa-wallet"></i></div>
                         <div class="metric-data">
                             <span class="metric-label">Net Dealer Margin</span>
-                            <strong class="metric-value">KSh 0</strong>
-                            <span class="metric-subtext text-success">0% average margin</span>
+                            <strong class="metric-value" id="salesMargin">KSh 0</strong>
+                            <span class="metric-subtext" id="salesMarginPct">0% after GasHub commission</span>
                         </div>
                     </article>
+                </div>
+
+                <!-- Period totals -->
+                <div class="sales-totals" id="salesTotals">
+                    <div><span>Goods sold</span><strong id="salesGross">KSh 0</strong></div>
+                    <div><span>GasHub commission</span><strong id="salesCommission">KSh 0</strong></div>
+                    <div><span>Delivery fees (yours)</span><strong id="salesDelivery">KSh 0</strong></div>
+                    <div><span>Completed orders</span><strong id="salesOrders">0</strong></div>
                 </div>
 
                 <!-- Sales Transactions Table -->
@@ -228,20 +242,21 @@
                         <table class="dealer-products-table">
                             <thead>
                                 <tr>
-                                    <th>Transaction ID</th>
+                                    <th>Order</th>
                                     <th>Customer</th>
                                     <th>Gas Brand &amp; Product</th>
-                                    <th>Amount</th>
+                                    <th>Goods sold</th>
+                                    <th>Commission</th>
+                                    <th>You earn</th>
                                     <th>Payment</th>
-                                    <th>Delivery Status</th>
-                                    <th>Time</th>
+                                    <th>Completed</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="salesTableBody">
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted" style="text-align: center; padding: 32px 16px; color: #64748b;">
+                                    <td colspan="8" class="text-center py-4 text-muted" style="text-align: center; padding: 32px 16px; color: #64748b;">
                                         <i class="fa-solid fa-receipt fa-2x" style="opacity: 0.35; margin-bottom: 8px; display: block;"></i>
-                                        <span>No sales transactions completed yet. Completed sales will appear here.</span>
+                                        <span>Loading your sales...</span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -277,6 +292,8 @@
 
 });
     </script>
+    <script src="dealer-sales.js"></script>
     <script src="dealer-mobile.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
 </body>
 </html>

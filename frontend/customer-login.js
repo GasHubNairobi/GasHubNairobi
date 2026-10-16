@@ -372,7 +372,13 @@
     const savedEmail = localStorage.getItem(REMEMBERED_EMAIL);
     if (savedEmail) { loginEmail.value = savedEmail; rememberMe.checked = true; }
 
-    if (resetToken) { showPanel("reset", true); }
+    if (resetToken) {
+        showPanel("reset", true);
+        /* check the link first, so an expired one is explained straight away instead of after typing a password */
+        csrfReady.then(() => api("/auth/reset-password/check", { method: "POST", body: { token: resetToken } })).then(res => {
+            if (res && res.status === 410) { showPanel("forgot", true); showMessage("This reset link has expired or was already used. Enter your email to get a new one.", "error"); }
+        });
+    }
     else if (verifyToken) { verifyEmail(verifyToken); }
     else if (authState === "success") { finishSocialLogin(); }
     else if (authState === "complete_profile") {            /* new Google customer: add phone + address on the sign-up page */
