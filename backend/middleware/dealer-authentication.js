@@ -2,7 +2,11 @@ const { pool } = require("../config/database-config");
 const { getBearerToken } = require("../utils/assistant");
 
 /* Stored in the database (not in memory) so sessions work across Netlify function instances. */
-const dealerSessions = require("../utils/session-store").createStore("dealer", 30 * 24 * 60 * 60 * 1000);
+const DAY = 24 * 60 * 60 * 1000;
+const WEB_SESSION_MS = 30 * DAY;          /* website: expires 30 days after login */
+const APP_SESSION_MS = 3650 * DAY;        /* installed app: stays signed in (about 10 years) until the dealer logs out; renewed on every page open */
+const APP_COOKIE_MS = 400 * DAY;          /* browsers cap cookies at about 400 days, so the cookie is re-issued each time a dealer page opens */
+const dealerSessions = require("../utils/session-store").createStore("dealer", WEB_SESSION_MS);
 
 /* HttpOnly cookie that lets the server protect the dealer HTML pages (the API itself uses the Bearer token). */
 const DEALER_SESSION_COOKIE = "gashub_dealer_session";
@@ -42,5 +46,8 @@ async function requireDealer(req, res, next) {
 module.exports = requireDealer;
 module.exports.requireDealer = requireDealer;
 module.exports.dealerSessions = dealerSessions;
+module.exports.WEB_SESSION_MS = WEB_SESSION_MS;
+module.exports.APP_SESSION_MS = APP_SESSION_MS;
+module.exports.APP_COOKIE_MS = APP_COOKIE_MS;
 module.exports.DEALER_SESSION_COOKIE = DEALER_SESSION_COOKIE;
 module.exports.dealerCookieOptions = dealerCookieOptions;

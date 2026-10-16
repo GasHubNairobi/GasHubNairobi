@@ -358,7 +358,7 @@ app.use(
 // served to a browser holding a valid dealer session cookie (set at dealer login). On Netlify these pages are NOT on the CDN
 // (scripts/build-netlify.js leaves them out), so this function is the only way to reach them.
 
-const { dealerSessions, DEALER_SESSION_COOKIE, dealerCookieOptions } = require("./middleware/dealer-authentication");
+const { dealerSessions, DEALER_SESSION_COOKIE, dealerCookieOptions, APP_SESSION_MS, APP_COOKIE_MS } = require("./middleware/dealer-authentication");
 const PUBLIC_DEALER_PAGES = new Set(["/dealer-login.html", "/dealer-application.html"]);
 
 async function requireDealerPage(req, res, next) {
@@ -383,6 +383,13 @@ async function requireDealerPage(req, res, next) {
         if (!a || a.user_status !== "active" || (a.dealer_status !== "active" && !pendingFirstLogin)) {
             await dealerSessions.delete(token);
             return toLogin();
+        }
+        /* app sessions never run out while the dealer keeps using the app: renew them each time a page opens */
+        if (session.app) {
+            try {
+                await dealerSessions.touch(token, APP_SESSION_MS);
+                res.cookie(DEALER_SESSION_COOKIE, token, dealerCookieOptions({ maxAge: APP_COOKIE_MS }));
+            } catch (e) { console.error("Could not renew app session:", e.message); }
         }
         res.setHeader("Cache-Control", "no-store, private");
         return next();

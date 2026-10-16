@@ -5,6 +5,13 @@
    Login + Registration
    ========================================================= */
 
+/* true when running as the installed app (not a normal browser tab): the server then keeps the dealer signed in until they log out */
+function isApp() {
+    try { if (/^android-app:\/\//.test(document.referrer || "")) return true; } catch (e) { }
+    try { return window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches || window.matchMedia("(display-mode: minimal-ui)").matches; }
+    catch (e) { return false; }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
@@ -306,7 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     const response = await fetch("/api/dealers/login", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json", Accept: "application/json" },
+                        headers: { "Content-Type": "application/json", Accept: "application/json", "X-GasHub-App": isApp() ? "1" : "0" },
                         // Send a canonical identifier plus compatibility aliases for
                         // API versions that expect username/email/phone/dealer_code.
                         body: JSON.stringify({ identifier, username: identifier, user_code: identifier, email: identifier, phone: identifier, dealer_code: identifier, password })
