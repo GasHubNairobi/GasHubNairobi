@@ -37,13 +37,23 @@ router.put("/withdrawals/settings", requireAdmin, withdrawalController.saveSetti
 router.patch("/withdrawals/:id", requireAdmin, withdrawalController.updateAdmin);
 router.post("/withdrawals/:id/send-now", requireAdmin, withdrawalController.sendNow);
 
+const plannerController = require("../controllers/payout-planner-controller");
+router.get("/payout-planner", requireAdmin, plannerController.overview);
+router.put("/payout-planner/schedule", requireAdmin, plannerController.saveSchedule);
+router.put("/payout-planner/funds", requireAdmin, plannerController.saveFunds);
+router.post("/payout-planner/run", requireAdmin, plannerController.runNow);
+
 router.get("/customers", requireAdmin, adminController.getCustomers);
 router.get("/customers/:id", requireAdmin, adminController.getCustomerById);
 const customerBanController = require("../controllers/admin-customer-ban-controller");
 router.patch("/customers/:id/ban", requireAdmin, customerBanController.banCustomer);
 router.patch("/customers/:id/unban", requireAdmin, customerBanController.unbanCustomer);
 router.delete("/customers/:id", requireAdmin, customerBanController.deleteCustomer);
-router.get("/reports", requireAdmin, adminController.getReports);
+const reportController = require("../controllers/report-controller");
+router.get("/reports", requireAdmin, reportController.getReports);
+router.post("/reports/seal", requireAdmin, reportController.sealReport);
+router.get("/reports/verify", requireAdmin, reportController.verifyReport);
+router.get("/reports/history", requireAdmin, reportController.history);
 
 router.get("/admins", requireAdmin, requireSuperUnlock, adminController.getAdmins);
 router.post("/admins", requireAdmin, requireSuperUnlock, adminController.createAdmin);
@@ -76,12 +86,18 @@ router.get("/settings/platform", requireAdmin, requireSuperUnlock, settingsContr
 router.put("/settings/platform", requireAdmin, requireSuperUnlock, settingsController.putPlatform);
 router.get("/settings/social", requireAdmin, settingsController.getSocial);
 router.put("/settings/social", requireAdmin, settingsController.putSocial);
+router.get("/settings/verification-fee", requireAdmin, settingsController.getVerificationFeeDefault);
+router.put("/settings/verification-fee", requireAdmin, settingsController.putVerificationFeeDefault);
 router.get("/settings/coins", requireAdmin, settingsController.getCoins);
 router.put("/settings/coins", requireAdmin, settingsController.putCoins);
 router.get("/settings/purchase-points", requireAdmin, settingsController.getPurchasePoints);
 router.put("/settings/purchase-points", requireAdmin, settingsController.putPurchasePoints);
 router.get("/settings/payment-account", requireAdmin, requireSuperUnlock, settingsController.getPaymentAccountSetting);
 router.put("/settings/payment-account", requireAdmin, requireSuperUnlock, settingsController.putPaymentAccountSetting);
+router.get("/settings/payment-methods", requireAdmin, requireSuperUnlock, settingsController.getPaymentMethodsSetting);
+router.put("/settings/payment-methods", requireAdmin, requireSuperUnlock, settingsController.putPaymentMethodsSetting);
+router.get("/settings/bank-account", requireAdmin, requireSuperUnlock, settingsController.getBankAccountSetting);
+router.put("/settings/bank-account", requireAdmin, requireSuperUnlock, settingsController.putBankAccountSetting);
 router.get("/settings/app", requireAdmin, settingsController.getAppSetting);
 router.put("/settings/app", requireAdmin, settingsController.putAppSetting);
 router.get("/settings/earn", requireAdmin, settingsController.getEarn);

@@ -263,7 +263,7 @@
     function mapServerOrder(o) {
         const items = Array.isArray(o.items) ? o.items : [];
         const first = items[0] || {};
-        const discount = Number(o.discount_amount) || 0;
+        const discount = Number(o.points_used) > 0 ? 0 : (Number(o.discount_amount) || 0);   /* a coin discount is paid by GasHub, it never lowers the dealer's sale */
         return {
             id: o.order_number || String(o.id),
             serverId: o.id,
@@ -376,8 +376,7 @@
         let dealerNet = 0;
 
         orders.forEach(order => {
-            const st = normalize(order.status);
-            if (st !== "rejected" && st !== "cancelled") {
+            if (countsTowardMoney(order)) {
                 const fin = calculateOrderFinancials(order);
                 grossRevenue += fin.gross;
                 gashubCut += fin.gashubFee;
@@ -399,11 +398,8 @@
             sidebarOrdersBadge.hidden = waitingForDealer <= 0;
         }
 
-        const notifBadge = document.getElementById("notificationBadge");
-        if (notifBadge) {
-            notifBadge.textContent = waitingForDealer;
-            notifBadge.hidden = waitingForDealer <= 0;
-        }
+        /* the bell is kept up to date by dealer-alerts.js */
+        if (window.GasHubDealerAlerts) window.GasHubDealerAlerts.refresh();
     }
 
     /* =====================================================
@@ -453,10 +449,10 @@
 
                 <td class="customer-cell">
                     <strong>${escapeHtml(order.customerName)}</strong>
-                    <a href="tel:${escapeHtml(order.customerPhone)}" class="customer-phone" title="Call customer">
+                    ${order.customerPhone ? `<span class="customer-phone" title="Customer number (partly hidden for privacy)">
                         <i class="fa-solid fa-phone" aria-hidden="true"></i>
                         <span>${escapeHtml(order.customerPhone)}</span>
-                    </a>
+                    </span>` : ""}
                 </td>
 
                 <td>
@@ -724,7 +720,34 @@
         setText("invModalDealerRate", `${(100 - fin.rate).toFixed(1)}%`);
         setText("invModalDealerNet", formatCurrency(fin.dealerNet));
 
+        fillInvoiceContact();
         openModal(modal);
+    }
+
+    /* The "contact us" details the admin saved (Admin > Settings > Social media & contact details) are printed in the
+       invoice footer. They are read from the public settings, so a change by the admin shows on the next receipt. */
+    let invoiceContactPromise = null;
+    function loadInvoiceContact() {
+        if (!invoiceContactPromise) {
+            const get = (p) => fetch(p, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+            invoiceContactPromise = Promise.all([get("/api/settings/contact"), get("/api/settings/social")])
+                .then(([c, s]) => ({ contact: c || {}, social: (s && s.social_links) || {} }));
+            invoiceContactPromise.then(r => { if (!Object.keys(r.contact).length && !Object.keys(r.social).length) invoiceContactPromise = null; });
+        }
+        return invoiceContactPromise;
+    }
+
+    function fillInvoiceContact() {
+        const box = document.getElementById("invFooterContact");
+        if (!box) return;
+        loadInvoiceContact().then(({ contact, social }) => {
+            /* downloaded invoice: only the call number and the email */
+            const lines = [];
+            const phone = String(contact.phone || "").trim();
+            if (phone) lines.push(`Call: ${escapeHtml(phone)}`);
+            if (contact.email) lines.push(`Email: ${escapeHtml(contact.email)}`);
+            box.innerHTML = lines.length ? `<strong>Contact GasHub support</strong><br>${lines.join("<br>")}` : "";
+        });
     }
 
     /* =====================================================
@@ -747,7 +770,7 @@
                 <div>
                     <label style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Customer Information</label>
                     <p style="margin: 4px 0 0; font-size: 14px; font-weight: 700; color: #0f172a;">${escapeHtml(order.customerName)}</p>
-                    <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">${escapeHtml(order.customerPhone)}</p>
+                    ${order.customerPhone ? `<p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">${escapeHtml(order.customerPhone)}</p>` : ""}
                     <p style="margin: 4px 0 0; font-size: 12px; color: #334155;"><strong>Address:</strong> ${escapeHtml(order.deliveryAddress || "Depot Counter")}${order.pinUrl ? ` &middot; <a href="${order.pinUrl}" target="_blank" rel="noopener">Pinned location</a>` : ""}</p>
                 </div>
                 <div>
@@ -1034,6 +1057,12 @@
         });
     }
 
+    /* One rule for every money total (cards, preview, printed report): rejected and cancelled orders earn nothing. */
+    function countsTowardMoney(order) {
+        const st = normalize(order.status);
+        return st !== "rejected" && st !== "cancelled";
+    }
+
     function getOrdersByTimeline(timeline) {
         const now = new Date().getTime();
         return ordersState.orders.filter(order => {
@@ -1057,7 +1086,7 @@
         let net = 0;
 
         orders.forEach(o => {
-            if (normalize(o.status) !== "rejected") {
+            if (countsTowardMoney(o)) {
                 const fin = calculateOrderFinancials(o);
                 gross += fin.gross;
                 gashub += fin.gashubFee;
@@ -1088,15 +1117,17 @@
 
         const rowsHtml = orders.map(o => {
             const fin = calculateOrderFinancials(o);
-            gross += fin.gross;
-            gashub += fin.gashubFee;
-            net += fin.dealerNet;
+            if (countsTowardMoney(o)) {
+                gross += fin.gross;
+                gashub += fin.gashubFee;
+                net += fin.dealerNet;
+            }
 
             return `
                 <tr>
                     <td>${escapeHtml(o.id)}</td>
                     <td>${formatDateTime(o.orderDate)}</td>
-                    <td>${escapeHtml(o.customerName)} (${escapeHtml(o.customerPhone)})</td>
+                    <td>${escapeHtml(o.customerName)}${o.customerPhone ? ` (${escapeHtml(o.customerPhone)})` : ""}</td>
                     <td>${escapeHtml(o.productName)}</td>
                     <td style="text-align: right;">${formatCurrency(fin.gross)}</td>
                     <td style="text-align: right; color: #6366f1;">${formatCurrency(fin.gashubFee)}</td>

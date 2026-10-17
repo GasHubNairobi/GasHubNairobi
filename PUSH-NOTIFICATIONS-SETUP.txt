@@ -1,0 +1,36 @@
+GASHUB PHONE PUSH NOTIFICATIONS - SETUP (about 10 minutes, once)
+================================================================
+
+1) Create the keys (on your computer, in the project folder)
+      node backend/scripts/generate-vapid-keys.js
+   It prints three lines. Add them in Netlify -> Site configuration -> Environment variables (and in your local .env):
+      VAPID_PUBLIC_KEY=...
+      VAPID_PRIVATE_KEY=...        <- tick "Contains secret values"
+      VAPID_SUBJECT=mailto:your-support-email@yourdomain
+   Do not change the keys later unless you must; if you do, phones quietly re-subscribe the next time they open GasHub.
+
+2) Deploy
+   Commit and push everything (package.json now lists "web-push", Netlify installs it by itself).
+
+3) Database (optional)
+   The table push_subscriptions is created automatically. If you prefer, run database/migrations/push-notifications-migration.sql
+   in the Supabase SQL Editor, then run migration-007 again so the new table is locked like the others.
+
+4) Try it
+   - Android (Chrome): open your site, sign in as a customer, wait a few seconds, tap "Turn on" on the card, allow notifications.
+   - Dealer: sign in on the dealer page on the phone and do the same.
+   - Place an order as the customer: the dealer's phone buzzes. Confirm it as the dealer: the customer's phone buzzes.
+   - iPhone (iOS 16.4+): Safari only allows notifications for apps added to the Home Screen. Tap Share -> "Add to Home Screen",
+     open GasHub from the home screen icon, sign in, then tap "Turn on".
+
+WHO GETS WHAT
+   Customer: order confirmed (pay now) / on the way / ready / delivered / cancelled / declined, payment received,
+             new message from the dealer, withdrawal requested / approved / paid / rejected.
+   Dealer:   new order, customer cancelled, payment received, new customer message, payout sent.
+   SMS and email notices still go out exactly as before; push is an extra.
+
+GOOD TO KNOW
+   - Log out stops alerts for that person on that phone (important on shared phones).
+   - A person who blocks notifications in the browser is simply not sent any; expired phones are forgotten automatically.
+   - Pages opened inside Facebook / Instagram / WhatsApp in-app browsers cannot receive push; open the site in Chrome or Safari.
+   - Chat push shows the start of the message on the lock screen.

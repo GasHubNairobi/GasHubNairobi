@@ -45,7 +45,7 @@ const ksh = (n) => "KSh " + Number(n || 0).toLocaleString("en-KE");
 
 /* Sends "your order is confirmed, you can pay now" by SMS and email. Never throws: a mail or SMS problem must never
    undo the dealer's confirmation. Sends once per order (pay_notice_sent_at). */
-async function notifyOrderConfirmed(orderId) {
+async function notifyOrderConfirmed(orderId, base) {
     try {
         await ensurePaymentFlowColumns();
         const M = require("./messaging-service");
@@ -54,7 +54,7 @@ async function notifyOrderConfirmed(orderId) {
         if (!claimed.rows.length) return { skipped: true };
 
         const r = await pool.query(
-            `SELECT o.order_number, o.total_amount, o.delivery_phone, o.fulfilment, o.dealer_name_snapshot,
+            `SELECT o.order_number, o.total_amount, o.customer_id, o.delivery_phone, o.fulfilment, o.dealer_name_snapshot,
                     u.full_name, u.email, u.phone
                FROM orders o LEFT JOIN users u ON u.id = o.customer_id WHERE o.id = $1`, [orderId]);
         const o = r.rows[0];
@@ -62,7 +62,7 @@ async function notifyOrderConfirmed(orderId) {
 
         const name = M.firstName(o.full_name);
         const dealer = o.dealer_name_snapshot || "Your dealer";
-        const link = `${M.baseUrl()}/customer-checkout.html?orderId=${encodeURIComponent(o.order_number)}&pay=1`;
+        const link = `${base || M.baseUrl()}/customer-checkout.html?orderId=${encodeURIComponent(o.order_number)}&pay=1`;
         const result = { sms: false, email: false };
 
         const smsText = `GasHub: Hi ${name}, ${dealer} has confirmed your order ${o.order_number} (${ksh(o.total_amount)}). ` +
@@ -87,8 +87,11 @@ async function notifyOrderConfirmed(orderId) {
             try { await M.sendEmail(o.email, subject, body); result.email = true; } catch (e) { console.error("Order-confirmed email failed:", e.message); }
         }
 
+        /* phone push notification (needs VAPID keys + a customer who turned notifications on) */
+        try { result.push = (await require("./push-service").orderConfirmed({ customer_id: o.customer_id, order_number: o.order_number, total_amount: o.total_amount, dealer_name_snapshot: o.dealer_name_snapshot })) > 0; } catch (e) { result.push = false; }
+
         /* nothing could be sent (e.g. SMS/SMTP not set up yet): allow a later attempt */
-        if (!result.sms && !result.email) {
+        if (!result.sms && !result.email && !result.push) {
             await pool.query("UPDATE orders SET pay_notice_sent_at = NULL WHERE id = $1", [orderId]).catch(() => {});
         }
         return result;

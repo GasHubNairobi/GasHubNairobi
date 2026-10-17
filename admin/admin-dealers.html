@@ -55,7 +55,6 @@
           <div>
             <div class="eyebrow">PARTNER MANAGEMENT & VERIFICATION</div>
             <h1>Dealer Directory <span class="heading-spark" aria-hidden="true">✳</span></h1>
-            <p>Monitor verified dealers, audit storefront performance, approve applications, and enforce marketplace decisions across Kenya.</p>
           </div>
           <div class="heading-actions">
             <span class="updated-label">
@@ -129,7 +128,6 @@
                 Requests to Become a Dealer 
                 <span id="applicationPendingCount" class="application-count">0 pending</span>
               </h2>
-              <p>Review new business submissions before generating credentials. Approved applicants receive on-boarding access.</p>
             </div>
             <button class="button button-light" id="refreshApplications" type="button">↻ Refresh requests</button>
           </div>
@@ -169,7 +167,6 @@
               <div class="title-icon">▤</div>
               <div>
                 <h2 id="dealersDirectoryHeading">All Registered Dealers</h2>
-                <p>Search, filter, view profiles, toggle availability, verify partner seals, or remove accounts.</p>
               </div>
             </div>
 
@@ -245,7 +242,6 @@
         <div>
           <div class="eyebrow">PARTNER ACCESS</div>
           <h2 id="addDealerTitle">Create Dealer Account</h2>
-          <p>Generate one-time initial login credentials for the dealer.</p>
         </div>
         <button type="button" class="dealer-modal-close" id="closeAddDealer" aria-label="Close modal">×</button>
       </div>
@@ -256,13 +252,13 @@
         <label>
           Login username *
           <input name="username" required minlength="3" maxlength="40" pattern="[A-Za-z0-9._-]+" autocomplete="off" placeholder="e.g. nairobi_gas_depot">
-          <small>3–40 characters: letters, numbers, dots, underscores or hyphens.</small>
+          
         </label>
 
         <label>
           One-time initial password *
           <input name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="Minimum 8 characters">
-          <small>Temporary password. The dealer must finish onboarding and choose a permanent password upon first login.</small>
+          
         </label>
 
         <div class="dealer-form-actions">
@@ -297,7 +293,7 @@
             <option value="grant">Grant Verified Seal</option>
             <option value="revoke">Revoke / Remove Verified Seal</option>
           </select>
-          <small>Verified dealers receive the official blue seal displayed to buyers across GasHub.</small>
+          
         </label>
 
         <div id="verifyDurationContainer">
@@ -315,7 +311,7 @@
           <label id="verifyCustomDateWrapper" style="display: none; margin-top: 10px;">
             Custom Expiration Date *
             <input type="date" id="verifyCustomExpiryDate">
-            <small>Must be a future date.</small>
+            
           </label>
         </div>
 

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>GasHub — Sample Orders Preview</title>
@@ -35,6 +36,5 @@ document.getElementById('backBtn').addEventListener('click',()=>{if(window.histo
 document.querySelectorAll('[data-order]').forEach(button=>button.addEventListener('click',()=>showToast('Sample order '+button.dataset.order+' — demo preview only.')));
 document.getElementById('redeemBtn').addEventListener('click',()=>showToast('Redemption must be validated by the live GasHub system.'));
 </script>
-    <script src="/gashub-maintenance-guard.js"></script>
 </body>
 </html>

@@ -15,7 +15,7 @@
 
   <main class="main-content">
     <header class="topbar">
-      <div class="topbar-heading"><button id="mobileMenuButton" class="mobile-menu">☰</button><div><p class="eyebrow">DEALER MANAGEMENT</p><h1>Dealer Details</h1><p class="subheading">Profile, verification, commercial terms and order history.</p></div></div>
+      <div class="topbar-heading"><button id="mobileMenuButton" class="mobile-menu">☰</button><div><p class="eyebrow">DEALER MANAGEMENT</p><h1>Dealer Details</h1></div></div>
       <div class="admin-chip"><span class="admin-avatar">A</span><span><strong id="adminUserName">Administrator</strong><small id="adminUserRole">Admin</small></span></div>
     </header>
 
@@ -53,8 +53,8 @@
       <article class="panel section-card">
         <div class="section-heading"><div><p class="eyebrow">COMMERCIAL TERMS</p><h3>Commission & verification</h3></div><span class="heading-icon">%</span></div>
         <form id="commercialForm" class="settings-form">
-          <label>Dealer commission rate (%)<div class="input-suffix"><input id="commissionRate" type="number" min="0" max="100" step="0.1" value="" required><span>%</span></div><small>Applied to the eligible order amount.</small></label>
-          <label>Verification fee (KES)<div class="input-suffix"><span>KSh</span><input id="verificationFee" type="number" min="0" step="1" value="" required></div><small>Set the fee according to your configured business policy.</small></label>
+          <label>Dealer commission rate (%)<div class="input-suffix"><input id="commissionRate" type="number" min="0" max="100" step="0.1" value="" required><span>%</span></div></label>
+          <label>Verification fee (KES)<div class="input-suffix"><span>KSh</span><input id="verificationFee" type="number" min="0" step="1" value="" required></div></label>
           <div class="verification-summary"><span>Verification status</span><strong id="verificationStatusText">Not verified</strong><span class="muted" id="verificationExpiryText">Expiry date: —</span></div>
           <button class="button button-primary" type="submit">Save commercial settings</button>
         </form>
@@ -62,7 +62,7 @@
     </section>
 
     <section class="panel section-card" id="workingHoursCard" style="margin-bottom:18px">
-      <div class="section-heading"><div><p class="eyebrow">OPERATIONS</p><h3>Working hours</h3><p class="section-subtitle">Set by the dealer in their profile. Times are Kenya time.</p></div><span class="heading-icon">◷</span></div>
+      <div class="section-heading"><div><p class="eyebrow">OPERATIONS</p><h3>Working hours</h3></div><span class="heading-icon">◷</span></div>
       <div class="details-grid">
         <div class="detail-item"><span>Service type</span><strong id="hoursMode">—</strong></div>
         <div class="detail-item"><span>Opening &amp; closing time</span><strong id="hoursRange">—</strong></div>
@@ -72,31 +72,31 @@
     </section>
 
     <section class="panel section-card payout-card">
-      <div class="section-heading"><div><p class="eyebrow">SETTLEMENT DETAILS</p><h3>Dealer payout destination</h3><p class="section-subtitle">Choose where dealer net proceeds should be sent.</p></div><span class="heading-icon">↗</span></div>
+      <div class="section-heading"><div><p class="eyebrow">SETTLEMENT DETAILS</p><h3>Dealer payout destination</h3></div><span class="heading-icon">↗</span></div>
       <form id="payoutForm" class="payout-form">
         <label class="field-label">Payout method<select id="payoutMethod"><option value="phone">M-Pesa phone number</option><option value="paybill">Paybill + account number</option><option value="till">Till number</option></select></label>
         <div id="payoutFields" class="payout-fields"></div>
-        <div class="payout-footer"><p>Where the money goes, when it is paid and how long orders are held first.</p><button class="button button-primary" type="submit">Save payout settings</button></div>
+        <div class="payout-footer"><button class="button button-primary" type="submit">Save payout settings</button></div>
       </form>
     </section>
 
     <section class="panel section-card payout-card" id="payoutsCard">
-      <div class="section-heading"><div><p class="eyebrow">DEALER PAYOUTS</p><h3>Payout schedule &amp; history</h3><p class="section-subtitle">Money is sent after the time you schedule: product price minus GasHub commission. Points discounts are paid by GasHub, and commission on cash orders is taken off the next payout.</p></div><span class="heading-icon">KSh</span></div>
+      <div class="section-heading"><div><p class="eyebrow">DEALER PAYOUTS</p><h3>Payout schedule &amp; history</h3></div><span class="heading-icon">KSh</span></div>
       <div class="order-summary" id="payoutBalance" style="margin-bottom:16px">
         <div><span>Online earnings (after commission)</span><strong id="poOnline">KSh 0.00</strong></div>
         <div><span>Cash commission to deduct</span><strong id="poCash">KSh 0.00</strong></div>
         <div><span>Ready to pay out</span><strong id="poNet">KSh 0.00</strong></div>
-        <div><span>Still on hold</span><strong id="poHold">0 orders</strong></div>
+        <div><span>Still on hold</span><strong id="poOnHold">0 orders</strong></div>
       </div>
+      <div id="poPlannerBanner" style="margin:0 -20px 8px"></div>
       <div class="payout-form" style="margin-bottom:18px">
-        <label class="field-label">Send the money on<input type="datetime-local" id="poWhen"></label>
-        <div class="payout-footer" style="border-top:0;padding-top:0"><p id="poHint">Only completed orders past the hold period are included.</p><button class="button button-primary" type="button" id="poSchedule">Schedule payout</button></div>
+        <div class="payout-footer" style="border-top:0;padding-top:0"><p id="poHint">Only completed orders past the hold period are included.</p><button class="button button-primary" type="button" id="poSchedule">Create this dealer&rsquo;s payout</button></div>
       </div>
       <div class="table-scroll"><table class="orders-table"><thead><tr><th>Reference</th><th>Send on</th><th>Online</th><th>Cash commission</th><th>Amount</th><th>Destination</th><th>Status</th><th>Action</th></tr></thead><tbody id="poBody"><tr><td colspan="8" class="empty-row">Loading payouts...</td></tr></tbody></table></div>
     </section>
 
     <section class="panel orders-panel">
-      <div class="orders-heading"><div><p class="eyebrow">SALES & FULFILMENT</p><h3>Dealer orders</h3><p class="section-subtitle">Order totals, platform commission, dealer net and fulfilment status.</p></div><button id="printOrdersButton" class="button button-light">⎙ Print orders</button></div>
+      <div class="orders-heading"><div><p class="eyebrow">SALES & FULFILMENT</p><h3>Dealer orders</h3></div><button id="printOrdersButton" class="button button-light">⎙ Print orders</button></div>
       <div class="order-summary" id="orderSummary"><div><span>Gross sales</span><strong id="grossSalesTotal">KSh 0.00</strong></div><div><span>GasHub commission</span><strong id="commissionTotal">KSh 0.00</strong></div><div><span>Dealer net</span><strong id="dealerNetTotal">KSh 0.00</strong></div><div><span>Orders shown</span><strong id="orderCount">0</strong></div></div>
       <div class="table-toolbar"><label class="search-box"><span>⌕</span><input id="orderSearch" type="search" placeholder="Search order, customer or product..."></label><select id="orderStatusFilter" aria-label="Filter orders by status"><option value="all">All order statuses</option><option>Pending</option><option>Confirmed</option><option>Processing</option><option>Out for delivery</option><option>Delivered</option><option>Completed</option><option>Cancelled</option></select></div>
       <div class="table-scroll"><table class="orders-table"><thead><tr><th>Order / Date</th><th>Customer</th><th>Product details</th><th>Qty</th><th>Gross total</th><th>GasHub cut</th><th>Dealer net</th><th>Fulfilment</th><th>Payment</th><th>Order status</th><th>Action</th></tr></thead><tbody id="ordersTableBody"></tbody></table></div>
@@ -107,7 +107,6 @@
 
   <dialog id="verificationDialog" class="modal">
     <form id="verificationForm" method="dialog"><div class="modal-header"><div><p class="eyebrow">DEALER VERIFICATION</p><h3>Verify dealer</h3></div><button type="button" class="modal-close" data-close-dialog="verificationDialog" aria-label="Close">×</button></div>
-      <p class="modal-copy">Set how long the verification badge should remain active. Set the verification duration and configured fee before confirming.</p>
       <label>Verification duration (days)<input id="verificationDays" type="number" min="1" max="3650" value="30" required></label>
       <div class="fee-preview"><span>Verification fee</span><strong id="verificationFeePreview">KSh 1,500</strong></div><div class="fee-preview"><span>Badge expiry</span><strong id="verificationExpiryPreview">—</strong></div>
       <div class="modal-actions"><button type="button" class="button button-light" data-close-dialog="verificationDialog">Cancel</button><button type="submit" class="button button-primary">Confirm verification</button></div>
@@ -115,6 +114,7 @@
   </dialog>
   <dialog id="orderDialog" class="modal"><form method="dialog"><div class="modal-header"><div><p class="eyebrow">ORDER DETAILS</p><h3 id="orderDialogTitle">Order</h3></div><button type="button" class="modal-close" data-close-dialog="orderDialog">×</button></div><div id="orderDialogBody" class="order-dialog-body"></div><div class="modal-actions"><button type="button" class="button button-light" data-close-dialog="orderDialog">Close</button></div></form></dialog>
   <script src="admin-sidebar.js"></script>
+<script src="admin-planner-banner.js"></script>
 <script src="admin-dealer-details.js"></script>
 </body>
 </html>

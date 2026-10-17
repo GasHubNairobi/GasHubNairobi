@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#d97706">
@@ -97,7 +98,7 @@
                 >
                     <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
                     <span>Orders</span>
-                    <span class="nav-badge" id="sidebarOrdersBadge">0</span>
+                    <span class="nav-badge" id="sidebarOrdersBadge" hidden>0</span>
                 </a>
 
                 <a
@@ -155,7 +156,7 @@
                 >
                     <i class="fa-solid fa-comments nav-icon" aria-hidden="true"></i>
                     <span>Messages</span>
-                    <span class="nav-badge info" id="sidebarMessagesBadge">3</span>
+                    <span class="nav-badge info" id="sidebarMessagesBadge" hidden>0</span>
                 </a>
 
                 <a
@@ -240,7 +241,7 @@
                         aria-label="Notifications"
                     >
                         <i class="fa-regular fa-bell" aria-hidden="true"></i>
-                        <span class="notification-pill" id="notificationBadge">0</span>
+                        <span class="notification-pill" id="notificationBadge" hidden>0</span>
                     </button>
 
                     <!-- Profile Pill -->
@@ -756,7 +757,8 @@
 
                 <!-- Invoice Footer -->
                 <div class="invoice-footer-note">
-                    <p>Thank you for trading through GasHub. For support, call 0800 720 000 or email support@gashub.co.ke.</p>
+                    <p>Thank you for trading through GasHub.</p>
+                    <div id="invFooterContact" class="invoice-contact-lines" style="margin:4px 0 6px; line-height:1.55;"></div>
                     <small>Official Computer Generated Invoice &bull; Valid Without Physical Signature</small>
                 </div>
             </div>
@@ -974,10 +976,12 @@
 
     <!-- Scripts -->
     <script src="gashub-core.js"></script>
+    <script src="dealer-verification.js" defer></script>
     <script src="dealer-logout.js"></script>
+    <script src="dealer-alerts.js" defer></script>
     <script src="dealer-order.js"></script>
 
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="dealer-mobile.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
 </body>
 </html>

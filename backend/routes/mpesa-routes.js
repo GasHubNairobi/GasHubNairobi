@@ -6,6 +6,7 @@ const { rateLimit } = require("../utils/rate-limit");
 
 const router = express.Router();
 router.get("/config", c.getConfig);
+router.get("/manual", rateLimit({ windowMs: 60 * 1000, max: 30, local: true }), requireUser, c.manualOptions);
 router.post("/stk-push", rateLimit({ windowMs: 10 * 60 * 1000, max: 20 }), requireUser, requireCsrf, c.stkPush);
 router.get("/status", rateLimit({ windowMs: 60 * 1000, max: 60, local: true }), requireUser, c.status);
 /* Safaricom calls this one. The secret in the address, the optional IP list and the Safaricom re-check protect it. */

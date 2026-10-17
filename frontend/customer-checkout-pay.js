@@ -14,7 +14,7 @@
     var ref = new URLSearchParams(location.search).get("orderId");
     var ordersUrl = "customer-orders.html?orderId=" + encodeURIComponent(ref) + "&view=order";
     var order = null, finished = false, boxKey = "", account, stkOn;
-    var coins = { loaded: false, enabled: false, rate: 0, min: 301, balance: null };
+    var coins = { loaded: false, enabled: false, rate: 0, min: 30, balance: null };
 
     function money(n) { return "KSh " + (Number(n) || 0).toLocaleString("en-KE"); }
     function paidStatus(s) { return /^(paid|complete|success)/i.test(String(s || "")); }
@@ -85,24 +85,10 @@
     }
 
     /* directly below the product price: the discount the customer's coins allow, worked out from the admin's exchange rate */
-    function discountBlock(o) {
-        var online = o.chosen && o.method !== "cash", f = coinOffer(o);
-        var rateTxt = f.show ? "1 coin = " + money(f.rate) : "";
-        var h = '<div class="pv-disc' + (o.discount > 0 ? " on" : "") + '">';
-        if (o.discount > 0) {
-            h += '<div class="pv-disc-row"><span>' + (R ? R.chip(o.pointsUsed, "credited") : "") + ' GasHub Coins discount</span><b>- ' + esc(money(o.discount)) + '</b></div>' +
-                '<small>' + Number(o.pointsUsed || 0).toLocaleString("en-KE") + ' coins activated' + (rateTxt ? " (" + esc(rateTxt) + ")" : "") + '</small>';
-        } else if (!f.show) {
-            return "";
-        } else if (!f.ok) {
-            h += '<div class="pv-disc-row"><span>Discount allowed</span><b>KSh 0</b></div><small>' + esc(f.why) + '</small>';
-        } else if (!online) {
-            h += '<div class="pv-disc-row"><span>Discount allowed</span><b>- ' + esc(money(f.allowed)) + '</b></div><small>' + f.usable.toLocaleString("en-KE") + ' coins x ' + esc(rateTxt.replace("1 coin = ", "KSh ")) + '. Choose M-Pesa or Bank to use it.</small>';
-        } else {
-            h += '<div class="pv-disc-row"><span>Discount allowed</span><b>- ' + esc(money(f.allowed)) + '</b></div><small>' + f.usable.toLocaleString("en-KE") + ' coins x ' + esc(rateTxt.replace("1 coin = ", "KSh ")) + '. Activate your coins below to use it.</small>';
-        }
-        return h + "</div>";
+    function coinsLabel(o) {
+        return "GasHub Coins discount" + (o.pointsUsed > 0 ? " (" + Number(o.pointsUsed).toLocaleString("en-KE") + " coins" + (coins.rate > 0 ? " \u00d7 " + money(coins.rate) : "") + ")" : "");
     }
+    function discountBlock(o) { return ""; }
 
     function renderSummary() {
         var o = order, it = (o.items && o.items[0]) || {}, more = (o.items || []).length - 1;
@@ -117,7 +103,7 @@
             '<div class="summary-breakdown">' +
             '<div class="summary-row"><span>Product</span><strong>' + esc(money(o.productTotal)) + '</strong></div>' +
             '<div class="summary-row"><span>Delivery</span><strong>' + esc(o.pickup ? "Pickup (free)" : money(o.deliveryFee)) + '</strong></div>' +
-            (o.discount > 0 ? '<div class="summary-row"><span>GasHub Coins discount</span><strong>- ' + esc(money(o.discount)) + '</strong></div>' : "") +
+            (o.discount > 0 ? '<div class="summary-row"><span>' + esc(coinsLabel(o)) + '</span><strong>- ' + esc(money(o.discount)) + '</strong></div>' : "") +
             '<div class="summary-row total-row"><span>Total to pay</span><strong>' + esc(money(o.due)) + '</strong></div></div>';
     }
 
@@ -127,7 +113,7 @@
         try {
             var r = await fetch("/api/points/config", { cache: "no-store", credentials: "same-origin" });
             var j = r.ok ? await r.json() : null;
-            if (j) { coins.enabled = j.enabled !== false; coins.rate = Number(j.pointValueKsh) || 0; coins.min = Number(j.minRedeem) > 0 ? Number(j.minRedeem) : 301; }
+            if (j) { coins.enabled = j.enabled !== false; coins.rate = Number(j.pointValueKsh) || 0; coins.min = Number(j.minRedeem) > 0 ? Number(j.minRedeem) : 30; }
         } catch (e) { }
         coins.balance = R ? await R.balance() : null;
         coins.loaded = true;
@@ -138,38 +124,35 @@
         var maxByBill = Math.max(0, Math.floor((Math.ceil(gross) - 1) / coins.rate));
         return { available: available, max: Math.min(available, maxByBill), gross: gross };
     }
+    /* as many coins as the order allows (KSh 1 is always left to pay), trimmed so no part of a coin is wasted at the admin's rate */
+    function coinsToUse(st) {
+        var d = Math.floor(st.max * coins.rate), n = Math.ceil(d / coins.rate - 1e-9);
+        if (!(n >= coins.min) || n > st.max) n = st.max;
+        return n;
+    }
+    /* one small on/off switch: on = the coins become money and come off the order pricing */
     function coinsHTML(o) {
         var st = coinState(o); if (!st) return "";
-        var on = o.pointsUsed > 0, start = on ? o.pointsUsed : st.max, min = coins.min;
-        var h = '<div class="pv-coins"><div class="pv-coins-head"><b>Use my GasHub Coins</b><span>' + R.chip(st.available, "credited") + '</span></div>' +
-            '<p class="pv-note">1 coin = ' + esc(money(coins.rate)) + '. Use ' + min.toLocaleString("en-KE") + ' coins or more for a discount. Coins work on online payments (M-Pesa or Bank), not cash on delivery.</p>';
-        if (st.available < min) h += '<p class="pv-note"><b>You need ' + (min - st.available).toLocaleString("en-KE") + ' more coins to unlock a discount.</b></p>';
-        else if (st.max < min) h += '<p class="pv-note"><b>This order is too small to use ' + min.toLocaleString("en-KE") + ' coins on.</b></p>';
-        else h += '<label><input type="checkbox" id="coinUse"' + (on ? " checked" : "") + '><span>' + (on ? "Using my GasHub Coins" : "Use my coins for a discount (up to " + esc(money(Math.floor(st.max * coins.rate))) + " off)") + '</span></label>' +
-            '<div id="coinWrap"' + (on ? "" : " hidden") + '><input type="range" id="coinSlider" min="' + min + '" max="' + st.max + '" step="1" value="' + start + '"' + (st.max <= min ? " disabled" : "") + '>' +
-            '<div class="pv-coins-row"><span>' + min.toLocaleString("en-KE") + '</span><strong id="coinNow"></strong><span>' + st.max.toLocaleString("en-KE") + '</span></div>' +
-            '<button type="button" class="pv-btn full" id="coinApply">' + "Change amount" + '</button></div>';
-        return h + '<p class="pv-msg" id="coinMsg"></p></div>';
+        var on = o.pointsUsed > 0, can = on || (st.available >= coins.min && st.max >= coins.min);
+        return '<div class="pv-coins coin-switch-row"><span class="csr-label">' + R.chip(st.available, "credited") + '<b>Use my coins</b></span>' +
+            '<label class="csr-sw' + (can ? "" : " off") + '"><input type="checkbox" id="coinUse"' + (on ? " checked" : "") + (can ? "" : " disabled") + ' aria-label="Use my GasHub Coins"><i></i></label>' +
+            '<p class="pv-msg" id="coinMsg"></p></div>';
     }
     function bindCoins(o) {
-        var cb = $("coinUse"), sl = $("coinSlider"), st = coinState(o);
-        if (!cb || !sl || !st) return;
-        function label() { var n = Number(sl.value) || 0, d = Math.floor(n * coins.rate); $("coinNow").textContent = n.toLocaleString("en-KE") + " coins = " + money(d) + " off · you pay " + money(Math.max(1, st.gross - d)); }
-        label(); sl.addEventListener("input", label);
+        var cb = $("coinUse"), st = coinState(o);
+        if (!cb || !st) return;
         cb.addEventListener("change", function () {
-            if (cb.checked) { $("coinWrap").hidden = false; if (!(o.pointsUsed > 0)) setCoins(Number(sl.value) || st.max); return; }   /* switching on activates the discount straight away */
-            $("coinWrap").hidden = true; if (o.pointsUsed > 0) setCoins(0);
+            if (cb.checked) setCoins(coinsToUse(st)); else if (o.pointsUsed > 0) setCoins(0);
         });
-        $("coinApply").addEventListener("click", function () { setCoins(Number(sl.value) || 0); });
     }
     async function setCoins(n) {
-        var btn = $("coinApply"), cb = $("coinUse");
-        if (btn) btn.disabled = true; if (cb) cb.disabled = true;
+        var btn = null, cb = $("coinUse");
+        if (cb) cb.disabled = true;
         setMsg("coinMsg", "Saving...");
         try {
             var r = await fetch("/api/my/orders/" + encodeURIComponent(order.id) + "/points", { method: "POST", headers: await headers(true), credentials: "same-origin", body: JSON.stringify({ points: n }) });
             var j = {}; try { j = await r.json(); } catch (x) { }
-            if (!r.ok || j.success === false) { setMsg("coinMsg", j.message || "We could not update your coins. Please try again.", true); if (btn) btn.disabled = false; if (cb) { cb.disabled = false; if (n === 0) cb.checked = true; } return; }
+            if (!r.ok || j.success === false) { setMsg("coinMsg", j.message || "We could not update your coins. Please try again.", true); if (btn) btn.disabled = false; if (cb) { cb.disabled = false; cb.checked = n === 0; } return; }
             await loadCoins(true); await reload();
         } catch (e) { setMsg("coinMsg", "No connection. Please try again.", true); if (btn) btn.disabled = false; if (cb) cb.disabled = false; }
     }
@@ -187,9 +170,36 @@
     }
     var bankInfo;
     async function bankConfig() {
-        if (bankInfo !== undefined) return bankInfo;
+        /* always fresh: the super admin can change the bank details or switch Bank off at any time */
         try { var r = await fetch("/api/payments/bank/config", { cache: "no-store", credentials: "same-origin" }); var j = await r.json(); bankInfo = j && j.configured ? j : null; } catch (e) { bankInfo = null; }
         return bankInfo;
+    }
+    /* which online methods the super admin has switched on (Admin > Settings > Super Admin Area > Online Payment Methods) */
+    async function methodsConfig() {
+        try { var r = await fetch("/api/settings/payment-methods", { cache: "no-store", credentials: "same-origin" }); var j = await r.json(); return { mpesa: !(j && j.mpesa === false), bank: !(j && j.bank === false) }; }
+        catch (e) { return { mpesa: true, bank: true }; }
+    }
+    /* the backup Till: the server hands it out only after the phone prompt failed twice (or when the prompt is switched off) */
+    async function manualInfo() {
+        try {
+            var r = await fetch("/api/payments/mpesa/manual?order_id=" + encodeURIComponent(order.id), { cache: "no-store", credentials: "same-origin", headers: R ? R.authHeaders(false) : {} });
+            var j = await r.json();
+            return j && j.available ? j : null;
+        } catch (e) { return null; }
+    }
+    function manualHTML(m, o) {
+        var how = m.type === "paybill" ? "Lipa na M-Pesa > Pay Bill" : (m.type === "till" ? "Lipa na M-Pesa > Buy Goods and Services" : "Send Money");
+        var lines = (m.type === "paybill" ? [["Paybill number", m.number], ["Account number", m.account_number]]
+            : (m.type === "till" ? [["Till number", m.number]] : [["Send Money to", m.number]]))
+            .concat([["Name", m.account_name], ["Amount to pay", money(o.due), "tot"]]).filter(function (l) { return l[1]; });
+        return '<div class="pv-banner" style="margin-top:12px"><b>Prompt not reaching your phone?</b> Pay manually: on your phone open M-Pesa, choose <b>' + esc(how) + '</b> and pay the exact amount below. Then type the M-Pesa code from the confirmation message in the box under this.</div>' +
+            rowsHTML(lines) + (m.instructions ? '<p class="pv-note">' + esc(m.instructions) + '</p>' : "");
+    }
+    /* called after a prompt failed or timed out: shows the backup Till if the server now allows it */
+    async function refreshManual() {
+        var area = $("manualArea"); if (!area || order.method !== "mpesa") return;
+        var m = await manualInfo();
+        if (m && !area.innerHTML) { area.innerHTML = manualHTML(m, order); revealCode(); }
     }
     async function render() {
         var o = order, box = $("pvBox");
@@ -205,15 +215,18 @@
 
         /* A. choose how to pay */
         if (!o.chosen) {
-            var k = "choose|" + o.total + "|" + o.pointsUsed + "|" + o.cashAllowed;
+            var sw = await methodsConfig();
+            var k = "choose|" + o.total + "|" + o.pointsUsed + "|" + o.cashAllowed + "|" + coins.balance + "|" + sw.mpesa + "|" + sw.bank;
             if (k === boxKey) return; boxKey = k;
             $("pvTitle").textContent = "Choose how to pay";
             box.innerHTML = rowsHTML([["Total to pay", money(o.due), "tot"]]) +
-                '<p class="pv-note">Pay with M-Pesa or Bank to use your GasHub Coins for a discount.</p>' +
+                coinsHTML(o) +
                 (o.cashAllowed !== false ? '<button type="button" class="pv-method" data-m="cash"><b>Cash on delivery</b><span>Pay the messenger when your gas ' + (o.pickup ? "is ready" : "arrives") + '.</span></button>'
                     : '<p class="pv-note">Cash on delivery is not available because you used GasHub coins on this order. Pay online instead.</p>') +
-                '<button type="button" class="pv-method" data-m="mpesa"><b>M-Pesa</b><span>Get a prompt on your phone and enter your PIN.</span></button>' +
-                '<button type="button" class="pv-method" data-m="bank"><b>Bank</b><span>Pay by bank transfer to GasHub.</span></button><p class="pv-msg" id="pvPm"></p>';
+                (sw.mpesa ? '<button type="button" class="pv-method" data-m="mpesa"><b>M-Pesa</b><span>Get a prompt on your phone and enter your PIN.</span></button>' : "") +
+                (sw.bank ? '<button type="button" class="pv-method" data-m="bank"><b>Bank</b><span>Pay by bank transfer to GasHub.</span></button>' : "") +
+                ((!sw.mpesa && !sw.bank && o.cashAllowed === false) ? '<p class="pv-note">Online payment is not available right now. Please try again later or contact GasHub support.</p>' : "") +
+                '<p class="pv-msg" id="pvPm"></p>';
             Array.prototype.forEach.call(box.querySelectorAll(".pv-method"), function (b) { b.addEventListener("click", function () { chooseMethod(b.getAttribute("data-m")); }); });
             bindCoins(o);
             return;
@@ -224,8 +237,17 @@
         var pend = o.pending;
         if (!pend) await loadCoins();
         var cfg = isBank ? { prompt: false, verify: false } : await mpesaConfig();
-        var key = ["pay", o.method, o.total, o.pointsUsed, !!o.rejected, pend ? "p" : "", pend ? "" : coins.balance].join("|");
+        var swB = await methodsConfig();
+        var man = (!isBank && swB.mpesa) ? await manualInfo() : null;
+        var key = ["pay", o.method, o.total, o.pointsUsed, !!o.rejected, pend ? "p" : "", pend ? "" : coins.balance, swB.mpesa, swB.bank, cfg.prompt, man ? "m" : ""].join("|");
         if (key === boxKey) return; boxKey = key;
+        /* the super admin switched this method off: the customer picks another one (unless a payment is already being confirmed) */
+        if (!pend && ((isBank && !swB.bank) || (!isBank && !swB.mpesa))) {
+            $("pvTitle").textContent = "Choose how to pay";
+            box.innerHTML = '<p class="pv-note"><b>' + (isBank ? "Bank payment" : "M-Pesa payment") + '</b> is not available right now. Please choose another way to pay.</p><p class="pv-change"><a href="#" id="changeMethod">Choose another payment method</a></p>';
+            $("changeMethod").addEventListener("click", function (e) { e.preventDefault(); order.chosen = false; boxKey = ""; render(); });
+            return;
+        }
         $("pvTitle").textContent = isBank ? "Pay by bank" : "Pay with M-Pesa";
         var html = rowsHTML([["Total to pay", money(o.due), "tot"]]) + (pend ? "" : coinsHTML(o));
 
@@ -233,7 +255,8 @@
             html += '<p class="pv-note">Enter the M-Pesa number you want to pay with. We send a prompt to that phone and you enter your M-Pesa PIN.</p>' +
                 '<form class="pv-form" id="stkForm" autocomplete="off"><input id="stkPhone" type="tel" inputmode="numeric" maxlength="14" placeholder="M-Pesa number, e.g. 0712345678" value="' + esc(String(o.deliveryPhone || "").replace(/[^\d+]/g, "")) + '"><button type="submit" class="pv-btn" id="stkBtn">Pay ' + esc(money(o.due)) + '</button></form>' +
                 '<p class="pv-msg" id="stkMsg"></p>';
-            if (!cfg.prompt) html += '<div class="pv-banner">M-Pesa phone payment is being set up. If you already paid GasHub another way, enter your M-Pesa code below.</div>';
+            if (!cfg.prompt && !man) html += '<div class="pv-banner">M-Pesa phone payment is not available right now. If you already paid GasHub another way, enter your M-Pesa code below.</div>';
+            html += '<div id="manualArea">' + (man ? manualHTML(man, o) : "") + '</div>';
         } else {
             var bk = await bankConfig(), lines = bk ? [["Bank", bk.bank_name], ["Account name", bk.account_name], ["Account number", bk.account_number], ["Branch", bk.branch], ["Paybill", bk.paybill]] : [];
             html += '<p class="pv-note">Pay <b>' + esc(money(o.due)) + '</b> to the GasHub bank account below. Use <b>' + esc(o.orderId) + '</b> as the payment reference, then enter the bank reference you receive.</p>';
@@ -242,7 +265,7 @@
         }
 
         /* the code box: for a payment that was slow to confirm, or made another way */
-        var showCode = !!pend || !!o.rejected || isBank || (!cfg.prompt);
+        var showCode = !!pend || !!o.rejected || isBank || (!cfg.prompt) || !!man;
         html += '<div id="codeArea"' + (showCode ? "" : " hidden") + ' class="pv-codearea">' +
             '<p class="pv-note"><b>' + (isBank ? "Paid by bank?" : "Already paid?") + '</b> Enter your ' + (isBank ? "bank reference" : "M-Pesa code") + ' and we will check that the payment was received.</p>' +
             (pend ? '<div class="pv-banner">We received your code <b>' + esc(pend.code) + '</b>. GasHub is confirming your payment.</div>' : "") +
@@ -313,7 +336,7 @@
         try {
             var r = await fetch("/api/payments/mpesa/stk-push", { method: "POST", headers: await headers(true), credentials: "same-origin", body: JSON.stringify({ order_id: order.id, phone: phone }) });
             var j = {}; try { j = await r.json(); } catch (x) { }
-            if (!r.ok || !j.checkoutRequestId) { setMsg("stkMsg", j.message || "We could not send the prompt. Please try again.", true); btn.disabled = false; revealCode(); return; }
+            if (!r.ok || !j.checkoutRequestId) { setMsg("stkMsg", j.message || "We could not send the prompt. Please try again.", true); btn.disabled = false; revealCode(); refreshManual(); return; }
             setMsg("stkMsg", "Check your phone and enter your M-Pesa PIN...");
             var started = Date.now(), shown = false;
             while (Date.now() - started < 130000) {
@@ -323,11 +346,19 @@
                 var sj = s.ok ? await s.json().catch(function () { return null; }) : null;
                 if (!sj) continue;
                 if (sj.status === "paid") { await reload(); return; }
-                if (sj.status && sj.status !== "pending") { setMsg("stkMsg", (sj.message || "The payment did not go through.") + " You can pay again, or enter your M-Pesa code if you already paid.", true); btn.disabled = false; btn.textContent = "Pay again"; revealCode(); return; }
+                if (sj.status && sj.status !== "pending") { setMsg("stkMsg", (sj.message || "The payment did not go through.") + " You can pay again, or enter your M-Pesa code if you already paid.", true); btn.disabled = false; btn.textContent = "Pay again"; revealCode(); refreshManual(); return; }
             }
             setMsg("stkMsg", "No confirmation yet. If M-Pesa took the money, enter your M-Pesa code below. Otherwise pay again.", true);
-            btn.disabled = false; btn.textContent = "Pay again"; revealCode();
+            btn.disabled = false; btn.textContent = "Pay again"; revealCode(); refreshManual();
         } catch (e) { setMsg("stkMsg", "No connection. Please try again.", true); btn.disabled = false; }
+    }
+
+    /* has the super admin switched a method on/off (or the prompt state changed) since this box was drawn? */
+    var lastSwitches = "";
+    async function switchesChanged() {
+        var sw = await methodsConfig(), m = order.method === "mpesa" && !order.pending ? await manualInfo() : null;
+        var now = [sw.mpesa, sw.bank, m ? "m" : ""].join("|"), was = lastSwitches; lastSwitches = now;
+        return was !== "" && was !== now;
     }
 
     /* ---------- start ---------- */
@@ -340,7 +371,7 @@
         if (!o) { $("pvBox").innerHTML = '<p class="pv-note">We could not find this order. <a href="customer-orders.html">View my orders</a></p>'; return; }
         order = o; render();
         /* pick up changes (e.g. GasHub confirmed the money) while this page is open */
-        setInterval(async function () { if (document.hidden || finished) return; var f = await fetchOrder(); if (f) { var changed = f.paymentStatus !== order.paymentStatus || f.paymentMethod !== order.paymentMethod || !!f.pending !== !!order.pending; order = f; if (changed) { boxKey = ""; render(); } } }, 15000);
+        setInterval(async function () { if (document.hidden || finished) return; var f = await fetchOrder(); if (f) { var changed = f.paymentStatus !== order.paymentStatus || f.paymentMethod !== order.paymentMethod || !!f.pending !== !!order.pending; order = f; if (!changed && order.chosen) changed = await switchesChanged(); if (changed) { boxKey = ""; render(); } } }, 15000);
     }
     start().catch(function (e) { console.error(e); });
 })();

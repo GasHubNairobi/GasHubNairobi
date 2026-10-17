@@ -19,17 +19,17 @@
     const MINE_ENDPOINT = "/api/dealers/products/mine";
     /* Category words the customer product page understands for its Gas / Cylinders / Gas + Cylinder / Accessories filters */
     const TYPE_LABELS = {
-        cylinder: "Gas Cylinder",
+        cylinder: "New Gas Cylinders",
         refill: "Gas Refill",
-        empty: "Empty Cylinder",
-        accessory: "Accessory",
-        industrial: "Industrial Gas"
+        empty: "Gas Cylinder Only",
+        accessory: "Gas Accessories",
+        industrial: "Commercial Gas"
     };
     function typeFromLabel(label) {
         const t = String(label || "").toLowerCase();
         if (/access/.test(t)) return "accessory";
-        if (/industrial/.test(t)) return "industrial";
-        if (/empty/.test(t)) return "empty";
+        if (/industrial|commercial/.test(t)) return "industrial";
+        if (/empty|only/.test(t)) return "empty";
         if (/cylinder/.test(t)) return "cylinder";
         return "refill";
     }
@@ -391,7 +391,7 @@
                 sku: String(p.sku || p.id || "").trim(),
                 name: String(p.name || "").trim(),
                 type: TYPE_LABELS[p.type] || p.type || "Gas",
-                size: String(p.size || "").trim(),
+                size: p.type === "accessory" ? "" : String(p.size || "").trim(),   /* accessories have no cylinder size */
                 price: Number(p.price) || 0,
                 stock: Math.max(0, parseInt(p.stock, 10) || 0),
                 available: p.available !== false,
@@ -481,6 +481,8 @@
                     }
                     const message = res.status === 401
                         ? "Dealer session expired. Please log in again to publish products."
+                        : res.status === 413
+                        ? "The photos are too large to publish together. Remove or replace some photos with smaller ones and try again."
                         : ((data.message || `The server refused the update (${res.status}).`) + (data.detail ? ` (${data.detail})` : ""));
                     this.showToast(message, "error");
                     return { ok: false, status: res.status, message };
@@ -505,13 +507,14 @@
         },
 
         /* Shrinks a chosen photo so it fits in storage and uploads quickly */
-        readImageCompressed(file, maxSide = 800, quality = 0.8) {
+        readImageCompressed(file, maxSide = 600, quality = 0.75) {
             return new Promise((resolve, reject) => {
+                if (file && file.size > 15 * 1024 * 1024) { reject(new Error("That photo is too large. Choose one under 15 MB.")); return; }
                 const reader = new FileReader();
                 reader.onerror = () => reject(reader.error);
                 reader.onload = () => {
                     const img = new Image();
-                    img.onerror = () => resolve(reader.result);
+                    img.onerror = () => reject(new Error("That file is not a picture this browser can open. Choose a JPG, PNG or WebP photo."));
                     img.onload = () => {
                         const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
                         const canvas = document.createElement("canvas");

@@ -97,7 +97,7 @@ function render(template, vars) {
 
 const escapeHtml = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const baseUrl = () => (process.env.APP_BASE_URL || process.env.PUBLIC_URL || "http://localhost:3000").replace(/\/$/, "");
+const baseUrl = (req) => require("./site-url").siteUrl(req);
 const firstName = (full) => String(full || "").trim().split(/\s+/)[0] || "there";
 
 /* plain text -> branded HTML email. Links in the text become clickable. */
@@ -129,7 +129,7 @@ function getTransport() {
             host: process.env.SMTP_HOST,
             port: Number(process.env.SMTP_PORT || 587),
             secure: String(process.env.SMTP_SECURE || "false") === "true",
-            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+            auth: { user: String(process.env.SMTP_USER).trim(), pass: String(process.env.SMTP_PASS).replace(/\s+/g, "") },   /* Gmail shows app passwords in groups of 4 with spaces; they must be sent without */
             pool: true,
             maxConnections: 3,
             maxMessages: 100

@@ -224,6 +224,8 @@ img { max-width: 100%; display: block; }
 .social-links a:hover { border-color: var(--yellow); color: #fff; }
 .social-links svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--yellow); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .social-links svg .f { fill: var(--yellow); stroke: none; }
+/* real brand logos on a white disc so black / coloured marks stay readable on the dark footer */
+.social-links img { width: 22px; height: 22px; flex: none; padding: 2px; border-radius: 50%; background: #fff; }
 .footer-bottom { position: relative; z-index: 1; max-width: 1100px; margin: 16px auto 0; padding-top: 10px; border-top: 1px solid #2a3150; display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: #7f88a8; }
 .footer-watermark { position: absolute; right: 10px; bottom: 6px; width: 48px; height: auto; opacity: .06; pointer-events: none; }
 

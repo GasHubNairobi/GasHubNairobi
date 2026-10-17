@@ -618,6 +618,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
+            const vf = await requestSettings("/api/admin/settings/verification-fee");
+            const fee = vf.settings && vf.settings.default_verification_fee;
+            const feeInput = document.getElementById("defaultVerificationFee");
+            if (feeInput) feeInput.value = fee != null ? fee : "";
+            updateVerificationFeePreview();
+        } catch (error) {
+            console.info("Default verification fee endpoint is not available yet:", error.message);
+        }
+
+        try {
             const data = await requestSettings("/api/admin/settings/coins");
             const settings = data.settings || data;
 
@@ -686,6 +696,34 @@ document.addEventListener("DOMContentLoaded", () => {
             console.info("Platform settings endpoint is not available yet:", error.message);
         }
     }
+
+    function updateVerificationFeePreview() {
+        const el = document.getElementById("verificationFeePreviewDefault");
+        const n = Number(document.getElementById("defaultVerificationFee")?.value);
+        if (el) el.textContent = Number.isFinite(n) && n > 0 ? "KSh " + n.toLocaleString("en-KE") : "No default fee set";
+    }
+    document.getElementById("defaultVerificationFee")?.addEventListener("input", updateVerificationFeePreview);
+
+    document.getElementById("verificationFeeForm")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const input = document.getElementById("defaultVerificationFee");
+        const raw = String(input?.value ?? "").trim();
+        if (raw !== "" && !(Number(raw) > 0)) { showMessage("Enter a fee above 0, or leave it empty to show no default fee."); return; }
+        const button = document.getElementById("saveVerificationFeeButton");
+        try {
+            if (button) { button.disabled = true; button.textContent = "Saving…"; }
+            const result = await requestSettings("/api/admin/settings/verification-fee", {
+                method: "PUT",
+                body: { default_verification_fee: raw === "" ? null : Number(raw) }
+            });
+            showMessage(result.message || "Default verification fee saved.", "success");
+            updateVerificationFeePreview();
+        } catch (error) {
+            showMessage(error.message || "Could not save the default verification fee.");
+        } finally {
+            if (button) { button.disabled = false; button.textContent = "Save Default Fee"; }
+        }
+    });
 
     document.getElementById("coinSettingsForm")?.addEventListener("submit", async event => {
         event.preventDefault();
@@ -864,6 +902,41 @@ document.addEventListener("DOMContentLoaded", () => {
         cashPoints: document.getElementById("cashPointsAmount")
     };
 
+    /* ranges: order amount from / to -> points (on the right), one list for online payments and one for cash */
+    const ppBoxes = { online: document.getElementById("ppRangesOnline"), cash: document.getElementById("ppRangesCash") };
+    const ppRanges = { online: [], cash: [] };
+    const esc = v => String(v == null ? "" : v).replace(/"/g, "&quot;");
+    function drawPpRanges(kind) {
+        const box = ppBoxes[kind];
+        if (!box) return;
+        box.innerHTML = ppRanges[kind].length ? ppRanges[kind].map((r, i) => `
+            <div class="pp-range" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px">
+                <div><small>From (KSh)</small><input type="number" min="0" step="1" data-f="from" value="${esc(r.from)}"></div>
+                <div><small>To (KSh)</small><input type="number" min="0" step="1" data-f="to" value="${esc(r.to)}" placeholder="and above"></div>
+                <div><small>Points earned</small><input type="number" min="0" step="1" data-f="points" value="${esc(r.points)}"></div>
+                <button type="button" class="secondary-button" data-del="${i}" aria-label="Remove range">✕</button>
+            </div>`).join("") : '<small>No ranges: every paid order earns the flat number above.</small>';
+    }
+    function readPpRanges(kind) {
+        const box = ppBoxes[kind];
+        if (!box) return;
+        ppRanges[kind] = Array.from(box.querySelectorAll(".pp-range")).map(row => {
+            const g = f => row.querySelector(`[data-f="${f}"]`).value;
+            return { from: g("from"), to: g("to"), points: g("points") };
+        });
+    }
+    ["online", "cash"].forEach(kind => {
+        ppBoxes[kind]?.addEventListener("click", e => { const b = e.target.closest("[data-del]"); if (!b) return; readPpRanges(kind); ppRanges[kind].splice(Number(b.dataset.del), 1); drawPpRanges(kind); });
+        document.getElementById(kind === "online" ? "ppAddOnline" : "ppAddCash")?.addEventListener("click", () => {
+            readPpRanges(kind);
+            const list = ppRanges[kind], last = list[list.length - 1];
+            const next = last && last.to !== "" && last.to !== null ? Number(last.to) + 1 : (last ? "" : 0);
+            list.push({ from: next, to: "", points: "" });
+            drawPpRanges(kind);
+        });
+    });
+    const sendRanges = kind => ppRanges[kind].map(r => ({ from: r.from === "" ? NaN : Number(r.from), to: r.to === "" || r.to == null ? null : Number(r.to), points: r.points === "" ? NaN : Number(r.points) }));
+
     function syncPurchasePointsUi() {
         if (ppFields.onlinePoints) ppFields.onlinePoints.disabled = !ppFields.onlineEnabled?.checked;
         if (ppFields.cashPoints) ppFields.cashPoints.disabled = !ppFields.cashEnabled?.checked;
@@ -883,6 +956,11 @@ document.addEventListener("DOMContentLoaded", () => {
             ppFields.cashEnabled.checked = s.cashEnabled !== false;
             if (s.onlinePoints != null) ppFields.onlinePoints.value = s.onlinePoints;
             if (s.cashPoints != null) ppFields.cashPoints.value = s.cashPoints;
+            ["online", "cash"].forEach(kind => {
+                const list = s[kind + "Ranges"];
+                ppRanges[kind] = Array.isArray(list) ? list.map(r => ({ from: r.from, to: r.to, points: r.points })) : [];
+                drawPpRanges(kind);
+            });
         } catch (error) {
             console.info("Purchase points endpoint is not available yet:", error.message);
         }
@@ -892,6 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("purchasePointsForm")?.addEventListener("submit", async event => {
         event.preventDefault();
         const online = Number(ppFields.onlinePoints.value), cash = Number(ppFields.cashPoints.value);
+        readPpRanges("online"); readPpRanges("cash");
         if (!Number.isInteger(online) || online < 0 || !Number.isInteger(cash) || cash < 0) {
             showMessage("Enter a whole number of points (0 or more) for both online and cash payments.");
             return;
@@ -903,7 +982,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "PUT",
                 body: {
                     onlineEnabled: ppFields.onlineEnabled.checked, onlinePoints: online,
-                    cashEnabled: ppFields.cashEnabled.checked, cashPoints: cash
+                    cashEnabled: ppFields.cashEnabled.checked, cashPoints: cash,
+                    onlineRanges: sendRanges("online"), cashRanges: sendRanges("cash")
                 }
             });
             showMessage(result.message || "Points for purchases saved.", "success");
@@ -952,7 +1032,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function relock(message) {
         superToken = "";
         /* the payment account is only shown while unlocked, so clear what was loaded */
-        ["payAccNumber", "payAccAccountNumber", "payAccName", "payAccInstructions"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        ["payAccNumber", "payAccAccountNumber", "payAccName", "payAccInstructions", "bankName", "bankAccountName", "bankAccountNumber", "bankBranch", "bankPaybill", "bankInstructions"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
         applyLockState();
         if (message) showMessage(message);
     }
@@ -977,6 +1057,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 loadAdmins();
                 loadPlatformSettings();
                 loadPaymentAccount();
+                loadPaymentMethods();
+                loadBankAccount();
             } catch (error) {
                 input.value = "";
                 showMessage(error.message || "Could not unlock.");
@@ -1046,7 +1128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const number = payAcc.number.value.trim();
         if (!number) {
             payAcc.preview.textContent = "Not set yet";
-            payAcc.hint.textContent = "Until this is saved, customers are told to contact support to pay.";
+            payAcc.hint.textContent = "Until this is saved, customers who cannot get the prompt are told to contact support.";
             return;
         }
         const parts = {
@@ -1055,7 +1137,7 @@ document.addEventListener("DOMContentLoaded", () => {
             phone: `Send Money to ${number}`
         };
         payAcc.preview.textContent = parts[type] + (payAcc.name.value.trim() ? ` · ${payAcc.name.value.trim()}` : "");
-        payAcc.hint.textContent = "Customers see this after they place an M-Pesa order and are asked for the M-Pesa code.";
+        payAcc.hint.textContent = "Customers see this only after the M-Pesa phone prompt failed to reach them twice (or when the prompt is switched off).";
     }
 
     async function loadPaymentAccount() {
@@ -1063,7 +1145,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const data = await superRequest("/api/admin/settings/payment-account");
             const s = data.settings || {};
-            payAcc.type.value = s.type || "paybill";
+            payAcc.type.value = s.type || "till";
             payAcc.number.value = s.number || "";
             payAcc.account.value = s.account_number || "";
             payAcc.name.value = s.account_name || "";
@@ -1098,11 +1180,96 @@ document.addEventListener("DOMContentLoaded", () => {
                 payAcc.number.value = result.settings.number || "";
                 updatePaymentAccountPreview();
             }
-            showMessage(result.message || "GasHub payment account saved.", "success");
+            showMessage(result.message || "Backup Till saved.", "success");
         } catch (error) {
             showMessage(error.message || "Could not save the payment account.");
         } finally {
-            if (button) { button.disabled = false; button.textContent = "Save Payment Account"; }
+            if (button) { button.disabled = false; button.textContent = "Save Backup Till"; }
+        }
+    });
+
+    /* ---------- online payment methods: on / off switches ---------- */
+    const pm = { prompt: document.getElementById("pmMpesaPrompt"), bank: document.getElementById("pmBank"), till: document.getElementById("pmManualTill"), warn: document.getElementById("pmWarning") };
+    function updatePmWarning() { if (pm.warn && pm.prompt) pm.warn.hidden = pm.prompt.checked || pm.till.checked; }
+    [pm.prompt, pm.till].forEach(el => el?.addEventListener("change", updatePmWarning));
+
+    async function loadPaymentMethods() {
+        if (!pm.prompt) return;
+        try {
+            const data = await superRequest("/api/admin/settings/payment-methods");
+            const s = data.settings || {};
+            pm.prompt.checked = s.mpesa_prompt !== false;
+            pm.bank.checked = s.bank !== false;
+            pm.till.checked = s.manual_till !== false;
+        } catch (error) {
+            console.info("Could not load the payment switches:", error.message);
+        }
+        updatePmWarning();
+    }
+
+    document.getElementById("paymentMethodsForm")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const button = document.getElementById("savePaymentMethodsButton");
+        try {
+            if (button) { button.disabled = true; button.textContent = "Saving…"; }
+            const result = await superRequest("/api/admin/settings/payment-methods", {
+                method: "PUT",
+                body: { mpesa_prompt: pm.prompt.checked, bank: pm.bank.checked, manual_till: pm.till.checked }
+            });
+            showMessage(result.message || "Payment methods saved.", "success");
+        } catch (error) {
+            showMessage(error.message || "Could not save the payment methods.");
+        } finally {
+            if (button) { button.disabled = false; button.textContent = "Save Payment Methods"; }
+        }
+    });
+
+    /* ---------- bank account shown to customers ---------- */
+    const bankF = {
+        name: document.getElementById("bankName"), accName: document.getElementById("bankAccountName"), number: document.getElementById("bankAccountNumber"),
+        branch: document.getElementById("bankBranch"), paybill: document.getElementById("bankPaybill"), instructions: document.getElementById("bankInstructions"),
+        preview: document.getElementById("bankPreview"), hint: document.getElementById("bankPreviewHint")
+    };
+    function updateBankPreview() {
+        if (!bankF.name) return;
+        const n = bankF.name.value.trim(), a = bankF.number.value.trim();
+        if (!n || !a) { bankF.preview.textContent = "Not set yet"; bankF.hint.textContent = "Until this is saved, customers who choose Bank are told the bank details are being set up."; return; }
+        bankF.preview.textContent = `${n} · Account ${a}` + (bankF.accName.value.trim() ? ` · ${bankF.accName.value.trim()}` : "");
+        bankF.hint.textContent = "Customers see these details (and your instructions) when they choose Bank.";
+    }
+    async function loadBankAccount() {
+        if (!bankF.name) return;
+        try {
+            const data = await superRequest("/api/admin/settings/bank-account");
+            const s = data.settings || {};
+            bankF.name.value = s.bank_name || ""; bankF.accName.value = s.account_name || ""; bankF.number.value = s.account_number || "";
+            bankF.branch.value = s.branch || ""; bankF.paybill.value = s.paybill || ""; bankF.instructions.value = s.instructions || "";
+            if (data.using_env) bankF.hint.textContent = "These details came from the server .env file. Press Save to keep them here from now on.";
+        } catch (error) {
+            console.info("Could not load the bank account:", error.message);
+        }
+        if (!(document.getElementById("bankPreviewHint")?.textContent || "").startsWith("These details came")) updateBankPreview();
+    }
+    [bankF.name, bankF.accName, bankF.number].forEach(el => el?.addEventListener("input", updateBankPreview));
+
+    document.getElementById("bankAccountForm")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const button = document.getElementById("saveBankAccountButton");
+        try {
+            if (button) { button.disabled = true; button.textContent = "Saving…"; }
+            const result = await superRequest("/api/admin/settings/bank-account", {
+                method: "PUT",
+                body: {
+                    bank_name: bankF.name.value.trim(), account_name: bankF.accName.value.trim(), account_number: bankF.number.value.trim(),
+                    branch: bankF.branch.value.trim(), paybill: bankF.paybill.value.trim(), instructions: bankF.instructions.value.trim()
+                }
+            });
+            updateBankPreview();
+            showMessage(result.message || "Bank details saved.", "success");
+        } catch (error) {
+            showMessage(error.message || "Could not save the bank details.");
+        } finally {
+            if (button) { button.disabled = false; button.textContent = "Save Bank Details"; }
         }
     });
 
@@ -1119,7 +1286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (tag) tag.textContent = data.live ? "Live on Play Store" : "Not live yet";
         if (hint) {
             hint.textContent = data.live
-                ? "The app is live, so customers see the download link in their profile."
+                ? "The app is live, so customers see the Download button at the top of the site and the link in their profile."
                 : "Customers do not see a download link yet. It appears automatically once the app is published on Google Play.";
             if (!data.install_key_set) hint.textContent += " Add APP_INSTALL_KEY to the server .env file (and put the same key in the app) so the app can confirm installs; until then no install points can be given.";
         }
@@ -1168,6 +1335,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadEarnSettings();
     loadPurchasePoints();
     updatePaymentAccountPreview();   /* the account itself is loaded after the super admin unlock */
+    updateBankPreview();
 
     /* ---------- collapsible settings cards ---------- */
     (function setupCollapsibleCards() {

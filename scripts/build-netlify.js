@@ -3,7 +3,8 @@
 
      frontend/*  ->  dist/            (customer pages, as before at the site root)
      Images/     ->  dist/Images/
-     dealer/     ->  dist/dealer/
+     dealer/     ->  dist/dealer/     EXCEPT the .html pages (only the public dealer-login / dealer-application pages are published);
+                                      the other dealer pages stay private and are served by the api function after the dealer login check
      admin/      ->  dist/admin/      EXCEPT the .html pages: those stay private and are served by the api function after the
                                       admin login check (exactly as backend/server.js did). admin-login.html is public, as before.
 
@@ -15,7 +16,7 @@ const path = require("path");
 const root = path.join(__dirname, "..");
 const dist = path.join(root, "dist");
 
-const HIDDEN = /\.(md|sql|txt|lnk|env|map)$/i;
+const HIDDEN = /\.(md|sql|txt|lnk|env|map|rej|orig|bak)$/i;   /* .rej / .orig / .bak are leftovers from patching: never published */
 const LEFTOVER = /\.\d+css$/i;
 
 function copyDir(from, to, keep) {
@@ -43,7 +44,11 @@ const all = () => true;
 const total =
     copyDir(path.join(root, "frontend"), dist, all) +
     copyDir(path.join(root, "Images"), path.join(dist, "Images"), all) +
-    copyDir(path.join(root, "dealer"), path.join(dist, "dealer"), all) +
+    copyDir(path.join(root, "dealer"), path.join(dist, "dealer"), (name) => {
+        const lower = name.toLowerCase();
+        if (/\.html?$/.test(lower)) return lower === "dealer-login.html" || lower === "dealer-application.html";
+        return true;
+    }) +
     copyDir(path.join(root, "admin"), path.join(dist, "admin"), (name) => {
         const lower = name.toLowerCase();
         if (/\.html?$/.test(lower)) return lower === "admin-login.html";

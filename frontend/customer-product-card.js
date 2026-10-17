@@ -11,7 +11,7 @@
 
     var FAV_KEY = "gasHubFavorites", LOC_KEY = "gasHubLocation";
     var DEALER_PAGE = "customer-dealer.html", PRODUCT_PAGE = "customer-product.html", CHECKOUT_PAGE = "customer-checkout.html";
-    var FALLBACK_IMG = "Images/watermark.png";
+    var FALLBACK_IMG = "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%2080%22%3E%3Crect%20width=%2280%22%20height=%2280%22%20fill=%22%23eaf0ff%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%239db3e8%22%20stroke-width=%223%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Crect%20x=%2226%22%20y=%2226%22%20width=%2228%22%20height=%2236%22%20rx=%2210%22/%3E%3Cpath%20d=%22M34%2026v-5h12v5M40%2021v-5%22/%3E%3C/g%3E%3C/svg%3E";
 
     function read(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
     function write(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
@@ -25,20 +25,24 @@
     /* ---------- reading a product from the API (ONE rule set for every page) ---------- */
     function normCategory(p) {
         var raw = clean(first(p.category, p.product_type, p.type, p.category_name, p.name)).toLowerCase();
-        if (/access|regulator|hose|burner|stand|valve|stove/.test(raw)) return "accessory";
-        if (raw.indexOf("gas") > -1 && raw.indexOf("cylinder") > -1) return "gas-cylinder";
-        if (raw.indexOf("cylinder") > -1) return "cylinder";
-        return "gas";
+        if (/access|regulator|hose|burner|stand|valve|stove/.test(raw)) return "accessory";      /* Gas Accessories */
+        if (/commercial|industrial/.test(raw)) return "commercial";                             /* Commercial Gas */
+        if (/refill/.test(raw)) return "refill";                                                /* Gas Refill */
+        if (/empty|cylinder only/.test(raw)) return "empty";                                    /* Gas Cylinder Only */
+        if (raw.indexOf("cylinder") > -1) return "cylinder";                                    /* New Gas Cylinders */
+        return "refill";                                                                        /* older products saved just as "gas" */
     }
     /* the type the DEALER picked when adding the product (Category / Type), shown as plain text by itself.
        Old products saved as just "gas" or "cylinder" read as "Gas" / "Cylinder". */
     function normTypeLabel(p) {
         var raw = clean(first(p.category, p.product_type, p.type, p.category_name));
         if (!raw) return "";
-        return raw.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim().replace(/(^|\s)([a-z])/g, function (m, a, b) { return a + b.toUpperCase(); });
+        /* customers see: Refill, New Gas Cylinders, Empty, Gas Accessories, Commercial Gas */
+        return { refill: "Refill", empty: "Empty", cylinder: "New Gas Cylinders", accessory: "Gas Accessories", commercial: "Commercial Gas" }[normCategory(p)] || "";
     }
     /* the gas weight, always written the same way: "13 KG" */
     function normSize(p) {
+        if (normCategory(p) === "accessory") return "";            /* accessories have no cylinder size */
         var v = clean(first(p.size, p.cylinder_size, p.cylinderSize, p.weight, p.weight_kg, p.gas_weight, p.cylinder_weight, p.weightKg));
         if (!v) { var m = clean(first(p.name, p.title, p.product_name)).match(/(\d+(?:\.\d+)?)\s*kg/i); if (m) v = m[1]; }
         if (!v) return "";
@@ -323,6 +327,6 @@
         } catch (e) { /* try again next time */ }
     }
 
-    function start() { check(); timer = setInterval(check, 10000); }
+    function start() { if (window.__gasHubNotifier) return; /* customer-notifications.js handles replies now */ check(); timer = setInterval(check, 10000); }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

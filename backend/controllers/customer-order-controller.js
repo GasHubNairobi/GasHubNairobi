@@ -9,7 +9,7 @@ const { ensureRefundColumns, settleCancelledOrder } = require("../utils/refunds"
 const { ensurePaymentFlowColumns, canCustomerPay } = require("../utils/payment-flow");
 
 /* A customer needs at least this many GasHub points before they can turn them into a discount. */
-const MIN_REDEEM_POINTS = 301;   /* default only: the admin sets the real number in Settings (getPointsConfig().minRedeem) */
+const MIN_REDEEM_POINTS = 30;   /* default only: the admin sets the real number in Settings (getPointsConfig().minRedeem) */
 
 /* Columns/ledger reasons the points discount needs. Created on first use so no SQL has to be run by hand. */
 let redeemReady = false;
@@ -259,7 +259,7 @@ async function createMyOrder(req, res) {
                 return res.status(400).json({ success: false, message: `Use between ${MIN} and ${Math.min(balance, maxByBill)} points on this order.` });
             }
             pointsUsed = requestedPoints;
-            discount = Math.floor(pointsUsed * rate);
+            discount = Math.floor(Math.round(pointsUsed * rate * 100) / 100);
         }
         const total = subtotal + fee - discount;
 
@@ -300,6 +300,7 @@ async function createMyOrder(req, res) {
         }
 
         await client.query("COMMIT");
+        await require("../utils/push-service").orderPlaced(o);   /* phone push to the dealer (best effort) */
         res.status(201).json({ success: true, message: "Order placed. The dealer will confirm it, then you can pay.", order: shapeOrder({ ...o, customer_name: req.user.full_name, customer_phone: req.user.phone, customer_email: req.user.email }, lines.map((l) => ({
             product_id: l.p.id, product_name: l.p.name, cylinder_size: l.p.cylinder_size, quantity: l.qty, unit_price: l.p.price, total_price: l.total, product_image: l.p.image }))) });
     } catch (error) {
@@ -334,6 +335,7 @@ async function cancelMyOrder(req, res) {
         const refund = await settleCancelledOrder(client, o, { restock: true, reason: clean(req.body && req.body.cancellation_reason, 300) || "Cancelled by customer." });
         await client.query("COMMIT");
         const fresh = (await pool.query("SELECT * FROM orders WHERE id = $1", [o.id])).rows[0] || upd;
+        await require("../utils/push-service").orderCancelledByCustomer(fresh);
         res.json({
             success: true,
             message: refund.refundPending
@@ -356,7 +358,7 @@ async function cancelMyOrder(req, res) {
 /* GET /api/points/config  (public) */
 async function pointsConfig(req, res) {
     const c = await getPointsConfig();
-    res.json({ success: true, enabled: c.enabled, pointsPerOrder: c.pointsPerOrder, onlineEnabled: c.onlineEnabled, onlinePoints: c.onlinePoints, cashEnabled: c.cashEnabled, cashPoints: c.cashPoints, pointValueKsh: c.pointValueKsh, minRedeem: c.minRedeem });
+    res.json({ success: true, enabled: c.enabled, pointsPerOrder: c.pointsPerOrder, onlineEnabled: c.onlineEnabled, onlinePoints: c.onlinePoints, cashEnabled: c.cashEnabled, cashPoints: c.cashPoints, onlineRanges: c.onlineRanges, cashRanges: c.cashRanges, pointValueKsh: c.pointValueKsh, minRedeem: c.minRedeem });
 }
 
 async function balanceOf(userId, db = pool) {
@@ -452,6 +454,12 @@ async function choosePaymentMethod(req, res) {
         if (["cancelled", "rejected"].includes(String(o.status))) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "This order was cancelled." }); }
         if (o.payment_status === "paid") { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "This order is already paid." }); }
         if (!canCustomerPay(o)) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "You can choose how to pay once the dealer has confirmed your order. We will SMS and email you." }); }
+        /* a method the super admin switched off cannot be chosen */
+        if (method === "mpesa" || method === "bank") {
+            const sw = await require("../utils/gashub-settings").getPaymentMethods();
+            if (method === "bank" && !sw.bank) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, code: "method_off", message: "Bank payment is not available right now. Please choose another way to pay." }); }
+            if (method === "mpesa" && !(sw.mpesa_prompt || sw.manual_till)) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, code: "method_off", message: "M-Pesa payment is not available right now. Please choose another way to pay." }); }
+        }
         if (method === "cash" && Number(o.points_used) > 0) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "You used GasHub points on this order, so it has to be paid online (M-Pesa or bank)." }); }
         /* a code that is waiting for GasHub to confirm it must not be left hanging when the customer changes method */
         const pending = await client.query("SELECT 1 FROM payments WHERE order_id = $1 AND status::text = 'pending' LIMIT 1", [o.id]);
@@ -505,6 +513,8 @@ async function applyOrderPoints(req, res) {
 
         const subtotal = Number(o.subtotal) || 0, fee = Number(o.delivery_fee) || 0, gross = subtotal + fee;
         const already = Number(o.points_used) || 0;
+        /* a discount the dealer gave is kept in the same column as the coins discount: coins would erase it, so they cannot be mixed */
+        if (already === 0 && Number(o.discount_amount) > 0 && requested > 0) return stop(400, "The dealer already gave you a discount on this order, so coins can't be added to it.");
 
         /* put back anything used before: the coins are only reserved until the order is paid */
         if (already > 0) await client.query("DELETE FROM points_ledger WHERE order_id = $1 AND reason = 'order_redeem'", [o.id]);
@@ -523,7 +533,7 @@ async function applyOrderPoints(req, res) {
                 return stop(400, `Use between ${MIN} and ${Math.min(balance, maxByBill)} coins on this order.`);
             }
             pointsUsed = requested;
-            discount = Math.floor(pointsUsed * rate);
+            discount = Math.floor(Math.round(pointsUsed * rate * 100) / 100);
             await client.query(
                 `INSERT INTO points_ledger (user_id, order_id, points, reason, note) VALUES ($1, $2, $3, 'order_redeem', $4)`,
                 [req.user.id, o.id, -pointsUsed, `Used on order ${o.order_number} (KSh ${discount} off)`]);

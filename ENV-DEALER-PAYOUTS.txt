@@ -1,0 +1,70 @@
+NOTE: GasHub now runs on NETLIFY + SUPABASE only. Ignore every Render / CRON_SECRET / pinger line below.
+Use Admin > Payout Planner to schedule dealer payouts; settings are in PAYOUT-PLANNER.md.
+
+AUTOMATIC DEALER PAYOUTS  (Render + Supabase)
+=============================================
+
+WHAT IT DOES
+  Every minute the server:
+   1. creates each dealer's payout on the dealer's own schedule (Admin > Dealers > open a dealer > Payout settings:
+      method, "daily" / "weekly" / "manual", day, time in Nairobi, hold hours, minimum payout). "Manual" dealers are never touched.
+   2. sends every payout whose time has come straight to the dealer's M-Pesa number (Safaricom B2C - the same setup as customer
+      withdrawals and refunds).
+   3. marks it Paid only when Safaricom confirms, with the real M-Pesa receipt. The dealer gets a phone notification, an SMS and an email.
+  The money amounts are exactly what the existing rules already work out: completed orders past the hold period, commission taken off,
+  cash-order commission carried forward, customer-points discounts paid by GasHub, minimum payout respected.
+
+TURN IT ON  (Render dashboard > your service > Environment)
+   MPESA_CONSUMER_KEY / MPESA_CONSUMER_SECRET / MPESA_ENV     (already set for payments)
+   MPESA_B2C_INITIATOR_NAME=...
+   MPESA_B2C_SECURITY_CREDENTIAL=...                          (see ENV-AUTO-PAYOUT.txt for how to make it)
+   MPESA_B2C_SHORTCODE=...                                    (only if different from MPESA_SHORTCODE)
+   MPESA_CALLBACK_BASE_URL=https://YOUR-SERVICE.onrender.com  (public https address, no slash at the end)
+   MPESA_CALLBACK_SECRET=a-long-random-text-of-24-or-more-characters
+   AUTO_DEALER_PAYOUTS=true                                   <- the master switch. Nothing is paid automatically without it.
+  In the Daraja portal set the B2C Result URL and Queue Timeout URL to:
+     https://YOUR-SERVICE.onrender.com/api/payments/mpesa/b2c/result/<MPESA_CALLBACK_SECRET>
+     https://YOUR-SERVICE.onrender.com/api/payments/mpesa/b2c/timeout/<MPESA_CALLBACK_SECRET>
+  Then redeploy. The B2C shortcode must hold enough money (its Utility / Working balance): payouts are paid from it, so top it up
+  before pay day. If it runs short Safaricom says "insufficient funds" and GasHub tries again in 30 and 60 minutes, then stops (Failed).
+
+KEEP RENDER AWAKE  (important for money)
+  Payouts are created and sent by a timer inside the server, so the server has to be running at the time.
+   - Best: a paid Render instance (always on). Nothing else to do.
+   - Free instance: it falls asleep after ~15 minutes without visitors and the timer sleeps with it. Add a free pinger
+     (cron-job.org or UptimeRobot) that calls the address below every 5 minutes. It wakes the server and runs the jobs:
+        POST https://YOUR-SERVICE.onrender.com/api/cron/tick        header:  Authorization: Bearer <CRON_SECRET>
+     and set  CRON_SECRET=a-long-random-text-of-24-or-more-characters  in Render. Without CRON_SECRET that address does not exist.
+     (https://YOUR-SERVICE.onrender.com/api/cron/health needs no secret: use it as Render's "Health Check Path".)
+  Even after a long sleep nothing is lost: on wake-up it catches up. A pay slot missed by more than 12 hours is skipped and that
+  period's money simply rolls into the dealer's next payout.
+
+WHAT THE ADMIN SEES  (Admin > Dealers > a dealer > Payouts)
+   Scheduled  - waiting for its time (marked "Automatic" when GasHub created it).  Send now / Hold / Cancel / Mark paid are still available.
+   Sending    - M-Pesa has been asked; buttons are locked so it can never be paid twice.
+   Paid       - Safaricom confirmed; the receipt code is shown.
+   Failed     - the reason is shown in red. Release = try again;  Send again = send now;  Mark paid = you paid it by hand.
+  Dealers see: Scheduled, Sending to M-Pesa, Paid (or "Delayed" with a calm message if something needs the admin).
+
+SAFETY BUILT IN
+   - Each send is claimed under a database lock first, and the database allows only ONE payout per dealer per period, so two servers or a
+     double click can never pay twice. A payout shown as Sending is locked.
+   - No answer from M-Pesa (network drop) is NEVER retried automatically: the money may have left. After 60 minutes it shows Failed
+     with "check your M-Pesa statement". If Safaricom's confirmation arrives late it still turns Paid by itself.
+   - Automatic retries only for "not enough float", "busy" and "internal failure", at most 3 tries. Every other refusal stops at once.
+   - Before sending, the payout total must still equal the orders inside it, and the M-Pesa number must be valid.
+   - One payment is limited to KSh 150,000 (change with MPESA_B2C_MAX_PER_TX). Bigger payouts stop as Failed: send by hand, then Mark paid.
+   - Paybill and Till destinations are not sent automatically (they stay Scheduled): pay by hand, then Mark paid.
+   - M-Pesa sends whole shillings, so a payout of KSh 1,500.40 is sent as KSh 1,500.
+
+FIRST TIME - RECOMMENDED
+   1. Test with MPESA_ENV=sandbox first, or start live with ONE dealer: set the others to "manual".
+   2. Press "Send now" on one small payout and watch it go Sending -> Paid before turning AUTO_DEALER_PAYOUTS on for everyone.
+
+OTHER RENDER NOTES
+   - Start command: npm start   |   Build command: npm install   (package.json already has both)
+   - Render's address is detected automatically for links in emails/SMS (RENDER_EXTERNAL_URL); set APP_BASE_URL only if you use your own domain.
+   - Render's proxy is trusted automatically (so each visitor is rate-limited by their own IP). If every visitor looks like the same IP in your
+     logs, set TRUST_PROXY=2.
+   - Supabase: use the connection POOLER details (Project Settings > Database) as DB_HOST / DB_PORT / DB_USER / DB_PASSWORD, as you do now.
+   - The database changes (new columns on dealer_payouts, an index) are applied automatically the first time the payouts code runs.

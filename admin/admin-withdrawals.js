@@ -16,12 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
         toggle: document.getElementById("wdToggle"),
         knob: document.getElementById("wdKnob"),
         toggleText: document.getElementById("wdToggleText"),
-        payForm: document.getElementById("wdPayoutForm"), paySave: document.getElementById("wdPaySave"),
-        payMethod: document.getElementById("wdPayMethod"), payNumber: document.getElementById("wdPayNumber"),
-        payNumberLabel: document.getElementById("wdPayNumberLabel"), payRef: document.getElementById("wdPayRef"),
-        payRefBox: document.getElementById("wdPayRefBox"), payName: document.getElementById("wdPayName"), rateNote: document.getElementById("wdRateNote"),
+        rateNote: document.getElementById("wdRateNote"),
         tiers: document.getElementById("wdTiers"), unitBtns: Array.from(document.querySelectorAll("[data-unit]")), unitHint: document.getElementById("wdUnitHint"), maxInput: document.getElementById("wdMaxCoins"), addTier: document.getElementById("wdAddTier"),
-        feeForm: document.getElementById("wdFeeForm"), feeSave: document.getElementById("wdFeeSave"), csv: document.getElementById("wdCsv"), accSource: document.getElementById("wdAccSource"),
+        feeForm: document.getElementById("wdFeeForm"), feeSave: document.getElementById("wdFeeSave"), csv: document.getElementById("wdCsv"),
         opensAt: document.getElementById("wdOpensAt"),
         switchForm: document.getElementById("wdSwitchForm"),
         switchSave: document.getElementById("wdSwitchSave"),
@@ -47,43 +44,13 @@ document.addEventListener("DOMContentLoaded", () => {
         el.stateTag.textContent = open ? "Open" : (waiting ? "Closed until " + when(r.opens_at) : "Closed");
     }
 
-    /* ---------- scheduled payout ---------- */
+    /* ---------- scheduled payout: one schedule for everything, kept in Payout Planner ---------- */
     const isOpenReq = (w) => w.status === "pending" || w.status === "approved";
     function showSchedule(r) {
-        const sc = r.payout_schedule || {};
         el.autoTag.className = "wd-state " + (r.auto_payout ? "on" : "off");
-        el.autoTag.textContent = r.auto_payout ? "Automatic payout ready" : "Automatic payout not set up";
-        if (document.activeElement !== el.payAt) el.payAt.value = toInput(sc.at);
-        el.schedClear.hidden = !sc.at;
-        const n = state.list.filter((w) => isOpenReq(w) && !w.payout_state).length;
-        el.schedHint.textContent = sc.at
-            ? "Scheduled for " + when(sc.at) + ". " + n + " request" + (n === 1 ? "" : "s") + " waiting now will be sent then (new requests made before that time are included)."
-            : "No payout scheduled. Pick a date and time, or use Send now on a request.";
-        const note = sc.last_result ? sc.last_result + (sc.last_run_at ? " (" + when(sc.last_run_at) + ")" : "") : "";
-        el.schedNote.textContent = note; el.schedNote.hidden = !note;
+        el.autoTag.textContent = r.auto_payout ? "Paybill ready" : "Automatic payout not set up";
+        GasHubPlannerBanner.render(document.getElementById("wdPlannerBanner"), r.payout_schedule);
     }
-    el.schedForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const at = fromInput(el.payAt.value);
-        if (!at) { showMessage("Pick the date and time to send the money, or leave things as they are and use Send now."); return; }
-        if (new Date(at) <= new Date()) { showMessage("Choose a payout time that is in the future."); return; }
-        el.schedSave.disabled = true;
-        try {
-            const r = await GasHubAdmin.adminApiRequest("/api/admin/withdrawals/settings", { method: "PUT", body: { payout_schedule: { at } } });
-            showSchedule(r); showMessage(r.message || "Saved.", "success");
-        } catch (error) {
-            showMessage(error.message || "Unable to save the schedule.", "error");
-        } finally { el.schedSave.disabled = false; }
-    });
-    el.schedClear.addEventListener("click", async () => {
-        el.schedClear.disabled = true;
-        try {
-            const r = await GasHubAdmin.adminApiRequest("/api/admin/withdrawals/settings", { method: "PUT", body: { payout_schedule: { at: "" } } });
-            el.payAt.value = ""; showSchedule(r); showMessage(r.message || "Cleared.", "success");
-        } catch (error) {
-            showMessage(error.message || "Unable to clear the schedule.", "error");
-        } finally { el.schedClear.disabled = false; }
-    });
 
     /* ---------- withdrawal charges (ranges) ---------- */
     let feeUnit = "coins";
@@ -163,25 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(a); a.click(); a.remove();
     });
 
-    const PAY_LABEL = { mpesa_phone: ["Phone number", "0712345678"], paybill: ["Paybill number", "e.g. 247247"], till: ["Till number", "e.g. 5123456"], bank: ["Account number", "Bank account number"] };
-    function payFormShape() {
-        const m = el.payMethod.value, l = PAY_LABEL[m] || PAY_LABEL.mpesa_phone;
-        el.payNumberLabel.textContent = l[0]; el.payNumber.placeholder = l[1];
-        el.payRefBox.hidden = m !== "paybill";
-    }
     function showPayout(r) {
-        const a = r.payout_account;
-        if (a && document.activeElement !== el.payNumber) {
-            el.payMethod.value = a.method || "mpesa_phone"; el.payNumber.value = a.number || "";
-            el.payRef.value = a.reference || ""; el.payName.value = a.name || "";
-        }
-        payFormShape();
-        if (a) {
-            el.accSource.hidden = a.source === "admin";
-            el.accSource.textContent = a.source === "env" ? "Using the GasHub withdrawal account from the .env file. Save here to replace it."
-                : "No withdrawal account is set yet. Fill it in here or in the .env file (GASHUB_WITHDRAWAL_ACCOUNT_* lines).";
-        }
-        if (r.payout_account_text !== undefined) state.account = r.payout_account_text || "";
         if (r.current_rate_ksh) { state.rate = r.current_rate_ksh; el.rateNote.textContent = "Current rate: 1 point = KSh " + ksh(r.current_rate_ksh) + ". Open requests (waiting or approved) are worked out at this rate."; el.rateNote.hidden = false; }
     }    const esc = (v) => GasHubAdmin.escapeHtml(v === null || v === undefined ? "" : String(v));
     const ksh = (n) => (Number(n) || 0).toLocaleString("en-KE", { maximumFractionDigits: 2 });
@@ -301,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (act === "approved") {
             if (!(await GasHubDialog.confirm({ title: "Approve this request?", message: `${w.customer_name} will receive KSh ${ksh(w.net_ksh)} to ${w.phone} (KSh ${ksh(w.amount_ksh)} less KSh ${ksh(w.fee_ksh)} charge). The amount is worked out at today\u2019s rate. Mark it Paid after you send the money.`, confirmText: "Approve", tone: "primary" }))) return;
         } else if (act === "paid") {
-            note = await GasHubDialog.prompt({ title: "Mark as paid", message: `Send KSh ${ksh(w.net_ksh)} (KSh ${ksh(w.amount_ksh)} less KSh ${ksh(w.fee_ksh)} charge, from ${w.points.toLocaleString("en-KE")} coins at today\u2019s rate) to ${w.phone} (${w.customer_name}) by M-Pesa` + (state.account ? ` from ${state.account}` : "") + `, then enter the receipt code.`, label: "M-Pesa receipt code", placeholder: "e.g. QGH7XK2LMN", confirmText: "Mark as paid", requiredMessage: "Enter the receipt code." });
+            note = await GasHubDialog.prompt({ title: "Mark as paid", message: `Send KSh ${ksh(w.net_ksh)} (KSh ${ksh(w.amount_ksh)} less KSh ${ksh(w.fee_ksh)} charge, from ${w.points.toLocaleString("en-KE")} coins at today\u2019s rate) to ${w.phone} (${w.customer_name}) by M-Pesa` + `, then enter the receipt code.`, label: "M-Pesa receipt code", placeholder: "e.g. QGH7XK2LMN", confirmText: "Mark as paid", requiredMessage: "Enter the receipt code." });
             if (note === null || note === undefined) return;
             note = "M-Pesa code " + String(note).trim();
         } else {
@@ -364,20 +313,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
             showMessage(error.message || "Unable to save the setting.", "error");
         } finally { el.switchSave.disabled = false; }
-    });
-
-    el.payMethod.addEventListener("change", payFormShape);
-    el.payForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        el.paySave.disabled = true;
-        try {
-            const r = await GasHubAdmin.adminApiRequest("/api/admin/withdrawals/settings", { method: "PUT", body: { payout_account: { method: el.payMethod.value, number: el.payNumber.value, reference: el.payRef.value, name: el.payName.value } } });
-            showPayout(r);
-            await load();
-            showMessage(r.message || "Saved.", "success");
-        } catch (error) {
-            showMessage(error.message || "Unable to save the withdrawal account.", "error");
-        } finally { el.paySave.disabled = false; }
     });
 
     el.search.addEventListener("input", render);

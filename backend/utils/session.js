@@ -11,6 +11,10 @@ const SESSION_COOKIE = "gashub_session";
 const CSRF_COOKIE = "gashub_csrf";
 
 let SECRET = process.env.SESSION_SECRET;
+/* in production a short or placeholder secret would let anyone forge sign-in cookies */
+if (IS_PROD && SECRET && (SECRET.length < 32 || /^(change-me|replace|your-|secret$|password)/i.test(SECRET))) {
+    throw new Error("SESSION_SECRET is too short or still a placeholder. Use at least 32 random characters.");
+}
 if (!SECRET) {
     if (IS_PROD) throw new Error("SESSION_SECRET must be set in production.");
     SECRET = crypto.randomBytes(32).toString("hex");

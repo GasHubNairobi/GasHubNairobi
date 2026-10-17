@@ -27,8 +27,8 @@
 
     var cs = document.currentScript;
     var manual = !!(cs && cs.hasAttribute("data-manual"));
-    var minMs = Number(cs && cs.getAttribute("data-min")) || 400;
-    var MAX_MS = 7000;   /* never block a page longer than this */
+    var minMs = Number(cs && cs.getAttribute("data-min")) || 150;
+    var MAX_MS = 2500;   /* never block a page longer than this */
     var PAY_MAX_MS = 45000; /* payments are allowed to take longer */
     var logo = cs && cs.getAttribute("data-logo");
     if (!logo) { try { logo = new URL("Images/logo.png", cs.src).href; } catch (e) { logo = "Images/logo.png"; } }
@@ -66,12 +66,12 @@
     var css =
         "html.cl-loading{overflow:hidden!important}" +
         ".cl-loader{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;" +
-        "background:radial-gradient(circle at 50% 38%,#fff 0%,#eaf0ff 70%,#dbe5ff 100%);transition:opacity .45s ease,visibility .45s ease;" +
+        "background:radial-gradient(circle at 50% 38%,#fff 0%,#eaf0ff 70%,#dbe5ff 100%);transition:opacity .2s ease,visibility .2s ease;" +
         "font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}" +
         ".cl-loader.done{opacity:0;visibility:hidden;pointer-events:none}" +
         ".cl-in{display:flex;flex-direction:column;align-items:center;padding:24px;text-align:center;max-width:320px}" +
         ".cl-logo{position:relative;width:132px;height:132px;display:flex;align-items:center;justify-content:center}" +
-        ".cl-logo img{position:relative;z-index:1;width:84px;height:auto;max-height:84px;object-fit:contain;animation:clPulse 1.8s ease-in-out infinite}" +
+        ".cl-logo img{position:relative;z-index:1;width:84px;height:auto;max-height:84px;object-fit:contain;opacity:0;transition:opacity .15s ease;animation:clPulse 1.8s ease-in-out infinite}.cl-logo img.ok{opacity:1}" +
         ".cl-logo b{position:relative;z-index:1;font-size:22px;font-weight:800;color:#0f2a7a}" +
         ".cl-ring{position:absolute;inset:0;border-radius:50%;border:4px solid rgba(31,79,216,.14);border-top-color:#1f4fd8;border-right-color:#ffc20e;animation:clSpin 1.1s linear infinite}" +
         ".cl-bar{width:170px;height:5px;margin-top:26px;border-radius:3px;background:rgba(31,79,216,.14);overflow:hidden}" +
@@ -106,6 +106,7 @@
     var img = el.querySelector("img"), fallback = el.querySelector("b");
     var titleEl = el.querySelector(".cl-title"), noteEl = el.querySelector(".cl-note");
     img.onerror = function () { img.hidden = true; fallback.hidden = false; };
+    img.onload = function () { img.classList.add("ok"); };
     img.src = logo;
 
     function setMessage(title, note, pay) {
@@ -152,10 +153,10 @@
 
     window.CustomerLoader = { show: show, hide: hide, setMessage: setMessage };
 
-    /* automatic mode: hide when the page has finished loading */
+    /* automatic mode: hide as soon as the page itself is ready - not after every image and font has downloaded */
     if (!manual) {
-        if (document.readyState === "complete") hide();
-        else window.addEventListener("load", hide);
+        if (document.readyState !== "loading") hide();
+        else document.addEventListener("DOMContentLoaded", hide);
     }
 
     /* back/forward cache: never show a stuck loader on a restored page */

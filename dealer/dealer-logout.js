@@ -22,14 +22,14 @@
         try { token = localStorage.getItem("gashub_dealer_token") || sessionStorage.getItem("gashub_dealer_token") || ""; } catch (e) { }
         var done = function () { wipe(); window.location.replace("/dealer/dealer-login.html?logged_out=1"); };
         var ctl = typeof AbortController === "function" ? new AbortController() : null;
-        var timer = setTimeout(function () { if (ctl) ctl.abort(); done(); }, 4000);
+        var timer = setTimeout(function () { if (ctl) ctl.abort(); done(); }, 8000);
         try {
-            fetch("/api/dealers/logout", {
+            Promise.resolve(window.GasHubPush ? window.GasHubPush.leave() : null).then(function () { return fetch("/api/dealers/logout", {
                 method: "POST",
                 headers: { Accept: "application/json", Authorization: "Bearer " + token },
                 cache: "no-store",
                 signal: ctl ? ctl.signal : undefined
-            }).catch(function () { }).then(function () { clearTimeout(timer); done(); });
+            }); }).catch(function () { }).then(function () { clearTimeout(timer); done(); });
         } catch (e) { clearTimeout(timer); done(); }
     }
 

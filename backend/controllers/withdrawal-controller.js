@@ -141,6 +141,7 @@ const currentRate = async () => Number((await getPointsConfig()).pointValueKsh) 
 /* The GasHub account the money is sent FROM when paying customers (admin only). Stored in the "withdrawal_payout" setting. */
 const PAYOUT_METHODS = ["mpesa_phone", "paybill", "till", "bank"];
 async function getPayoutAccount() {
+    if (mpesa.b2cConfigured()) return { method: "paybill", name: "GasHub", number: mpesa.b2cShortcode(), reference: "", note: "", source: "paybill" };   /* all money goes out of the Paybill */
     const a = await getSetting("withdrawal_payout", {});
     if (a.number) {
         return { method: PAYOUT_METHODS.includes(a.method) ? a.method : "mpesa_phone", name: a.name || "", number: a.number || "", reference: a.reference || "", note: a.note || "", source: "admin" };
@@ -198,6 +199,7 @@ const HEADLINE = {
 };
 async function notifyCustomer(w, kind) {
     try {
+        await require("../utils/push-service").withdrawal(w.user_id, kind, w);   /* phone push (best effort) */
         const M = require("../utils/messaging-service");
         const u = (await pool.query("SELECT full_name, email, phone FROM users WHERE id = $1 LIMIT 1", [w.user_id])).rows[0] || {};
         const name = M.firstName(u.full_name || w.customer_name);
@@ -367,14 +369,20 @@ async function settleAutoPaid(row, receipt) {
 /* POST /api/payments/mpesa/b2c/result/:secret  and  /timeout/:secret   (Safaricom calls these) */
 async function b2cResult(req, res) {
     if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     try {
         await ensureSchema();
         const r = req.body && req.body.Result;
         const origin = r && String(r.OriginatorConversationID || "").slice(0, 80);
         if (!origin) return;
         const row = (await pool.query("SELECT * FROM points_withdrawals WHERE payout_origin_id = $1 LIMIT 1", [origin])).rows[0];
-        if (!row) { console.warn("M-Pesa payout result for an unknown payment ignored."); return; }
+        if (!row) {
+            /* not a withdrawal: it may be a dealer payout, or an automatic refund (same Safaricom result address) */
+            const dealerPayout = await require("../utils/dealer-payouts").handleB2cResult(r).catch((e) => { console.error("M-Pesa dealer payout result error:", e && e.message); return false; });
+            if (dealerPayout) return;
+            const handled = await require("../utils/refunds").handleB2cResult(r).catch((e) => { console.error("M-Pesa refund result error:", e && e.message); return false; });
+            if (!handled) console.warn("M-Pesa payout result for an unknown payment ignored.");
+            return;
+        }
         if (String(r.ResultCode) === "0") {
             const params = (r.ResultParameters && r.ResultParameters.ResultParameter) || [];
             const pick = (k) => { const it = params.find((i) => i && i.Key === k); return it ? it.Value : undefined; };
@@ -387,10 +395,10 @@ async function b2cResult(req, res) {
             await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2 WHERE id = $1 AND payout_origin_id = $3 AND status IN ('pending','approved')", [row.id, why, origin]);
         }
     } catch (e) { console.error("M-Pesa payout result error:", e && e.message); }
+    finally { if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" }); }   /* answered AFTER saving (Netlify stops a function once it answers) */
 }
 async function b2cTimeout(req, res) {
     if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     try {
         await ensureSchema();
         const r = req.body && req.body.Result;
@@ -398,7 +406,10 @@ async function b2cTimeout(req, res) {
         if (!origin) return;
         await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2 WHERE payout_origin_id = $1 AND payout_state = 'sending'",
             [origin, "M-Pesa did not answer in time. Check your M-Pesa statement before sending again."]);
+        await require("../utils/dealer-payouts").handleB2cTimeout(r).catch((e) => console.error("M-Pesa dealer payout timeout error:", e && e.message));
+        await require("../utils/refunds").handleB2cTimeout(r).catch((e) => console.error("M-Pesa refund timeout error:", e && e.message));
     } catch (e) { console.error("M-Pesa payout timeout error:", e && e.message); }
+    finally { if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" }); }
 }
 
 /* the scheduled payout: when the time arrives, every waiting / approved request that has not been tried yet is sent.
@@ -406,6 +417,7 @@ async function b2cTimeout(req, res) {
 let schedRunning = false;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function runScheduledPayout() {
+    return;          /* retired: scheduling now lives only in Admin > Payout Planner (one schedule, one place) */
     if (schedRunning) return;
     schedRunning = true;
     try {
@@ -436,11 +448,24 @@ if (!isServerless) setInterval(runScheduledPayout, 30 * 1000).unref();
 async function hasMinuteWork() {
     try {
         await ensureSchema();
-        const sch = await getSchedule();
-        if (sch.at && new Date(sch.at).getTime() <= Date.now()) return true;
         const waiting = await pool.query("SELECT 1 FROM withdrawal_notify WHERE notified_at IS NULL LIMIT 1");
         return waiting.rows.length > 0;
     } catch (e) { return false; }
+}
+
+/* ---------- used by the Payout Planner (Admin > Payout Planner) ---------- */
+/* every open request (waiting / approved) worth its coins at TODAY's rate and charges, with where its M-Pesa payment is up to */
+async function plannerRows() {
+    await ensureSchema();
+    const rate = await currentRate(), fees = await getFees();
+    const r = await pool.query("SELECT * FROM points_withdrawals WHERE status IN ('pending','approved') ORDER BY created_at");
+    return r.rows.map((x) => ({ ...shapeAdmin(x, rate, fees), customer_name: x.customer_name }));
+}
+/* ids the scheduled run should send: open requests not tried yet (optionally only the approved ones) */
+async function openRequestIds({ onlyApproved } = {}) {
+    await ensureSchema();
+    const r = await pool.query(`SELECT id FROM points_withdrawals WHERE status IN ${onlyApproved ? "('approved')" : "('pending','approved')"} AND payout_state IS NULL ORDER BY created_at`);
+    return r.rows.map((x) => x.id);
 }
 
 /* ================= CUSTOMER ================= */
@@ -472,7 +497,9 @@ async function getInfo(req, res) {
             max_amount_ksh: Math.floor(Math.min(balance, maxC === null ? balance : maxC) * rate),
             name: u.full_name || "", email: u.email || "", phone: u.phone || "",
             has_pending: h.rows.some((r) => r.status === "pending"),
-            payout_at: await (async () => { const sc = await getSchedule(); return sc.at && new Date(sc.at).getTime() > Date.now() ? sc.at : null; })(),   /* when the money will be sent, if the admin scheduled it */
+            payout_at: await (async () => {      /* when the money will be sent: the one-off schedule or the Payout Planner's next run, whichever is first */
+                return await require("./payout-planner-controller").nextCustomerRun();
+            })(),
             notify_requested: (await pool.query("SELECT 1 FROM withdrawal_notify WHERE user_id = $1 AND notified_at IS NULL", [String(req.user.id)])).rows.length > 0,
             history: h.rows.map((r) => shapeLive(r, rate, fees))
         });
@@ -587,7 +614,7 @@ async function listAdmin(req, res) {
         const rate = await currentRate();
         const fees = await getFees();
         const minAmount = await minAmountKsh();
-        res.json({ success: true, current_rate_ksh: rate, fees: { unit: fees.unit, ranges: feeRanges(fees) }, payout_account: await getPayoutAccount(), payout_account_text: accountText(await getPayoutAccount()), min_amount_ksh: await minAmountKsh(), max_coins: await maxCoins(), withdrawals_enabled: !win.closed, switched_off: win.switched_off, opens_at: win.saved_opens_at, payout_schedule: await getSchedule(), auto_payout: mpesa.b2cConfigured(), withdrawals: r.rows.map((x) => ({ ...shapeAdmin(x, rate, fees), customer_id: x.user_id, customer_name: x.customer_name, customer_email: x.customer_email, processed_by: x.processed_by || "" })) });
+        res.json({ success: true, current_rate_ksh: rate, fees: { unit: fees.unit, ranges: feeRanges(fees) }, payout_account: await getPayoutAccount(), payout_account_text: accountText(await getPayoutAccount()), min_amount_ksh: await minAmountKsh(), max_coins: await maxCoins(), withdrawals_enabled: !win.closed, switched_off: win.switched_off, opens_at: win.saved_opens_at, payout_schedule: await require("./payout-planner-controller").summary("customers"), auto_payout: mpesa.b2cConfigured(), withdrawals: r.rows.map((x) => ({ ...shapeAdmin(x, rate, fees), customer_id: x.user_id, customer_name: x.customer_name, customer_email: x.customer_email, processed_by: x.processed_by || "" })) });
     } catch (error) {
         console.error("Admin withdrawals error:", error);
         res.status(500).json({ success: false, message: "Unable to load withdrawals." });
@@ -709,20 +736,7 @@ async function saveSettings(req, res) {
             }
         }
         if (b.payout_schedule !== undefined) {
-            const raw = (b.payout_schedule || {}).at;
-            const old = await getSetting("withdrawal_schedule", {});
-            if (!raw) {
-                const { at, ...rest } = old;
-                await putSetting("withdrawal_schedule", rest);
-                msgs.push("The scheduled payout was cleared. Use Send now to pay requests one by one.");
-            } else {
-                const at = new Date(raw);
-                if (isNaN(at)) return res.status(400).json({ success: false, message: "That payout date and time is not valid." });
-                if (at.getTime() <= Date.now() + 30 * 1000) return res.status(400).json({ success: false, message: "Choose a payout time that is in the future." });
-                if (!mpesa.b2cConfigured()) return res.status(409).json({ success: false, message: NOT_SET_UP });
-                await putSetting("withdrawal_schedule", { at: at.toISOString(), last_run_at: old.last_run_at || null, last_result: "" });
-                msgs.push(`Payout scheduled for ${nairobiTime(at)}. Every waiting or approved request will be sent to the customers' M-Pesa then.`);
-            }
+            return res.status(409).json({ success: false, message: "Payouts are now scheduled in one place: open Payout Planner in the menu." });
         }
         if (b.payout_account !== undefined) {
             const a = b.payout_account || {};
@@ -771,11 +785,11 @@ async function saveSettings(req, res) {
         const win = await withdrawWindow();
         notifyWaiting();                                    /* if withdrawals are open now, tell the customers who asked */
         const fe = await getFees();
-        res.json({ success: true, message: msgs.join(" "), fees: { unit: fe.unit, ranges: feeRanges(fe) }, payout_account: await getPayoutAccount(), min_amount_ksh: await minAmountKsh(), max_coins: await maxCoins(), withdrawals_enabled: !win.closed, switched_off: win.switched_off, opens_at: win.saved_opens_at, payout_schedule: await getSchedule(), auto_payout: mpesa.b2cConfigured() });
+        res.json({ success: true, message: msgs.join(" "), fees: { unit: fe.unit, ranges: feeRanges(fe) }, payout_account: await getPayoutAccount(), min_amount_ksh: await minAmountKsh(), max_coins: await maxCoins(), withdrawals_enabled: !win.closed, switched_off: win.switched_off, opens_at: win.saved_opens_at, payout_schedule: await require("./payout-planner-controller").summary("customers"), auto_payout: mpesa.b2cConfigured() });
     } catch (error) {
         console.error("Save withdrawal settings error:", error);
         res.status(500).json({ success: false, message: "Unable to save the setting." });
     }
 }
 
-module.exports = { notifyWaiting, runScheduledPayout, hasMinuteWork, getInfo, createWithdrawal, subscribeNotify, quote, listAdmin, updateAdmin, sendNow, saveSettings, b2cResult, b2cTimeout };
+module.exports = { plannerRows, openRequestIds, startPayout, notifyWaiting, runScheduledPayout, hasMinuteWork, getInfo, createWithdrawal, subscribeNotify, quote, listAdmin, updateAdmin, sendNow, saveSettings, b2cResult, b2cTimeout };

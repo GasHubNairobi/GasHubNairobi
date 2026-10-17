@@ -171,6 +171,26 @@ async function removeRider(req, res) {
 
 /* ---------- orders ---------- */
 
+/* The dealer never sees a customer's phone number before the customer has paid. After payment only a masked number is shown
+   (the middle 4 digits become ****). The messenger still gets the full number (delivery email and delivery page use their own queries). */
+function maskPhone(v) {
+    const d = String(v || "").replace(/[^\d+]/g, "");
+    if (d.replace(/\D/g, "").length < 9) return "";
+    /* keep the country/leading part and the next 3 digits, hide the middle with *****, keep the last 2 digits: +254742*****39 */
+    const lead = d.startsWith("+254") ? 7 : d.startsWith("254") ? 6 : d.startsWith("0") ? 4 : 4;
+    return d.slice(0, lead) + "*****" + d.slice(-2);
+}
+function hideCustomerContact(row) {
+    if (!row || typeof row !== "object") return row;
+    const paid = String(row.payment_status || "").toLowerCase() === "paid";
+    const out = { ...row };
+    for (const k of Object.keys(out)) {
+        if (/phone/i.test(k) && !/^(rider|dealer|messenger)_/i.test(k)) out[k] = paid ? maskPhone(out[k]) : "";
+    }
+    return out;
+}
+
+
 /* GET /api/dealers/orders/mine  - the dealer sees everything, including the rider's full ID number */
 async function listOrders(req, res) {
     try {
@@ -184,7 +204,7 @@ async function listOrders(req, res) {
              LEFT JOIN order_items oi ON oi.order_id = o.id
              WHERE o.dealer_id = $1
              GROUP BY o.id, u.id ORDER BY o.created_at DESC LIMIT 200`, [req.dealer.dealer_id]);
-        res.json({ success: true, orders: r.rows });
+        res.json({ success: true, orders: r.rows.map(hideCustomerContact) });
     } catch (error) {
         console.error("Dealer orders error:", error);
         res.status(500).json({ success: false, message: "Unable to load your orders." });
@@ -289,6 +309,9 @@ async function updateOrder(req, res) {
         if (b.discount_amount != null && b.discount_amount !== "") {
             if (o.payment_status === "paid") { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "A discount can't be changed after the order is paid." }); }
             const disc = Math.max(0, Number(b.discount_amount) || 0);
+            /* the customer's GasHub Coins discount is stored in the same column and is paid for by GasHub: a dealer discount would wipe it out
+               (coins spent, no discount) and the commission would be worked out wrongly */
+            if (Number(o.points_used) > 0 && disc !== Number(o.discount_amount)) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "The customer used GasHub Coins on this order, so a dealer discount can't be added." }); }
             if (disc > Number(o.subtotal)) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "The discount can't be more than the products total." }); }
             set("discount_amount", disc); set("discount_note", clean(b.discount_note, 200) || null);
             set("total_amount", Number(o.subtotal) + feeNow - disc);
@@ -355,9 +378,12 @@ async function updateOrder(req, res) {
            Sent after everything above is saved. A Netlify function stops as soon as it answers, so the message is
            finished first (errors are still ignored). */
         if (confirmedNow && String(o.status) === "pending") {
-            await require("../utils/payment-flow").notifyOrderConfirmed(upd.id).catch(() => {});
+            await require("../utils/payment-flow").notifyOrderConfirmed(upd.id, baseUrl(req)).catch(() => {});   /* includes the phone push */
+        } else if (b.status && String(b.status).toLowerCase() !== String(o.status).toLowerCase()) {
+            /* phone push to the customer: on the way / ready / delivered / cancelled (best effort, never blocks the answer) */
+            await require("../utils/push-service").orderStatus(upd, b.status);
         }
-        res.json({ success: true, order: upd, messengerEmail });
+        res.json({ success: true, order: hideCustomerContact(upd), messengerEmail });
     } catch (error) {
         try { await client.query("ROLLBACK"); } catch (e) { /* ignore */ }
         console.error("Dealer update order error:", error);
@@ -398,6 +424,7 @@ async function recordPayment(req, res) {
         /* the amount is always the order total: a dealer cannot record a different figure */
         const out = await markOrderPaid(client, own.id, { method: "cash", notes: clean(req.body && req.body.notes, 300) || null, confirmedBy: `Cash confirmed by dealer (${dealerName})` });
         await client.query("COMMIT");
+        if (!out.alreadyPaid) await require("../utils/push-service").orderPaid(out.order);
         const done = out.completed ? " The delivery was already confirmed, so the order is now completed." : "";
         res.json({ success: true, message: (out.pointsAwarded ? `Cash payment confirmed. The customer earned ${out.pointsAwarded} GasHub points.` : "Cash payment confirmed.") + done, order: out.order, pointsAwarded: out.pointsAwarded, completed: out.completed });
     } catch (error) {

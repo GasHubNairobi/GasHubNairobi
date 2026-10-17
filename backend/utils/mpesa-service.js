@@ -8,9 +8,27 @@ const env = (k) => String(process.env[k] || "").trim();
 const isLive = () => env("MPESA_ENV").toLowerCase() === "production";
 const baseUrl = () => (isLive() ? "https://api.safaricom.co.ke" : "https://sandbox.safaricom.co.ke");
 
+/* ---- the two routes must never touch each other ----
+   IN  (deposits):  customers pay the TILL = MPESA_SHORTCODE (and MPESA_PARTYB, the till that is credited).
+   OUT (payouts):   money leaves the PAYBILL = MPESA_B2C_SHORTCODE.
+   If the same number is used on both sides, BOTH routes are switched off until it is fixed (otherwise customer payments could land in
+   the payout account, or payouts could drain the till). */
+/* OPT-IN: MPESA_ALLOW_SAME_SHORTCODE=true lets ONE number receive customer payments AND send payouts. Off by default.
+   Then you are responsible for keeping enough money in that account for payouts and refunds, and customer payments and
+   payouts share one balance. A top-up of that account can also appear as a received payment. */
+const allowSameShortcode = () => String(process.env.MPESA_ALLOW_SAME_SHORTCODE || "").trim().toLowerCase() === "true";
+const depositNumbers = () => [env("MPESA_SHORTCODE"), env("MPESA_PARTYB")].filter(Boolean);
+function routeProblems() {
+    const out = [], b = env("MPESA_B2C_SHORTCODE");
+    if (!env("MPESA_SHORTCODE")) out.push("MPESA_SHORTCODE (the Till customers pay) is not set.");
+    if (!b) out.push("MPESA_B2C_SHORTCODE (the Paybill that sends payouts) is not set.");
+    if (b && !allowSameShortcode() && depositNumbers().includes(b)) out.push("The Paybill that sends payouts is the same number as the Till that receives payments. Use two different numbers.");
+    return out;
+}
+const sameRoute = () => Boolean(!allowSameShortcode() && env("MPESA_B2C_SHORTCODE") && depositNumbers().includes(env("MPESA_B2C_SHORTCODE")));
 function isConfigured() {
     const secret = env("MPESA_CALLBACK_SECRET");
-    return Boolean(env("MPESA_CONSUMER_KEY") && env("MPESA_CONSUMER_SECRET") && env("MPESA_SHORTCODE") && env("MPESA_PASSKEY")
+    return Boolean(!sameRoute() && env("MPESA_CONSUMER_KEY") && env("MPESA_CONSUMER_SECRET") && env("MPESA_SHORTCODE") && env("MPESA_PASSKEY")
         && /^https:\/\//i.test(env("MPESA_CALLBACK_BASE_URL")) && secret.length >= 24);
 }
 
@@ -118,16 +136,20 @@ async function stkQuery(checkoutRequestId) {
    Needs, on top of the keys above: MPESA_B2C_INITIATOR_NAME and MPESA_B2C_SECURITY_CREDENTIAL (the initiator password already
    encrypted with Safaricom's certificate), and optionally MPESA_B2C_SHORTCODE (defaults to MPESA_SHORTCODE).
    See ENV-AUTO-PAYOUT.txt. Safaricom replies later on the result address below. */
+/* Money only ever leaves from the PAYBILL in MPESA_B2C_SHORTCODE. There is no fallback to MPESA_SHORTCODE (the Till that receives
+   customer payments), and the two must be different numbers. */
+const b2cShortcode = () => env("MPESA_B2C_SHORTCODE");
 function b2cConfigured() {
     const secret = env("MPESA_CALLBACK_SECRET");
-    return Boolean(env("MPESA_CONSUMER_KEY") && env("MPESA_CONSUMER_SECRET") && (env("MPESA_B2C_SHORTCODE") || env("MPESA_SHORTCODE"))
+    return Boolean(env("MPESA_CONSUMER_KEY") && env("MPESA_CONSUMER_SECRET") && b2cShortcode() && !sameRoute()
         && env("MPESA_B2C_INITIATOR_NAME") && env("MPESA_B2C_SECURITY_CREDENTIAL")
         && /^https:\/\//i.test(env("MPESA_CALLBACK_BASE_URL")) && secret.length >= 24);
 }
 const b2cUrl = (kind) => env("MPESA_CALLBACK_BASE_URL").replace(/\/+$/, "") + "/api/payments/mpesa/b2c/" + kind + "/" + encodeURIComponent(env("MPESA_CALLBACK_SECRET"));
 
 /* Sends `amount` (whole shillings) to `phone` (2547XXXXXXXX). `originId` is our own unique id, used to match Safaricom's reply. */
-async function b2cPay({ phone, amount, originId, remarks }) {
+async function b2cPay({ phone, amount, originId, remarks, occasion }) {
+    if (!b2cConfigured()) { const e = new Error("Automatic payout is not set up: MPESA_B2C_SHORTCODE must be your Paybill and different from the Till."); e.daraja = true; throw e; }
     const token = await getToken();
     const r = await call("/mpesa/b2c/v3/paymentrequest", {
         method: "POST",
@@ -138,12 +160,12 @@ async function b2cPay({ phone, amount, originId, remarks }) {
             SecurityCredential: env("MPESA_B2C_SECURITY_CREDENTIAL"),
             CommandID: env("MPESA_B2C_COMMAND") === "SalaryPayment" ? "SalaryPayment" : "BusinessPayment",
             Amount: Math.round(Number(amount)),
-            PartyA: env("MPESA_B2C_SHORTCODE") || env("MPESA_SHORTCODE"),
+            PartyA: b2cShortcode(),
             PartyB: phone,
             Remarks: String(remarks || "GasHub withdrawal").slice(0, 100),
             QueueTimeOutURL: b2cUrl("timeout"),
             ResultURL: b2cUrl("result"),
-            Occasion: "GasHub Coins"
+            Occasion: String(occasion || "GasHub Coins").slice(0, 100)
         }
     });
     if (!r.ok || String(r.json.ResponseCode) !== "0") {
@@ -163,4 +185,4 @@ function ipAllowed(ip) {
     return list.includes(String(ip || "").replace(/^::ffff:/, ""));
 }
 
-module.exports = { b2cConfigured, b2cPay, c2bEnabled, registerC2bUrls, isConfigured, stkPush, stkQuery, toMsisdn, secretMatches, ipAllowed, callbackUrl };
+module.exports = { allowSameShortcode, routeProblems, depositNumbers, b2cShortcode, b2cConfigured, b2cPay, c2bEnabled, registerC2bUrls, isConfigured, stkPush, stkQuery, toMsisdn, secretMatches, ipAllowed, callbackUrl };

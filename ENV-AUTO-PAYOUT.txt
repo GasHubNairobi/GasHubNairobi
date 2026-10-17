@@ -35,3 +35,12 @@ HOW IT WORKS
   one after the other. Customers see "GasHub will send withdrawals to M-Pesa on ..." on their withdraw page. The result of the last run
   is shown under the schedule. Clear schedule removes it.
 - The database gets new columns on first use (payout_state, payout_receipt, ...). No migration to run.
+
+AUTOMATIC REFUNDS (Admin > Payments > "Refunds to send")
+- The same B2C lines above also power refunds. With them set, press "Refund now" next to a refund and the money goes straight back to the
+  M-Pesa number the customer paid with. The order turns "refunded" only when Safaricom confirms, the refunded amount is taken off the
+  order (amount paid) and the payment is marked refunded, so the totals and reports no longer count it. The customer gets an SMS + email.
+- M-Pesa sends whole shillings: a refund of KSh 1,500.40 is sent as KSh 1,500.
+- Orders paid by bank transfer cannot be refunded to M-Pesa automatically: send it through the bank and press "Mark as refunded".
+- If M-Pesa fails, the row shows the reason and the button becomes "Refund again". If there was no answer at all, check your M-Pesa
+  statement before pressing it again.

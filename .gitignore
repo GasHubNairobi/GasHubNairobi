@@ -1,54 +1,40 @@
+# Secrets - never commit
 .env
 .env.*
 !.env.example
-node_modules/
-*.zip
-
-# Environment files and secrets
-.env
-.env.*
-!.env.example
-
-# Node.js dependencies
-node_modules/
-**/node_modules/
-
-# Git data
-.git/
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-
-# Local environment and editor files
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-*.swp
-
-# Temporary and cache files
-tmp/
-temp/
-.cache/
-coverage/
-
-# Build outputs
-dist/
-build/
-
-# Local backups
-*.bak
-*.old
-*~
-
-# Private keys and certificates
 *.pem
 *.key
 *.p12
 *.pfx
 
-# Local operating-system shortcuts
+# Dependencies and build output
+node_modules/
+**/node_modules/
+dist/
+build/
+.netlify/
+
+# Misc
+*.zip
+*.log
+npm-debug.log*
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.old
+*~
 *.lnk
+tmp/
+temp/
+.cache/
+coverage/
+
+.env
+
+.env
+.env.*
+!.env.example
+ENV-PAYMENT-FIELDS.txt

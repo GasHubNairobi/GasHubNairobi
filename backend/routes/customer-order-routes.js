@@ -17,6 +17,7 @@ my.post("/reviews", requireUser, requireCsrf, reviews.submitReview);
 my.post("/reviews/skip", requireUser, requireCsrf, reviews.skipReview);
 /* item the customer opened checkout for (feeds the admin's "selected item" reminder) */
 my.post("/selections", requireUser, requireCsrf, selections.recordSelection);
+my.get("/notifications", requireUser, require("../controllers/message-controller").customerNotifications);
 my.get("/orders", requireUser, c.listMyOrders);
 my.get("/orders/:orderId", requireUser, c.getMyOrder);
 my.get("/orders/:orderId/tracking", requireUser, tracking.getMyTracking);
