@@ -49,6 +49,8 @@
         function flag(x) { return !(x === false || x === 0 || String(x).toLowerCase() === "false"); }
         return {
             onlineEnabled: flag(c.onlineEnabled), cashEnabled: flag(c.cashEnabled),
+            onlineRanges: Array.isArray(c.onlineRanges) ? c.onlineRanges.map(function (r) { return { from: Number(r.from) || 0, to: r.to === null || r.to === undefined ? null : Number(r.to), points: Number(r.points) || 0 }; }) : [],
+            cashRanges: Array.isArray(c.cashRanges) ? c.cashRanges.map(function (r) { return { from: Number(r.from) || 0, to: r.to === null || r.to === undefined ? null : Number(r.to), points: Number(r.points) || 0 }; }) : [],
             onlinePoints: (c.onlinePoints != null ? amt(c.onlinePoints) : pp), cashPoints: (c.cashPoints != null ? amt(c.cashPoints) : pp),
             enabled: !(en === false || en === 0 || String(en).toLowerCase() === "false"),
             kshPerPoint: per > 0 ? per : DEFAULT_CFG.kshPerPoint,

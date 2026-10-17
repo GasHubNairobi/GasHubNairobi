@@ -17,7 +17,17 @@ async function getPointsConfig(db = pool) {
         /* points for purchases are set separately for online payments (M-Pesa / bank) and cash; an older single "points per order" is the fallback */
         const pts = (x) => (x !== undefined && x !== null && x !== "" && Number.isFinite(Number(x)) && Number(x) >= 0) ? Math.floor(Number(x)) : basePer;
         const onlinePoints = pts(v.onlinePoints), cashPoints = pts(v.cashPoints);
+        /* coins by order amount, separately for online (M-Pesa / bank) and cash: [{ from, to (null = and above), points }] set by the admin.
+           When a payment type has rows, they replace its flat number. (An older single shared list is used for both until the admin saves.) */
+        const normRanges = (list) => (Array.isArray(list) ? list : []).map((r) => ({
+            from: Math.max(0, Math.floor(Number(r && r.from) || 0)),
+            to: r && r.to !== null && r.to !== undefined && r.to !== "" && Number.isFinite(Number(r.to)) ? Math.floor(Number(r.to)) : null,
+            points: Math.max(0, Math.floor(Number(r && r.points) || 0))
+        })).sort((x, y) => x.from - y.from);
+        const onlineRanges = normRanges(v.onlineRanges !== undefined ? v.onlineRanges : v.purchaseRanges);
+        const cashRanges = normRanges(v.cashRanges !== undefined ? v.cashRanges : v.purchaseRanges);
         return {
+            onlineRanges, cashRanges,
             enabled: v.enabled !== false,
             onlineEnabled: v.onlineEnabled !== false,
             cashEnabled: v.cashEnabled !== false,
@@ -39,7 +49,14 @@ async function awardPointsForPaidOrder(client, order) {
     /* cash and online payments are switched on/off and valued separately by the admin */
     const cash = isCash(order.payment_method);
     const on = cash ? cfg.cashEnabled : cfg.onlineEnabled;
-    const points = cash ? cfg.cashPoints : cfg.onlinePoints;
+    let points = cash ? cfg.cashPoints : cfg.onlinePoints;
+    /* ranges: the coins depend on the order amount the customer paid (the whole shilling counts: "to 500" includes 500.40) */
+    const ranges = cash ? cfg.cashRanges : cfg.onlineRanges;
+    if (ranges && ranges.length) {
+        const total = Number(order.total_amount) || 0;
+        const hit = ranges.find((r) => total >= r.from && (r.to === null || total < r.to + 1));
+        points = hit ? hit.points : 0;
+    }
     if (!cfg.enabled || !on || !points || !order.customer_id) return 0;
 
     const given = await client.query(

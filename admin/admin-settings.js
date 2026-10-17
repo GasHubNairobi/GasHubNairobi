@@ -902,6 +902,41 @@ document.addEventListener("DOMContentLoaded", () => {
         cashPoints: document.getElementById("cashPointsAmount")
     };
 
+    /* ranges: order amount from / to -> points (on the right), one list for online payments and one for cash */
+    const ppBoxes = { online: document.getElementById("ppRangesOnline"), cash: document.getElementById("ppRangesCash") };
+    const ppRanges = { online: [], cash: [] };
+    const esc = v => String(v == null ? "" : v).replace(/"/g, "&quot;");
+    function drawPpRanges(kind) {
+        const box = ppBoxes[kind];
+        if (!box) return;
+        box.innerHTML = ppRanges[kind].length ? ppRanges[kind].map((r, i) => `
+            <div class="pp-range" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px">
+                <div><small>From (KSh)</small><input type="number" min="0" step="1" data-f="from" value="${esc(r.from)}"></div>
+                <div><small>To (KSh)</small><input type="number" min="0" step="1" data-f="to" value="${esc(r.to)}" placeholder="and above"></div>
+                <div><small>Points earned</small><input type="number" min="0" step="1" data-f="points" value="${esc(r.points)}"></div>
+                <button type="button" class="secondary-button" data-del="${i}" aria-label="Remove range">✕</button>
+            </div>`).join("") : '<small>No ranges: every paid order earns the flat number above.</small>';
+    }
+    function readPpRanges(kind) {
+        const box = ppBoxes[kind];
+        if (!box) return;
+        ppRanges[kind] = Array.from(box.querySelectorAll(".pp-range")).map(row => {
+            const g = f => row.querySelector(`[data-f="${f}"]`).value;
+            return { from: g("from"), to: g("to"), points: g("points") };
+        });
+    }
+    ["online", "cash"].forEach(kind => {
+        ppBoxes[kind]?.addEventListener("click", e => { const b = e.target.closest("[data-del]"); if (!b) return; readPpRanges(kind); ppRanges[kind].splice(Number(b.dataset.del), 1); drawPpRanges(kind); });
+        document.getElementById(kind === "online" ? "ppAddOnline" : "ppAddCash")?.addEventListener("click", () => {
+            readPpRanges(kind);
+            const list = ppRanges[kind], last = list[list.length - 1];
+            const next = last && last.to !== "" && last.to !== null ? Number(last.to) + 1 : (last ? "" : 0);
+            list.push({ from: next, to: "", points: "" });
+            drawPpRanges(kind);
+        });
+    });
+    const sendRanges = kind => ppRanges[kind].map(r => ({ from: r.from === "" ? NaN : Number(r.from), to: r.to === "" || r.to == null ? null : Number(r.to), points: r.points === "" ? NaN : Number(r.points) }));
+
     function syncPurchasePointsUi() {
         if (ppFields.onlinePoints) ppFields.onlinePoints.disabled = !ppFields.onlineEnabled?.checked;
         if (ppFields.cashPoints) ppFields.cashPoints.disabled = !ppFields.cashEnabled?.checked;
@@ -921,6 +956,11 @@ document.addEventListener("DOMContentLoaded", () => {
             ppFields.cashEnabled.checked = s.cashEnabled !== false;
             if (s.onlinePoints != null) ppFields.onlinePoints.value = s.onlinePoints;
             if (s.cashPoints != null) ppFields.cashPoints.value = s.cashPoints;
+            ["online", "cash"].forEach(kind => {
+                const list = s[kind + "Ranges"];
+                ppRanges[kind] = Array.isArray(list) ? list.map(r => ({ from: r.from, to: r.to, points: r.points })) : [];
+                drawPpRanges(kind);
+            });
         } catch (error) {
             console.info("Purchase points endpoint is not available yet:", error.message);
         }
@@ -930,6 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("purchasePointsForm")?.addEventListener("submit", async event => {
         event.preventDefault();
         const online = Number(ppFields.onlinePoints.value), cash = Number(ppFields.cashPoints.value);
+        readPpRanges("online"); readPpRanges("cash");
         if (!Number.isInteger(online) || online < 0 || !Number.isInteger(cash) || cash < 0) {
             showMessage("Enter a whole number of points (0 or more) for both online and cash payments.");
             return;
@@ -941,7 +982,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "PUT",
                 body: {
                     onlineEnabled: ppFields.onlineEnabled.checked, onlinePoints: online,
-                    cashEnabled: ppFields.cashEnabled.checked, cashPoints: cash
+                    cashEnabled: ppFields.cashEnabled.checked, cashPoints: cash,
+                    onlineRanges: sendRanges("online"), cashRanges: sendRanges("cash")
                 }
             });
             showMessage(result.message || "Points for purchases saved.", "success");

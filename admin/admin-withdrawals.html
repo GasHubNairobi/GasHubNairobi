@@ -25,7 +25,6 @@
                 <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">☰</button>
                 <div>
                     <h2>Point Withdrawals</h2>
-                    <p>Customers asking to turn their GasHub points into M-Pesa money.</p>
                 </div>
             </div>
             <div class="admin-user-area">
@@ -50,7 +49,6 @@
                 <div class="card-header">
                     <div>
                         <h3>Open / Close Withdrawals <span class="wd-state on" id="wdStateTag">Open</span></h3>
-                        <p>Switch withdrawals off and, if you like, set when they open again. Customers then see a countdown (&ldquo;Withdrawals will be available in ...&rdquo;) and cannot send a request until it ends. With no date they stay closed until you switch them back on. Time is Nairobi time.</p>
                     </div>
                 </div>
                 <div class="wd-settings">
@@ -60,7 +58,7 @@
                     <div class="wd-sched" id="wdSchedBox">
                         <label for="wdOpensAt">Open again automatically on (optional)</label>
                         <input type="datetime-local" id="wdOpensAt">
-                        <small>Customers see a countdown to this time. Leave it empty to keep withdrawals closed until you switch them on.</small>
+                        
                     </div>
                     <button type="submit" class="link-button ok" id="wdSwitchSave">Save reopening time</button>
                 </form>
@@ -70,7 +68,6 @@
                 <div class="card-header">
                     <div>
                         <h3>When customers are paid <span class="wd-state off" id="wdAutoTag">Checking...</span></h3>
-                        <p>All payouts are scheduled in one place, <b>Payout Planner</b>, and always sent from your Paybill. This is the same schedule you see there. To pay one customer straight away, press <b>Send now</b> next to their request below.</p>
                     </div>
                 </div>
                 <div id="wdPlannerBanner"></div>
@@ -82,7 +79,6 @@
                 <div class="card-header">
                     <div>
                         <h3>Withdrawal Charges</h3>
-                        <p>The transaction cost taken off each withdrawal. Pick the range the amount falls in; what is left after the charge is what you send to the customer. Customers see these charges on their withdraw page. Type where each range starts and ends; leave the last range&rsquo;s end empty for &ldquo;and above&rdquo;. Ranges must not overlap.</p>
                     </div>
                 </div>
                 <form class="wd-settings" id="wdFeeForm">
@@ -104,7 +100,6 @@
                 <div class="card-header">
                     <div>
                         <h3>Withdrawal Limits</h3>
-                        <p>Customers cannot withdraw less than the lowest amount or more GasHub Coins than the maximum at once (leave the maximum empty for no limit). Points convert to money at the GasHub Coin rate in Settings. A request is always paid at the rate in force when you approve or pay it, even if the customer asked before the rate changed.</p>
                     </div>
                 </div>
                 <form class="wd-settings" id="wdSettingsForm">
@@ -126,7 +121,6 @@
                 <div class="card-header">
                     <div>
                         <h3>All Requests &amp; Records</h3>
-                        <p>Press Send now to send the money to that customer&rsquo;s M-Pesa straight away (it is marked Paid when M-Pesa confirms), or send it yourself and mark the request as Paid with the receipt code. Rejecting returns the points. Every request stays here as a record, also after it is paid.</p>
                     </div>
                     <div class="table-tools">
                         <div class="search-box">

@@ -27,6 +27,9 @@
         var cls = ["delivered", "completed"].indexOf(s) > -1 ? "ok" : ["cancelled", "rejected"].indexOf(s) > -1 ? "bad" : "warn";
         return '<span class="msgr-pill ' + cls + '">' + esc(s.replace(/_/g, " ") || "-") + "</span>";
     }
+    function initials(n) { var p = String(n || "?").trim().split(/\s+/); return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase(); }
+    function count(n, cls) { n = Number(n) || 0; return '<span class="msgr-count ' + (n === 0 ? "zero" : (cls || "")) + '">' + n + "</span>"; }
+    function payChip(m) { return '<span class="msgr-pay' + (m === "cash" ? " cash" : "") + '">' + esc(payLabel(m)) + "</span>"; }
     function note(msg) { var n = $("msgrMessage"); n.textContent = msg || ""; n.hidden = !msg; n.classList.toggle("show", !!msg); }
 
     function query() {
@@ -81,11 +84,11 @@
         $("statAvg").textContent = fmtMin(avg);
 
         $("summaryBody").innerHTML = data.summary.length ? data.summary.map(function (m) {
-            return "<tr><td><strong>" + esc(m.name) + "</strong></td>" +
+            return '<tr><td><div class="msgr-person"><span class="msgr-avatar">' + esc(initials(m.name)) + '</span><strong>' + esc(m.name) + "</strong></div></td>" +
                 '<td><a href="tel:' + esc(m.phone) + '">' + esc(m.phone || "-") + "</a></td>" +
                 "<td>" + (m.email ? '<a href="mailto:' + esc(m.email) + '">' + esc(m.email) + "</a>" : "-") + "</td>" +
-                "<td>" + esc(m.dealerName || "-") + "</td><td>" + m.orders + "</td><td>" + m.delivered + "</td><td>" + m.open + "</td>" +
-                "<td>" + fmtMin(m.avgMinutes) + "</td>" +
+                "<td>" + esc(m.dealerName || "-") + "</td><td>" + count(m.orders) + "</td><td>" + count(m.delivered, "ok") + "</td><td>" + count(m.open, "warn") + "</td>" +
+                '<td><span class="msgr-time">' + fmtMin(m.avgMinutes) + "</span></td>" +
                 "<td>" + (m.messengerId != null ? '<button type="button" class="btn-link" data-msgr="' + esc(m.messengerId) + '">View orders</button>' : "") + "</td></tr>";
         }).join("") : '<tr><td colspan="9" class="table-empty"><strong>No messengers found</strong><span>No orders have been given to a messenger for this filter.</span></td></tr>';
 
@@ -94,9 +97,9 @@
                 "<td>" + esc(d.messengerName) + '<span class="msgr-sub">' + esc(d.messengerPhone || "") + "</span></td>" +
                 "<td>" + esc(d.dealerName || "-") + '<span class="msgr-sub">' + esc(d.dealerPhone || "") + "</span></td>" +
                 "<td>" + esc(d.customerName || "-") + '<span class="msgr-sub">' + esc(d.destination) + "</span></td>" +
-                "<td>" + esc(payLabel(d.paymentMethod)) + '<span class="msgr-sub">' + esc(d.paymentStatus || "") + " - KSh " + Number(d.totalAmount).toLocaleString("en-KE") + "</span></td>" +
+                "<td>" + payChip(d.paymentMethod) + '<span class="msgr-sub">' + esc(d.paymentStatus || "") + " - KSh " + Number(d.totalAmount).toLocaleString("en-KE") + "</span></td>" +
                 "<td>" + fmtDate(d.assignedAt) + "</td><td>" + fmtDate(d.startedAt) + "</td><td>" + fmtDate(d.deliveredAt) + "</td>" +
-                "<td><strong>" + fmtMin(d.minutesTaken) + "</strong></td><td>" + statusPill(d.status) + "</td></tr>";
+                '<td><span class="msgr-time">' + fmtMin(d.minutesTaken) + "</span></td><td>" + statusPill(d.status) + "</td></tr>";
         }).join("") : '<tr><td colspan="10" class="table-empty"><strong>No orders</strong><span>Nothing matches this filter.</span></td></tr>';
     }
 

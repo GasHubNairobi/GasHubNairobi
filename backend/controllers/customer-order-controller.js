@@ -259,7 +259,7 @@ async function createMyOrder(req, res) {
                 return res.status(400).json({ success: false, message: `Use between ${MIN} and ${Math.min(balance, maxByBill)} points on this order.` });
             }
             pointsUsed = requestedPoints;
-            discount = Math.floor(pointsUsed * rate);
+            discount = Math.floor(Math.round(pointsUsed * rate * 100) / 100);
         }
         const total = subtotal + fee - discount;
 
@@ -358,7 +358,7 @@ async function cancelMyOrder(req, res) {
 /* GET /api/points/config  (public) */
 async function pointsConfig(req, res) {
     const c = await getPointsConfig();
-    res.json({ success: true, enabled: c.enabled, pointsPerOrder: c.pointsPerOrder, onlineEnabled: c.onlineEnabled, onlinePoints: c.onlinePoints, cashEnabled: c.cashEnabled, cashPoints: c.cashPoints, pointValueKsh: c.pointValueKsh, minRedeem: c.minRedeem });
+    res.json({ success: true, enabled: c.enabled, pointsPerOrder: c.pointsPerOrder, onlineEnabled: c.onlineEnabled, onlinePoints: c.onlinePoints, cashEnabled: c.cashEnabled, cashPoints: c.cashPoints, onlineRanges: c.onlineRanges, cashRanges: c.cashRanges, pointValueKsh: c.pointValueKsh, minRedeem: c.minRedeem });
 }
 
 async function balanceOf(userId, db = pool) {
@@ -513,6 +513,8 @@ async function applyOrderPoints(req, res) {
 
         const subtotal = Number(o.subtotal) || 0, fee = Number(o.delivery_fee) || 0, gross = subtotal + fee;
         const already = Number(o.points_used) || 0;
+        /* a discount the dealer gave is kept in the same column as the coins discount: coins would erase it, so they cannot be mixed */
+        if (already === 0 && Number(o.discount_amount) > 0 && requested > 0) return stop(400, "The dealer already gave you a discount on this order, so coins can't be added to it.");
 
         /* put back anything used before: the coins are only reserved until the order is paid */
         if (already > 0) await client.query("DELETE FROM points_ledger WHERE order_id = $1 AND reason = 'order_redeem'", [o.id]);
@@ -531,7 +533,7 @@ async function applyOrderPoints(req, res) {
                 return stop(400, `Use between ${MIN} and ${Math.min(balance, maxByBill)} coins on this order.`);
             }
             pointsUsed = requested;
-            discount = Math.floor(pointsUsed * rate);
+            discount = Math.floor(Math.round(pointsUsed * rate * 100) / 100);
             await client.query(
                 `INSERT INTO points_ledger (user_id, order_id, points, reason, note) VALUES ($1, $2, $3, 'order_redeem', $4)`,
                 [req.user.id, o.id, -pointsUsed, `Used on order ${o.order_number} (KSh ${discount} off)`]);

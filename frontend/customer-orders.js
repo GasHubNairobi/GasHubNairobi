@@ -180,6 +180,13 @@
         var on = cash ? cfg.cashEnabled !== false : cfg.onlineEnabled !== false;
         var pts = cash ? cfg.cashPoints : cfg.onlinePoints;
         if (pts == null) pts = cfg.pointsPerOrder || 0;
+        /* the admin can set points by order amount: then the amount decides */
+        var rg = cash ? cfg.cashRanges : cfg.onlineRanges;
+        if (rg && rg.length) {
+            var t = Number(order.total) || 0, hit = null;
+            rg.forEach(function (r) { if (!hit && t >= r.from && (r.to === null || t < r.to + 1)) hit = r; });
+            pts = hit ? hit.points : 0;
+        }
         return on ? (pts || 0) : 0;
     }
     function pointsTotal() { return order.pointsAwarded > 0 ? order.pointsAwarded : earnsFor(); }

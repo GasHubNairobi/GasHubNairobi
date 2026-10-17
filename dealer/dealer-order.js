@@ -263,7 +263,7 @@
     function mapServerOrder(o) {
         const items = Array.isArray(o.items) ? o.items : [];
         const first = items[0] || {};
-        const discount = Number(o.discount_amount) || 0;
+        const discount = Number(o.points_used) > 0 ? 0 : (Number(o.discount_amount) || 0);   /* a coin discount is paid by GasHub, it never lowers the dealer's sale */
         return {
             id: o.order_number || String(o.id),
             serverId: o.id,
@@ -376,8 +376,7 @@
         let dealerNet = 0;
 
         orders.forEach(order => {
-            const st = normalize(order.status);
-            if (st !== "rejected" && st !== "cancelled") {
+            if (countsTowardMoney(order)) {
                 const fin = calculateOrderFinancials(order);
                 grossRevenue += fin.gross;
                 gashubCut += fin.gashubFee;
@@ -721,7 +720,34 @@
         setText("invModalDealerRate", `${(100 - fin.rate).toFixed(1)}%`);
         setText("invModalDealerNet", formatCurrency(fin.dealerNet));
 
+        fillInvoiceContact();
         openModal(modal);
+    }
+
+    /* The "contact us" details the admin saved (Admin > Settings > Social media & contact details) are printed in the
+       invoice footer. They are read from the public settings, so a change by the admin shows on the next receipt. */
+    let invoiceContactPromise = null;
+    function loadInvoiceContact() {
+        if (!invoiceContactPromise) {
+            const get = (p) => fetch(p, { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+            invoiceContactPromise = Promise.all([get("/api/settings/contact"), get("/api/settings/social")])
+                .then(([c, s]) => ({ contact: c || {}, social: (s && s.social_links) || {} }));
+            invoiceContactPromise.then(r => { if (!Object.keys(r.contact).length && !Object.keys(r.social).length) invoiceContactPromise = null; });
+        }
+        return invoiceContactPromise;
+    }
+
+    function fillInvoiceContact() {
+        const box = document.getElementById("invFooterContact");
+        if (!box) return;
+        loadInvoiceContact().then(({ contact, social }) => {
+            /* downloaded invoice: only the call number and the email */
+            const lines = [];
+            const phone = String(contact.phone || "").trim();
+            if (phone) lines.push(`Call: ${escapeHtml(phone)}`);
+            if (contact.email) lines.push(`Email: ${escapeHtml(contact.email)}`);
+            box.innerHTML = lines.length ? `<strong>Contact GasHub support</strong><br>${lines.join("<br>")}` : "";
+        });
     }
 
     /* =====================================================
@@ -1031,6 +1057,12 @@
         });
     }
 
+    /* One rule for every money total (cards, preview, printed report): rejected and cancelled orders earn nothing. */
+    function countsTowardMoney(order) {
+        const st = normalize(order.status);
+        return st !== "rejected" && st !== "cancelled";
+    }
+
     function getOrdersByTimeline(timeline) {
         const now = new Date().getTime();
         return ordersState.orders.filter(order => {
@@ -1054,7 +1086,7 @@
         let net = 0;
 
         orders.forEach(o => {
-            if (normalize(o.status) !== "rejected") {
+            if (countsTowardMoney(o)) {
                 const fin = calculateOrderFinancials(o);
                 gross += fin.gross;
                 gashub += fin.gashubFee;
@@ -1085,9 +1117,11 @@
 
         const rowsHtml = orders.map(o => {
             const fin = calculateOrderFinancials(o);
-            gross += fin.gross;
-            gashub += fin.gashubFee;
-            net += fin.dealerNet;
+            if (countsTowardMoney(o)) {
+                gross += fin.gross;
+                gashub += fin.gashubFee;
+                net += fin.dealerNet;
+            }
 
             return `
                 <tr>

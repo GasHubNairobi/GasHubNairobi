@@ -670,8 +670,17 @@
         });
 
         const sum = (key) => rows.reduce((t, o) => t + (Number(o[key]) || 0), 0);
-        const counted = rows.filter(o => !["cancelled", "canceled", "rejected"].includes(String(o.status).toLowerCase()) && !o.refund_status && String(o.payment_status || "").toLowerCase() !== "refunded");
-        /* goods + delivery fee before commission, so gross - commission = dealer net (total_amount is after coin discounts, which GasHub pays) */
+        /* Only a COMPLETED, paid order that was not cancelled or refunded is real money for the dealer.
+           This is the same rule as the dealer's Sales page and Payouts, so every page shows the same figures. */
+        const isEarned = o => String(o.status).toLowerCase() === "completed" && !o.refund_status &&
+            String(o.payment_status || "").toLowerCase() !== "refunded";
+        const notCountedWhy = o => {
+            const st = String(o.status).toLowerCase();
+            if (["cancelled", "canceled", "rejected"].includes(st)) return "Cancelled - no money";
+            if (o.refund_status || String(o.payment_status || "").toLowerCase() === "refunded") return "Refunded - reversed";
+            return "Not completed yet";
+        };
+        const counted = rows.filter(isEarned);
         const gross = counted.reduce((t, o) => t + (Number(o.dealer_gross ?? o.total_amount) || 0), 0);
         const commission = counted.reduce((t, o) => t + (Number(o.commission_amount) || 0), 0);
         const net = counted.reduce((t, o) => t + (Number(o.dealer_payout) || 0), 0);
@@ -679,7 +688,7 @@
         if ($("commissionTotal")) $("commissionTotal").textContent = currency(commission);
         if ($("dealerNetTotal")) $("dealerNetTotal").textContent = currency(net);
         if ($("orderCount")) $("orderCount").textContent = String(rows.length);
-        if ($("tableCountText")) $("tableCountText").textContent = `Showing ${rows.length} order${rows.length === 1 ? "" : "s"}`;
+        if ($("tableCountText")) $("tableCountText").textContent = `Showing ${rows.length} order${rows.length === 1 ? "" : "s"} - ${counted.length} counted in the totals (completed, not cancelled or refunded)`;
         if ($("completedOrders")) {
             $("completedOrders").textContent = String(
                 allOrders.filter(o => ["completed", "delivered"].includes(String(o.status).toLowerCase())).length
@@ -701,9 +710,12 @@
                     ${o.customer_phone ? `<span class="cell-sub">${escapeHtml(o.customer_phone)}</span>` : ""}</td>
                 <td>${escapeHtml(o.product_name || "—")}</td>
                 <td>${escapeHtml(o.quantity ?? "—")}</td>
-                <td>${escapeHtml(currency(o.total_amount))}</td>
+                ${isEarned(o)
+                    ? `<td>${escapeHtml(currency(o.dealer_gross ?? o.total_amount))}</td>
                 <td>${escapeHtml(currency(o.commission_amount))}</td>
-                <td>${escapeHtml(currency(o.dealer_payout))}</td>
+                <td>${escapeHtml(currency(o.dealer_payout))}</td>`
+                    : `<td style="color:#8a948d">${escapeHtml(currency(o.total_amount))}</td>
+                <td colspan="2" style="color:#8a948d">${escapeHtml(notCountedWhy(o))}</td>`}
                 <td>${escapeHtml(String(o.fulfilment || "—").replace(/_/g, " "))}</td>
                 <td>${escapeHtml(o.payment_status_label || o.payment_status || "—")}</td>
                 <td>${escapeHtml(statusText(o))}</td>

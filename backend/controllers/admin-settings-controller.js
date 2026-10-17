@@ -94,7 +94,7 @@ async function putCoins(req, res) {
 async function getPurchasePoints(req, res) {
     try {
         const c = await require("../utils/order-fulfilment").getPointsConfig();
-        res.json({ success: true, settings: { onlineEnabled: c.onlineEnabled, onlinePoints: c.onlinePoints, cashEnabled: c.cashEnabled, cashPoints: c.cashPoints } });
+        res.json({ success: true, settings: { onlineEnabled: c.onlineEnabled, onlinePoints: c.onlinePoints, cashEnabled: c.cashEnabled, cashPoints: c.cashPoints, onlineRanges: c.onlineRanges, cashRanges: c.cashRanges } });
     } catch (e) { fail(res, e, "load the purchase points settings"); }
 }
 
@@ -116,9 +116,36 @@ async function putPurchasePoints(req, res) {
             if (r.error) return res.status(400).json({ success: false, message: r.error });
             next[key] = r.value;
         }
+        const readRanges = (list, label) => {
+            list = Array.isArray(list) ? list : [];
+            if (list.length > 30) return { error: `${label}: use 30 ranges at most.` };
+            const out = [];
+            for (let i = 0; i < list.length; i++) {
+                const r = list[i] || {}, n = i + 1;
+                const from = Number(r.from), pts = Number(r.points);
+                const to = r.to === null || r.to === undefined || r.to === "" ? null : Number(r.to);
+                if (!Number.isInteger(from) || from < 0) return { error: `${label}, range ${n}: enter a whole-shilling start amount (0 or more).` };
+                if (to !== null && (!Number.isInteger(to) || to < from)) return { error: `${label}, range ${n}: the end amount must be a whole number that is not below the start.` };
+                if (!Number.isInteger(pts) || pts < 0 || pts > 100000) return { error: `${label}, range ${n}: enter a whole number of points (0 or more).` };
+                out.push({ from, to, points: pts });
+            }
+            out.sort((x, y) => x.from - y.from);
+            for (let i = 0; i < out.length - 1; i++) {
+                if (out[i].to === null) return { error: `${label}: only the last range can be left open-ended ("and above").` };
+                if (out[i + 1].from <= out[i].to) return { error: `${label}: the ranges overlap (KSh ${out[i + 1].from} is already inside ${out[i].from} to ${out[i].to}).` };
+            }
+            return { value: out };
+        };
+        for (const [key, label] of [["onlineRanges", "Online payments"], ["cashRanges", "Cash payments"]]) {
+            if (b[key] === undefined) continue;
+            const r = readRanges(b[key], label);
+            if (r.error) return res.status(400).json({ success: false, message: r.error });
+            next[key] = r.value;
+            delete next.purchaseRanges;        /* the older shared list is replaced by these two */
+        }
         await putSetting("points", next);
         const c = await require("../utils/order-fulfilment").getPointsConfig();
-        res.json({ success: true, message: "Points for purchases saved.", settings: { onlineEnabled: c.onlineEnabled, onlinePoints: c.onlinePoints, cashEnabled: c.cashEnabled, cashPoints: c.cashPoints } });   /* read back, so the admin sees what is really stored */
+        res.json({ success: true, message: "Points for purchases saved.", settings: { onlineEnabled: c.onlineEnabled, onlinePoints: c.onlinePoints, cashEnabled: c.cashEnabled, cashPoints: c.cashPoints, onlineRanges: c.onlineRanges, cashRanges: c.cashRanges } });   /* read back, so the admin sees what is really stored */
     } catch (e) { fail(res, e, "save the purchase points settings"); }
 }
 

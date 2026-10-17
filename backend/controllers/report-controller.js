@@ -11,6 +11,7 @@ const crypto = require("crypto");
 const { pool } = require("../config/database-config");
 const { getSetting } = require("../utils/gashub-settings");
 const { formatOrderStatus, formatPaymentStatus } = require("../utils/assistant");
+const { ensureRefundColumns } = require("../utils/refunds");
 
 const TYPES = ["overview", "orders", "payments", "customers", "products"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -37,11 +38,12 @@ function readFilters(src) {
 
 /* Everything the report shows. `registers` adds the full order / payment lists (used by the Orders and Payments reports). */
 async function buildReport(start, end, type, registers) {
+    await ensureRefundColumns();
     const q = (sql) => pool.query(sql, [start, end]);
     const [summary, orders, payments, products, customers] = await Promise.all([
         q(`SELECT
                 COUNT(DISTINCT o.id)::INTEGER AS total_orders,
-                COALESCE(SUM(CASE WHEN o.status NOT IN ('cancelled', 'rejected') THEN o.total_amount ELSE 0 END), 0) AS total_sales,
+                COALESCE(SUM(CASE WHEN o.status NOT IN ('cancelled', 'rejected') AND o.refund_status IS NULL AND COALESCE(o.payment_status::text, '') <> 'refunded' THEN o.total_amount ELSE 0 END), 0) AS total_sales,
                 (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE ${inRange("p.created_at")} AND p.status = 'paid' AND NOT EXISTS (SELECT 1 FROM orders ro WHERE ro.id = p.order_id AND ro.status::text IN ('cancelled', 'rejected'))) AS total_payments,
                 (SELECT COUNT(*)::INTEGER FROM users u WHERE u.role = 'customer' AND ${inRange("u.created_at")}) AS new_customers,
                 (SELECT COUNT(*)::INTEGER FROM users u WHERE u.role = 'customer') AS total_customers
@@ -53,10 +55,10 @@ async function buildReport(start, end, type, registers) {
         q(`SELECT oi.product_id, oi.product_name, COUNT(DISTINCT oi.order_id)::INTEGER AS order_count,
                   COALESCE(SUM(oi.quantity), 0)::INTEGER AS quantity_sold, COALESCE(SUM(oi.total_price), 0) AS total_sales
              FROM order_items oi INNER JOIN orders o ON o.id = oi.order_id
-             WHERE ${inRange("o.created_at")} AND o.status NOT IN ('cancelled', 'rejected')
+             WHERE ${inRange("o.created_at")} AND o.status NOT IN ('cancelled', 'rejected') AND o.refund_status IS NULL AND COALESCE(o.payment_status::text, '') <> 'refunded'
              GROUP BY oi.product_id, oi.product_name ORDER BY total_sales DESC LIMIT ${MAX_ROWS + 1}`),
         q(`SELECT u.id, u.full_name, u.email, u.phone, COUNT(o.id)::INTEGER AS order_count,
-                  COALESCE(SUM(CASE WHEN o.status NOT IN ('cancelled', 'rejected') THEN o.total_amount ELSE 0 END), 0) AS total_spent
+                  COALESCE(SUM(CASE WHEN o.status NOT IN ('cancelled', 'rejected') AND o.refund_status IS NULL AND COALESCE(o.payment_status::text, '') <> 'refunded' THEN o.total_amount ELSE 0 END), 0) AS total_spent
              FROM users u INNER JOIN orders o ON o.customer_id = u.id AND ${inRange("o.created_at")}
              WHERE u.role = 'customer' GROUP BY u.id, u.full_name, u.email, u.phone ORDER BY total_spent DESC LIMIT ${MAX_ROWS + 1}`)
     ]);

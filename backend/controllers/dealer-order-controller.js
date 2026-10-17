@@ -309,6 +309,9 @@ async function updateOrder(req, res) {
         if (b.discount_amount != null && b.discount_amount !== "") {
             if (o.payment_status === "paid") { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "A discount can't be changed after the order is paid." }); }
             const disc = Math.max(0, Number(b.discount_amount) || 0);
+            /* the customer's GasHub Coins discount is stored in the same column and is paid for by GasHub: a dealer discount would wipe it out
+               (coins spent, no discount) and the commission would be worked out wrongly */
+            if (Number(o.points_used) > 0 && disc !== Number(o.discount_amount)) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "The customer used GasHub Coins on this order, so a dealer discount can't be added." }); }
             if (disc > Number(o.subtotal)) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "The discount can't be more than the products total." }); }
             set("discount_amount", disc); set("discount_note", clean(b.discount_note, 200) || null);
             set("total_amount", Number(o.subtotal) + feeNow - disc);
