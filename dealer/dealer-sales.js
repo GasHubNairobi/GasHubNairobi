@@ -29,6 +29,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         set("salesRefills", (t.refills_sold || 0) + (t.refills_sold === 1 ? " Cylinder" : " Cylinders"));
         set("salesNew", (t.new_cylinders_sold || 0) + (t.new_cylinders_sold === 1 ? " Unit" : " Units"));
+        set("salesEmpty", (t.empty_cylinders_sold || 0) + (t.empty_cylinders_sold === 1 ? " Unit" : " Units"));
+        set("salesAccessories", (t.accessories_sold || 0) + (t.accessories_sold === 1 ? " Item" : " Items"));
+        set("salesCommercial", (t.commercial_sold || 0) + (t.commercial_sold === 1 ? " Unit" : " Units"));
         set("salesMargin", kes(t.net_margin));
         set("salesMarginPct", (t.margin_pct || 0) + "% after GasHub commission (" + (d.commission_rate || 0) + "%)");
         set("salesGross", kes(t.gross_sales));

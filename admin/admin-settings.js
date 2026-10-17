@@ -618,6 +618,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
+            const vf = await requestSettings("/api/admin/settings/verification-fee");
+            const fee = vf.settings && vf.settings.default_verification_fee;
+            const feeInput = document.getElementById("defaultVerificationFee");
+            if (feeInput) feeInput.value = fee != null ? fee : "";
+            updateVerificationFeePreview();
+        } catch (error) {
+            console.info("Default verification fee endpoint is not available yet:", error.message);
+        }
+
+        try {
             const data = await requestSettings("/api/admin/settings/coins");
             const settings = data.settings || data;
 
@@ -686,6 +696,34 @@ document.addEventListener("DOMContentLoaded", () => {
             console.info("Platform settings endpoint is not available yet:", error.message);
         }
     }
+
+    function updateVerificationFeePreview() {
+        const el = document.getElementById("verificationFeePreviewDefault");
+        const n = Number(document.getElementById("defaultVerificationFee")?.value);
+        if (el) el.textContent = Number.isFinite(n) && n > 0 ? "KSh " + n.toLocaleString("en-KE") : "No default fee set";
+    }
+    document.getElementById("defaultVerificationFee")?.addEventListener("input", updateVerificationFeePreview);
+
+    document.getElementById("verificationFeeForm")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const input = document.getElementById("defaultVerificationFee");
+        const raw = String(input?.value ?? "").trim();
+        if (raw !== "" && !(Number(raw) > 0)) { showMessage("Enter a fee above 0, or leave it empty to show no default fee."); return; }
+        const button = document.getElementById("saveVerificationFeeButton");
+        try {
+            if (button) { button.disabled = true; button.textContent = "Saving…"; }
+            const result = await requestSettings("/api/admin/settings/verification-fee", {
+                method: "PUT",
+                body: { default_verification_fee: raw === "" ? null : Number(raw) }
+            });
+            showMessage(result.message || "Default verification fee saved.", "success");
+            updateVerificationFeePreview();
+        } catch (error) {
+            showMessage(error.message || "Could not save the default verification fee.");
+        } finally {
+            if (button) { button.disabled = false; button.textContent = "Save Default Fee"; }
+        }
+    });
 
     document.getElementById("coinSettingsForm")?.addEventListener("submit", async event => {
         event.preventDefault();

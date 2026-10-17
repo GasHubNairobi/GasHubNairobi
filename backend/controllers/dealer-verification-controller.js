@@ -11,6 +11,7 @@
    Works on Netlify Functions + Supabase only: no timers, no files, no memory kept between calls. The table is created on first use. */
 const { pool } = require("../config/database-config");
 const mpesa = require("../utils/mpesa-service");
+const { getDefaultVerificationFee } = require("../utils/gashub-settings");
 
 const VERIFICATION_DAYS = 365;                 /* same length the admin's own "verify" button gives */
 const PROMPT_LIFETIME_MS = 3 * 60 * 1000;
@@ -70,7 +71,9 @@ async function getMine(req, res) {
         const live = (await pool.query(
             "SELECT checkout_request_id FROM dealer_verification_payments WHERE dealer_id = $1 AND status = 'pending' AND created_at > NOW() - interval '3 minutes' ORDER BY created_at DESC LIMIT 1",
             [String(d.id)])).rows[0];
-        res.json({ success: true, ...stateOf(d), mpesa_enabled: mpesa.isConfigured(), pending_checkout_request_id: live ? live.checkout_request_id : null });
+        /* the admin's default fee is shown only while no fee has been set for this dealer; it is never what gets charged */
+        const defaultFee = Number(d.verification_fee) > 0 ? null : await getDefaultVerificationFee().catch(() => null);
+        res.json({ success: true, ...stateOf(d), default_fee: defaultFee, mpesa_enabled: mpesa.isConfigured(), pending_checkout_request_id: live ? live.checkout_request_id : null });
     } catch (e) {
         console.error("Verification state error:", e && e.message);
         res.status(500).json({ success: false, message: "Unable to load your verification status." });

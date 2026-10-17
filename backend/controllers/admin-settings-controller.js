@@ -5,7 +5,7 @@ const {
     PLATFORMS, getSetting, putSetting, normalizeSocial, normalizeSupport, normalizeEarn, getEarnConfig,
     normalizePaymentAccount, getPaymentAccount,
     normalizePaymentMethods, getPaymentMethods, normalizeBankAccount, getBankAccount,
-    normalizeApp, getAppConfig, appLink, playStoreLive, forgetLiveCheck
+    normalizeApp, getAppConfig, appLink, playStoreLive, forgetLiveCheck, getDefaultVerificationFee
 } = require("../utils/gashub-settings");
 const lock = require("../utils/super-lock");
 const { resetCache: resetMaintenanceCache } = require("../utils/platform-settings");
@@ -34,6 +34,28 @@ async function putSocial(req, res) {
         await putSetting("support", support.value);
         res.json({ success: true, message: "Social media and contact details saved.", social_links: social.value, support: support.value });
     } catch (e) { fail(res, e, "save the social settings"); }
+}
+
+/* ---------- default verification fee (display only) ---------- */
+async function getVerificationFeeDefault(req, res) {
+    try {
+        res.json({ success: true, settings: { default_verification_fee: await getDefaultVerificationFee() } });
+    } catch (e) { fail(res, e, "load the default verification fee"); }
+}
+
+async function putVerificationFeeDefault(req, res) {
+    try {
+        const raw = (req.body || {}).default_verification_fee;
+        const blank = raw === null || raw === undefined || String(raw).trim() === "";
+        let amount = null;
+        if (!blank) {
+            amount = Number(raw);
+            if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000) return res.status(400).json({ success: false, message: "Enter a fee above 0 (or leave it empty to show no default fee)." });
+            amount = Math.round(amount * 100) / 100;
+        }
+        await putSetting("verification_fee_default", { amountKsh: amount, updatedBy: who(req), updatedAt: new Date().toISOString() });
+        res.json({ success: true, message: amount ? "Default verification fee saved. It is only shown to dealers until you set their own fee." : "Default verification fee cleared.", settings: { default_verification_fee: amount } });
+    } catch (e) { fail(res, e, "save the default verification fee"); }
 }
 
 /* ---------- GasHub coin / point value ---------- */
@@ -248,4 +270,4 @@ async function putPlatform(req, res) {
     } catch (e) { fail(res, e, "save the platform settings"); }
 }
 
-module.exports = { getPaymentMethodsSetting, putPaymentMethodsSetting, getBankAccountSetting, putBankAccountSetting, getSocial, putSocial, getCoins, putCoins, getPurchasePoints, putPurchasePoints, getEarn, putEarn, lockStatus, lockUnlock, lockRelock, lockChangePassword, getPlatform, putPlatform, getPaymentAccountSetting, putPaymentAccountSetting, getAppSetting, putAppSetting };
+module.exports = { getVerificationFeeDefault, putVerificationFeeDefault, getPaymentMethodsSetting, putPaymentMethodsSetting, getBankAccountSetting, putBankAccountSetting, getSocial, putSocial, getCoins, putCoins, getPurchasePoints, putPurchasePoints, getEarn, putEarn, lockStatus, lockUnlock, lockRelock, lockChangePassword, getPlatform, putPlatform, getPaymentAccountSetting, putPaymentAccountSetting, getAppSetting, putAppSetting };

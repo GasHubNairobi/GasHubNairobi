@@ -51,7 +51,15 @@ function buildBuckets(period, today) {
 
 const REFILL_RE = /refill|swap/i;
 const ACCESSORY_RE = /regulator|hose|burner|grill|stove|accessor|lighter|kit\b/i;
-function kindOf(name) {
+/* The category the dealer picked for the product decides first: Gas Refill, New Gas Cylinders, Gas Cylinder Only (empty),
+   Gas Accessories, Commercial Gas. Older products (or a deleted product) fall back to the words in the product name. */
+function kindOf(category, name) {
+    const c = String(category || "").toLowerCase();
+    if (/access/.test(c)) return "accessory";
+    if (/commercial|industrial/.test(c)) return "commercial";
+    if (/refill/.test(c)) return "refill";
+    if (/empty|cylinder only/.test(c)) return "empty";
+    if (/cylinder/.test(c)) return "new";
     if (REFILL_RE.test(name)) return "refill";
     if (ACCESSORY_RE.test(name)) return "accessory";
     return "new";
@@ -77,7 +85,7 @@ async function getMySales(req, res) {
             `SELECT o.id, o.order_number, o.payment_method, o.subtotal, o.discount_amount, o.points_used, o.delivery_fee, o.total_amount,
                     o.completed_at, o.status::text AS status, o.fulfilment, u.full_name AS customer_name,
                     to_char(o.completed_at AT TIME ZONE '${TZ}', 'YYYY-MM-DD') AS day,
-                    COALESCE((SELECT json_agg(json_build_object('name', oi.product_name, 'size', oi.cylinder_size, 'qty', oi.quantity) ORDER BY oi.created_at)
+                    COALESCE((SELECT json_agg(json_build_object('name', oi.product_name, 'size', oi.cylinder_size, 'qty', oi.quantity, 'category', (SELECT p.category::text FROM products p WHERE p.id::text = oi.product_id::text LIMIT 1)) ORDER BY oi.created_at)
                                 FROM order_items oi WHERE oi.order_id = o.id), '[]'::json) AS items
                FROM orders o LEFT JOIN users u ON u.id = o.customer_id
               WHERE o.dealer_id = $1 AND o.status::text = 'completed' AND o.completed_at IS NOT NULL
@@ -89,8 +97,8 @@ async function getMySales(req, res) {
         const sales = r.rows.map((o) => {
             const s = dealerSale(o, pct);
             const items = Array.isArray(o.items) ? o.items : [];
-            const units = { refill: 0, new: 0, accessory: 0 };
-            items.forEach((i) => { units[kindOf(`${i.name || ""} ${i.size || ""}`)] += Number(i.qty) || 0; });
+            const units = { refill: 0, new: 0, empty: 0, accessory: 0, commercial: 0 };
+            items.forEach((i) => { units[kindOf(i.category, `${i.name || ""} ${i.size || ""}`)] += Number(i.qty) || 0; });
             return { ...o, sale: s, units, qty: items.reduce((t, i) => t + (Number(i.qty) || 0), 0) };
         });
 
@@ -107,7 +115,7 @@ async function getMySales(req, res) {
 
         /* the chart: revenue per bucket */
         const values = buckets.map((b) => revenueOf(current.filter((o) => inRange(o, b.from, b.to))));
-        const cylinders = (list) => list.reduce((t, o) => t + o.units.refill + o.units.new, 0);
+        const cylinders = (list) => list.reduce((t, o) => t + o.units.refill + o.units.new + o.units.empty + o.units.commercial, 0);
 
         /* completion rate: of the orders that ended in this period (completed + cancelled/rejected), how many were completed */
         const closed = await pool.query(
@@ -138,7 +146,9 @@ async function getMySales(req, res) {
             totals: {
                 refills_sold: current.reduce((t, o) => t + o.units.refill, 0),
                 new_cylinders_sold: current.reduce((t, o) => t + o.units.new, 0),
+                empty_cylinders_sold: current.reduce((t, o) => t + o.units.empty, 0),
                 accessories_sold: current.reduce((t, o) => t + o.units.accessory, 0),
+                commercial_sold: current.reduce((t, o) => t + o.units.commercial, 0),
                 gross_sales: revenue,
                 commission: sum(current, (o) => o.sale.commission),
                 delivery_fees: sum(current, (o) => o.sale.delivery),

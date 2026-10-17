@@ -1216,6 +1216,7 @@ const GasHubStockApp = (() => {
         const modalProductImage = document.getElementById("modalProductImage");
 
         if (skuInput) skuInput.readOnly = true;
+        if (typeInput && !typeInput._ghAccWatch) { typeInput._ghAccWatch = true; typeInput.addEventListener("change", applyAccessoryFields); }
 
         if (productId) {
             const item = state.products.find((p) => p.id === productId);
@@ -1228,7 +1229,7 @@ const GasHubStockApp = (() => {
             brandInput.value = item.brand;
             nameInput.value = item.name;
             typeInput.value = item.type;
-            sizeInput.value = item.size;
+            sizeInput.value = item.type === "accessory" ? "" : item.size;
             valveInput.value = item.valve || "20mm Clip-On";
             stockInput.value = item.stock;
             emptyInput.value = item.emptyStock || 0;
@@ -1261,6 +1262,7 @@ const GasHubStockApp = (() => {
             }
         }
 
+        applyAccessoryFields();
         backdrop.hidden = false;
         if (brandInput) brandInput.focus();
     }
@@ -1268,6 +1270,18 @@ const GasHubStockApp = (() => {
     function closeProductModal() {
         const backdrop = document.getElementById("productModalBackdrop");
         if (backdrop) backdrop.hidden = true;
+    }
+
+    /* Gas Accessories have no cylinder size or valve fitting: hide both fields and don't ask for them */
+    function applyAccessoryFields() {
+        const typeInput = document.getElementById("modalType");
+        const sizeInput = document.getElementById("modalSize");
+        const valveInput = document.getElementById("modalValve");
+        const acc = !!typeInput && typeInput.value === "accessory";
+        [sizeInput, valveInput].forEach((el) => { const g = el && el.closest(".form-group"); if (g) g.hidden = acc; });
+        if (sizeInput) { sizeInput.required = !acc; if (acc) sizeInput.value = ""; }
+        if (valveInput && acc) valveInput.value = "N/A";
+        else if (valveInput && valveInput.value === "N/A") valveInput.value = "20mm Clip-On";
     }
 
     function handleProductFormSubmit(e, keepOpen = false) {
@@ -1306,8 +1320,8 @@ const GasHubStockApp = (() => {
             brand,
             name,
             type: typeInput.value,
-            size: sizeInput.value.trim() || "13kg",
-            valve: valveInput.value,
+            size: typeInput.value === "accessory" ? "Standard Kit" : (sizeInput.value.trim() || "13kg"),
+            valve: typeInput.value === "accessory" ? "N/A" : valveInput.value,
             stock: Math.max(0, parseInt(stockInput.value, 10) || 0),
             emptyStock: Math.max(0, parseInt(emptyInput.value, 10) || 0),
             lowStockLimit: Math.max(1, parseInt(limitInput.value, 10) || 5),

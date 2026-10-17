@@ -353,7 +353,9 @@
     }
 
     /* Commission rate and verification fee (admin-only endpoints) */
-    function fillCommercial(settings) {
+    let defaultVerificationFee = null;
+    function fillCommercial(settings, defaultFee) {
+        if (defaultFee !== undefined) defaultVerificationFee = Number(defaultFee) > 0 ? Number(defaultFee) : null;
         if (!settings) return;
         if ($("commissionRate") && settings.commission_rate != null) {
             $("commissionRate").value = Number(settings.commission_rate);
@@ -362,6 +364,14 @@
             $("verificationFee").value = Number(settings.verification_fee);
             verificationFee = Number(settings.verification_fee) || 0;
         }
+        /* no fee set for this dealer yet: only SHOW the default (placeholder + preview); nothing is filled in or saved */
+        const fi = $("verificationFee");
+        if (fi && !(Number(settings.verification_fee) > 0) && defaultVerificationFee) {
+            fi.placeholder = "Default: " + defaultVerificationFee;
+            const hint = fi.closest("label") && fi.closest("label").querySelector("small");
+            if (hint) hint.textContent = "Default fee KSh " + defaultVerificationFee.toLocaleString("en-KE") + " is shown to this dealer until you set their own fee.";
+        }
+        if (typeof updateVerificationPreview === "function") { try { updateVerificationPreview(); } catch (e) { /* ignore */ } }
     }
 
     async function loadCommercial() {
@@ -369,7 +379,7 @@
             const result = await apiRequest(
                 `/api/admin/dealers/${encodeURIComponent(dealer.id)}/commercial`
             );
-            fillCommercial(result.settings);
+            fillCommercial(result.settings, result.default_verification_fee);
         } catch (error) {
             console.error("Unable to load commercial settings:", error);
             notify(`Commercial settings: ${error.message}`, "error");
@@ -532,7 +542,8 @@
 
         if ($("verificationFeePreview")) {
             $("verificationFeePreview").textContent =
-                currency(verificationFee);
+                verificationFee > 0 ? currency(verificationFee)
+                    : (defaultVerificationFee ? currency(defaultVerificationFee) + " (default)" : currency(0));
         }
 
         if ($("verificationExpiryPreview")) {

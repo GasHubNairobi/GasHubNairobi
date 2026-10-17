@@ -25,20 +25,24 @@
     /* ---------- reading a product from the API (ONE rule set for every page) ---------- */
     function normCategory(p) {
         var raw = clean(first(p.category, p.product_type, p.type, p.category_name, p.name)).toLowerCase();
-        if (/access|regulator|hose|burner|stand|valve|stove/.test(raw)) return "accessory";
-        if (raw.indexOf("gas") > -1 && raw.indexOf("cylinder") > -1) return "gas-cylinder";
-        if (raw.indexOf("cylinder") > -1) return "cylinder";
-        return "gas";
+        if (/access|regulator|hose|burner|stand|valve|stove/.test(raw)) return "accessory";      /* Gas Accessories */
+        if (/commercial|industrial/.test(raw)) return "commercial";                             /* Commercial Gas */
+        if (/refill/.test(raw)) return "refill";                                                /* Gas Refill */
+        if (/empty|cylinder only/.test(raw)) return "empty";                                    /* Gas Cylinder Only */
+        if (raw.indexOf("cylinder") > -1) return "cylinder";                                    /* New Gas Cylinders */
+        return "refill";                                                                        /* older products saved just as "gas" */
     }
     /* the type the DEALER picked when adding the product (Category / Type), shown as plain text by itself.
        Old products saved as just "gas" or "cylinder" read as "Gas" / "Cylinder". */
     function normTypeLabel(p) {
         var raw = clean(first(p.category, p.product_type, p.type, p.category_name));
         if (!raw) return "";
-        return raw.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim().replace(/(^|\s)([a-z])/g, function (m, a, b) { return a + b.toUpperCase(); });
+        /* customers see: Refill, New Gas Cylinders, Empty, Gas Accessories, Commercial Gas */
+        return { refill: "Refill", empty: "Empty", cylinder: "New Gas Cylinders", accessory: "Gas Accessories", commercial: "Commercial Gas" }[normCategory(p)] || "";
     }
     /* the gas weight, always written the same way: "13 KG" */
     function normSize(p) {
+        if (normCategory(p) === "accessory") return "";            /* accessories have no cylinder size */
         var v = clean(first(p.size, p.cylinder_size, p.cylinderSize, p.weight, p.weight_kg, p.gas_weight, p.cylinder_weight, p.weightKg));
         if (!v) { var m = clean(first(p.name, p.title, p.product_name)).match(/(\d+(?:\.\d+)?)\s*kg/i); if (m) v = m[1]; }
         if (!v) return "";

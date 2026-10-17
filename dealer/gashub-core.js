@@ -19,17 +19,17 @@
     const MINE_ENDPOINT = "/api/dealers/products/mine";
     /* Category words the customer product page understands for its Gas / Cylinders / Gas + Cylinder / Accessories filters */
     const TYPE_LABELS = {
-        cylinder: "Gas Cylinder",
+        cylinder: "New Gas Cylinders",
         refill: "Gas Refill",
-        empty: "Empty Cylinder",
-        accessory: "Accessory",
-        industrial: "Industrial Gas"
+        empty: "Gas Cylinder Only",
+        accessory: "Gas Accessories",
+        industrial: "Commercial Gas"
     };
     function typeFromLabel(label) {
         const t = String(label || "").toLowerCase();
         if (/access/.test(t)) return "accessory";
-        if (/industrial/.test(t)) return "industrial";
-        if (/empty/.test(t)) return "empty";
+        if (/industrial|commercial/.test(t)) return "industrial";
+        if (/empty|only/.test(t)) return "empty";
         if (/cylinder/.test(t)) return "cylinder";
         return "refill";
     }
@@ -391,7 +391,7 @@
                 sku: String(p.sku || p.id || "").trim(),
                 name: String(p.name || "").trim(),
                 type: TYPE_LABELS[p.type] || p.type || "Gas",
-                size: String(p.size || "").trim(),
+                size: p.type === "accessory" ? "" : String(p.size || "").trim(),   /* accessories have no cylinder size */
                 price: Number(p.price) || 0,
                 stock: Math.max(0, parseInt(p.stock, 10) || 0),
                 available: p.available !== false,

@@ -319,7 +319,7 @@ function renderCylinderMatrix(products) {
         },
         {
             key: "accessory",
-            name: "Regulators & Accessories",
+            name: "Gas Accessories",
             badge: "ACC",
             badgeClass: "dark",
             filterFn: (p) => p.type === "accessory" || (p.size && p.size.toLowerCase().includes("kit"))

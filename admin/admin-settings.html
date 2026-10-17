@@ -280,6 +280,18 @@
                 <div class="settings-history"><h3>Recent Rate History</h3><div class="admin-table-wrapper"><table class="admin-table"><thead><tr><th>Previous rate</th><th>New rate</th><th>Changed by</th><th>Date</th></tr></thead><tbody id="coinRateHistory"><tr><td colspan="4" class="table-empty">Rate history will appear when the backend provides it.</td></tr></tbody></table></div></div>
             </section>
 
+            <!-- DEFAULT VERIFICATION FEE (display only) -->
+            <section class="content-card settings-section" id="verificationFeeSettings">
+                <div class="card-header"><div><h2>Default Verification Fee</h2><p>This fee is only <strong>shown</strong> to a dealer (and on the dealer's page here) until you set a verification fee for that individual dealer. It is never charged and is not saved onto any dealer.</p></div><span class="settings-tag">KES only</span></div>
+                <form id="verificationFeeForm">
+                    <div class="settings-rate-row">
+                        <div class="form-group"><label for="defaultVerificationFee">Default verification fee (KSh)</label><input type="number" id="defaultVerificationFee" min="1" step="1" placeholder="e.g. 1500"><small>Leave empty to show no default fee.</small></div>
+                        <div class="coin-preview"><span>What dealers see</span><strong id="verificationFeePreviewDefault">No default fee set</strong><small>Shown as the standard fee until you set their own fee.</small></div>
+                    </div>
+                    <div class="form-actions"><button class="primary-button" id="saveVerificationFeeButton" type="submit">Save Default Fee</button></div>
+                </form>
+            </section>
+
             <!-- POINTS FOR PURCHASES -->
             <section class="content-card settings-section" id="purchasePointsSettings">
                 <div class="card-header"><div><h2>GasHub Points for Purchases</h2><p>Control whether customers earn GasHub Points when they pay for an order, and how many. Online payments (M-Pesa or bank, paid to GasHub) and cash payments (paid to the messenger) are managed separately.</p></div><span class="settings-tag">Per order</span></div>

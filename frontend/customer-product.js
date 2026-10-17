@@ -318,10 +318,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const map = {
             cylinders: "cylinder",
             cylinder: "cylinder",
+            "new-cylinders": "cylinder",
             accessories: "accessory",
             accessory: "accessory",
-            gas: "gas",
-            "gas-cylinder": "gas-cylinder"
+            gas: "refill",
+            refill: "refill",
+            "gas-refill": "refill",
+            empty: "empty",
+            "cylinder-only": "empty",
+            commercial: "commercial",
+            industrial: "commercial",
+            "gas-cylinder": "cylinder"
         };
 
         if (map[c]) setType(map[c]);

@@ -86,6 +86,8 @@ router.get("/settings/platform", requireAdmin, requireSuperUnlock, settingsContr
 router.put("/settings/platform", requireAdmin, requireSuperUnlock, settingsController.putPlatform);
 router.get("/settings/social", requireAdmin, settingsController.getSocial);
 router.put("/settings/social", requireAdmin, settingsController.putSocial);
+router.get("/settings/verification-fee", requireAdmin, settingsController.getVerificationFeeDefault);
+router.put("/settings/verification-fee", requireAdmin, settingsController.putVerificationFeeDefault);
 router.get("/settings/coins", requireAdmin, settingsController.getCoins);
 router.put("/settings/coins", requireAdmin, settingsController.putCoins);
 router.get("/settings/purchase-points", requireAdmin, settingsController.getPurchasePoints);

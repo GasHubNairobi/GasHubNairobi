@@ -211,10 +211,11 @@
                             <div class="form-group">
                                 <label for="saType" class="form-label required">Product Type</label>
                                 <select id="saType" class="form-control" required>
-                                    <option value="cylinder">Complete Cylinder (Full Gas)</option>
-                                    <option value="refill">Gas Refill Swap</option>
-                                    <option value="empty">Empty Cylinder</option>
-                                    <option value="accessory">Accessory (Burner, Regulator, Hose)</option>
+                                    <option value="refill">Gas Refill</option>
+                                    <option value="cylinder">New Gas Cylinders</option>
+                                    <option value="empty">Gas Cylinder Only</option>
+                                    <option value="accessory">Gas Accessories</option>
+                                    <option value="industrial">Commercial Gas</option>
                                 </select>
                             </div>
 
@@ -229,6 +230,7 @@
                                     <option value="20mm Clip-On">20mm Clip-On (Standard)</option>
                                     <option value="27mm Quick-On">27mm Quick-On</option>
                                     <option value="Threaded POL">Threaded POL Valve</option>
+                                    <option value="High Pressure">High Pressure (Commercial)</option>
                                 </select>
                             </div>
                         </div>
@@ -367,6 +369,22 @@
             if (brandInput) brandInput.addEventListener("input", updateSku);
             if (sizeInput) sizeInput.addEventListener("input", updateSku);
             if (typeInput) typeInput.addEventListener("change", updateSku);
+
+            /* Gas Accessories have no cylinder size or valve fitting, so those two fields are hidden for them */
+            const valveInputEl = document.getElementById("saValve");
+            const sizeGroup = sizeInput ? sizeInput.closest(".form-group") : null;
+            const valveGroup = valveInputEl ? valveInputEl.closest(".form-group") : null;
+            function applyTypeFields() {
+                const acc = typeInput && typeInput.value === "accessory";
+                if (sizeGroup) sizeGroup.hidden = acc;
+                if (valveGroup) valveGroup.hidden = acc;
+                if (sizeInput) sizeInput.required = !acc;
+                if (acc && sizeInput) sizeInput.value = "";
+                else if (sizeInput && !sizeInput.value) sizeInput.value = "13kg";
+                updateSku();
+            }
+            if (typeInput) typeInput.addEventListener("change", applyTypeFields);
+            applyTypeFields();
             if (regenBtn) regenBtn.addEventListener("click", updateSku);
             updateSku();
 
@@ -438,8 +456,8 @@
                         brand,
                         name,
                         type: typeInput.value,
-                        size: sizeInput.value.trim() || "13kg",
-                        valve: document.getElementById("saValve").value,
+                        size: typeInput.value === "accessory" ? "Standard Kit" : (sizeInput.value.trim() || "13kg"),
+                        valve: typeInput.value === "accessory" ? "N/A" : document.getElementById("saValve").value,
                         stock: Math.max(0, parseInt(document.getElementById("saStock").value, 10) || 0),
                         emptyStock: Math.max(0, parseInt(document.getElementById("saEmptyStock").value, 10) || 0),
                         lowStockLimit: Math.max(1, parseInt(document.getElementById("saLowStockLimit").value, 10) || 5),

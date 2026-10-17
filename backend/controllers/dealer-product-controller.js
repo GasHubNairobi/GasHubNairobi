@@ -123,7 +123,7 @@ async function syncMyProducts(req, res) {
       if (!name || !Number.isFinite(price) || price<0) continue;
       const code=String(p.sku||p.product_code||"").trim()||generateCode("GAS");
       codes.push(code);
-      const parsed=splitSize(p.size||p.cylinder_size);
+      const parsed=/access/i.test(category) ? { size: null, unit: null, text: "" } : splitSize(p.size||p.cylinder_size);   /* accessories have no cylinder size */
       const stock=Math.max(0,Number.parseInt(p.stock??p.stock_quantity??0,10)||0);
       const cat=pickCategory(categoryLabels,category);
       const status=productStatus(p,stock,labels);

@@ -186,9 +186,16 @@
                 if (j.pending_checkout_request_id) { say("A payment prompt is already waiting on your phone. Enter your PIN, or wait a minute and try again.", ""); }
             } else {
                 fee.classList.add("missing");
-                $("ghvFeeAmount").textContent = "Not set yet";
-                $("ghvPayText").textContent = "Pay via M-Pesa";
-                say("GasHub Admin has not set a verification fee for your outlet yet. Please contact GasHub support.", "err");
+                if (j.default_fee) {
+                    /* just shown: the dealer still cannot pay until GasHub Admin sets the fee for this outlet */
+                    $("ghvFeeAmount").textContent = ksh(j.default_fee) + " (standard fee)";
+                    $("ghvPayText").textContent = "Pay via M-Pesa";
+                    say("This is GasHub's standard verification fee. Your exact fee is confirmed by GasHub Admin before you can pay. Please contact GasHub support.", "err");
+                } else {
+                    $("ghvFeeAmount").textContent = "Not set yet";
+                    $("ghvPayText").textContent = "Pay via M-Pesa";
+                    say("GasHub Admin has not set a verification fee for your outlet yet. Please contact GasHub support.", "err");
+                }
             }
         }).catch(function (err) {
             $("ghvFeeAmount").textContent = "—";

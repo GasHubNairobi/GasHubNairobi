@@ -31,6 +31,14 @@ async function getSetting(key, fallback = {}, db = pool) {
     }
 }
 
+/* The default verification fee the admin typed in Admin > Settings. It is only DISPLAYED (dealer pop-up, admin dealer page)
+   until the admin sets a fee for an individual dealer; it is never charged and never copied onto a dealer. null = not set. */
+async function getDefaultVerificationFee(db = pool) {
+    const v = await getSetting("verification_fee_default", {}, db);
+    const n = Number(v && v.amountKsh);
+    return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 async function putSetting(key, value, db = pool) {
     await db.query(
         `INSERT INTO gashub_settings (setting_key, setting_value, updated_at) VALUES ($1, $2::jsonb, NOW())
@@ -244,6 +252,7 @@ async function playStoreLive(cfg) {
 const forgetLiveCheck = () => liveCache.clear();
 
 module.exports = {
+    getDefaultVerificationFee,
     PLATFORMS, PLATFORM_NAMES, DEFAULT_EARN,
     getSetting, putSetting, cleanUrl, normalizeSocial, normalizeSupport, normalizeEarn, getEarnConfig,
     PAYMENT_ACCOUNT_TYPES, DEFAULT_PAYMENT_ACCOUNT, normalizePaymentAccount, getPaymentAccount,
