@@ -11,6 +11,32 @@ const { isServerless } = require("../utils/runtime");
    so the total number of connections stays low. DATABASE_URL (a full connection string) is also accepted. */
 const poolMax = Number(process.env.DB_POOL_MAX) || (isServerless ? 3 : 10);
 
+/* Encrypted connection to Supabase.
+   Best (verifies you are really talking to Supabase): download Supabase's CA certificate (Supabase dashboard -> Project Settings ->
+   Database -> SSL Configuration -> "Download certificate") and put its text in DB_SSL_CA (or the whole file base64-encoded in
+   DB_SSL_CA_BASE64, easier in Netlify). The connection is then fully verified.
+   Until a certificate is provided the connection is still encrypted but the server's identity is not checked (the previous behaviour),
+   so the site keeps working. DB_SSL_VERIFY=false forces that mode even when a certificate is set. */
+function sslConfig() {
+    let ca = "";
+    if (process.env.DB_SSL_CA_BASE64) {
+        try { ca = Buffer.from(process.env.DB_SSL_CA_BASE64.trim(), "base64").toString("utf8"); } catch (e) { ca = ""; }
+    } else if (process.env.DB_SSL_CA) {
+        ca = process.env.DB_SSL_CA.replace(/\\n/g, "\n");
+    }
+    ca = ca.trim();
+    if (ca && /-----BEGIN CERTIFICATE-----/.test(ca) && String(process.env.DB_SSL_VERIFY || "").toLowerCase() !== "false") {
+        /* The certificate chain is checked against Supabase's own CA. Supabase's pooler addresses do not always match the
+           certificate's host name, so the host-name comparison is optional: set DB_SSL_CHECK_HOSTNAME=true to also require it. */
+        const cfg = { ca, rejectUnauthorized: true };
+        if (String(process.env.DB_SSL_CHECK_HOSTNAME || "").toLowerCase() !== "true") cfg.checkServerIdentity = () => undefined;
+        return cfg;
+    }
+    if (ca) console.warn("DB_SSL_CA is set but is not a valid certificate (or DB_SSL_VERIFY=false): the database connection is NOT being verified.");
+    else console.warn("Database connection is encrypted but not verified. Set DB_SSL_CA_BASE64 to Supabase's CA certificate to verify it.");
+    return { rejectUnauthorized: false };
+}
+
 const pool = new Pool({
     ...(process.env.DATABASE_URL
         ? { connectionString: process.env.DATABASE_URL }
@@ -21,7 +47,7 @@ const pool = new Pool({
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME || "postgres"
         }),
-    ssl: { rejectUnauthorized: false },
+    ssl: sslConfig(),
     max: poolMax,
     idleTimeoutMillis: isServerless ? 8000 : 30000,
     connectionTimeoutMillis: 10000,

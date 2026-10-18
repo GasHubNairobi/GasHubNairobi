@@ -1,0 +1,126 @@
+/* GasHub laptop / desktop layout.
+   The pages were designed phone-first, so on a laptop they were drawn as a narrow column with small text and a big empty
+   area on the right ("half the screen"). This file only does something from 1024px wide upwards - phones and tablets are
+   not touched. Load it AFTER the page's own stylesheet:
+       <link rel="stylesheet" href="gashub-desktop.css">                                                              */
+
+/* ---------- always: decorative logos / watermarks fade in instead of popping in ---------- */
+.page-watermark, .footer-watermark, .brand-watermark { animation: ghFadeIn .5s ease .15s backwards; }
+@keyframes ghFadeIn { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .page-watermark, .footer-watermark, .brand-watermark { animation: none; } }
+
+@media (min-width: 1024px) {
+    :root { --gh-page: 1320px; --gh-gutter: clamp(28px, 4vw, 64px); }
+
+    body { font-size: 16px; }
+
+    /* ----- header: logo + location + bell spread over the full width, same gutter as the content ----- */
+    .customer-header { height: 70px; padding: 0 var(--gh-gutter); gap: 16px; }
+    .customer-logo img { height: 40px; max-width: 150px; }
+    .menu-btn { width: 42px; height: 42px; border-radius: 11px; }
+    .menu-btn span { width: 18px; }
+    .location-btn { height: 42px; min-width: 220px; max-width: 340px; font-size: 14px; border-radius: 21px; padding: 0 16px; }
+    .location-btn svg { width: 16px; height: 16px; }
+    .notification-link { width: 42px; height: 42px; }
+    .notification-link svg { width: 20px; height: 20px; }
+
+    /* ----- the content column: ONE width and ONE left edge for hero, filters, sections and footer ----- */
+    .hero-content, .hero-inner, .home-section, .controls, .products-section, .dealers-section,
+    .footer-inner, .footer-bottom, .ab-wrap, .ab-sec, .wrap {
+        max-width: var(--gh-page); margin-left: auto; margin-right: auto;
+        padding-left: var(--gh-gutter); padding-right: var(--gh-gutter);
+    }
+    .hero-content, .hero-inner, .footer-inner, .footer-bottom { padding-top: 0; padding-bottom: 0; }
+    .footer-bottom { padding-top: 14px; }
+    .ab-band.dark .ab-sec { max-width: 1100px; }
+    .wrap { max-width: 1100px; }
+
+    /* ----- hero: text left, big search + buttons, no dead space ----- */
+    .home-hero { padding: 64px 0 72px; }
+    .hero-eyebrow { font-size: 15px; letter-spacing: .3px; }
+    .hero-content h1 { font-size: 52px; max-width: 760px; letter-spacing: -1px; }
+    .hero-text { font-size: 18px; max-width: 640px; }
+    .hero-row { max-width: 760px; margin-top: 22px; }
+    .customer-search-form input { height: 52px; font-size: 16px; padding: 0 14px; }
+    .customer-search-form button { padding: 0 22px; font-size: 15px; }
+    .hero-row .hero-btn, .hero-btn { min-height: 60px; font-size: 15px; padding: 0 24px; }
+    .hero-actions .hero-btn { max-width: 200px; min-height: 48px; }
+    .page-watermark { width: 190px; right: var(--gh-gutter); bottom: 20px; opacity: .1; }
+
+    .page-hero, .hero { padding-top: 40px; padding-bottom: 40px; }
+
+    /* ----- sections ----- */
+    .home-section { padding-top: 44px; padding-bottom: 6px; }
+    .section-heading { margin-bottom: 18px; }
+    .section-heading h2 { font-size: 26px; }
+    .section-heading p { font-size: 14px; }
+    .see-all { font-size: 14px; }
+
+    .belt { gap: 16px; }
+    .belt .gcard, .pcard { width: 220px; }
+    .gphoto { height: 150px; }
+    .gname { font-size: 14px; min-height: 36px; }
+    .gprice { font-size: 18px; }
+    .gview { min-height: 42px; font-size: 13px; }
+    .gcart { width: 46px; min-height: 42px; }
+    .glink, .grating, .gmeta, .gbrand, .setloc { font-size: 12px; }
+
+    .product-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; }
+    .dealer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .dcard { padding: 16px; gap: 14px; }
+    .dlogo { width: 52px; height: 52px; font-size: 16px; }
+    .dbody h3 { font-size: 16px; }
+    .dbody p, .dstats { font-size: 13px; }
+    .steps-grid, .features-grid { gap: 20px; }
+    .step-card, .feature-card { padding: 24px; }
+    .step-card h3, .feature-card h3 { font-size: 17px; }
+    .step-card p, .feature-card p { font-size: 14.5px; }
+    .about-home { padding: 36px 40px; }
+    .about-home-text h2 { font-size: 24px; }
+    .about-home-text p { font-size: 15px; max-width: 720px; }
+    .about-card { width: 120px; height: 120px; }
+
+    /* ----- products page ----- */
+    .controls { padding-top: 22px; }
+    .products-section { padding-top: 8px; padding-bottom: 48px; }
+    .chip { font-size: 14px; }
+
+    /* ----- dealers page ----- */
+    .dealers-section { padding-bottom: 48px; }
+
+    /* ----- orders: use the width, two columns of cards ----- */
+    .wrap .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+
+    /* ----- profile: hero + a two-column body instead of one skinny column ----- */
+    .hero-in { max-width: var(--gh-page); padding-left: var(--gh-gutter); padding-right: var(--gh-gutter); }
+    .page {
+        max-width: var(--gh-page); padding: 22px var(--gh-gutter) 56px;
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 22px; align-items: start;
+    }
+    .page > * { min-width: 0; }
+    .page > .foot-note, .page > #accountSection, .page > .danger-card, .page > .notice { grid-column: 1 / -1; }
+
+    /* ----- footer ----- */
+    .customer-footer { padding-top: 48px; padding-bottom: 20px; }
+    .footer-inner { gap: 48px; }
+    .footer-brand img { height: 36px; max-width: 130px; }
+    .footer-brand p { font-size: 14px; max-width: 420px; }
+    .footer-column h3 { font-size: 15px; }
+    .footer-links a { font-size: 14px; }
+    .footer-links { gap: 9px; }
+    .footer-bottom { font-size: 13px; }
+    .footer-watermark { width: 90px; right: var(--gh-gutter); }
+
+    /* ----- the slide-in menu is easier to hit on a laptop ----- */
+    .gh-drawer { width: 340px; }
+
+    /* ----- floating "Ask GasHub" button keeps clear of the content edge ----- */
+    .gha-fab, .fab { right: var(--gh-gutter); bottom: 24px; }
+}
+
+@media (min-width: 1600px) {
+    :root { --gh-page: 1480px; }
+    .hero-content h1 { font-size: 58px; }
+    .product-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .dealer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

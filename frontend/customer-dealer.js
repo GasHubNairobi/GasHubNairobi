@@ -122,7 +122,6 @@
             '<div id="followWrap">' + followBtnHTML(d) + '</div>' +
             '<h3 class="m-sub">About</h3><p class="m-about">' + esc(d.about) + '</p>' +
             (d.services.length ? '<div class="m-services">' + d.services.map(function (s) { return '<span>' + esc(s) + '</span>'; }).join('') + '</div>' : '') +
-            '<p class="m-privacy">Phone numbers stay private. Chat and order inside GasHub.</p>' +
             '<div class="m-tabs" role="tablist"><button type="button" data-tab="products">Products</button><button type="button" data-tab="reviews">Reviews</button><button type="button" data-tab="chat">Chat</button></div>' +
             '<div id="mPanel"></div>';
 
@@ -359,9 +358,7 @@
     /* ================= START ================= */
     async function start() {
         safe(showLocation);
-        var minWait = new Promise(function (r) { setTimeout(r, 1000); });
         try { state.all = await G.load(); } catch (e) { console.error(e); state.all = []; }
-        await minWait;
         $("#dealerLoading").hidden = true;
         render();
         var want = new URLSearchParams(location.search).get("id");

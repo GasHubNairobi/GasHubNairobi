@@ -539,7 +539,11 @@ async function getCustomerById(req, res) {
                             AS completed_orders,
 
                         COALESCE(
-                            SUM(total_amount),
+                            SUM(total_amount) FILTER (
+                                WHERE status::text NOT IN ('cancelled', 'rejected')
+                                  AND COALESCE(payment_status::text, '') <> 'refunded'
+                                  AND to_jsonb(orders)->>'refund_status' IS NULL
+                            ),
                             0
                         ) AS total_spent
 
@@ -693,6 +697,7 @@ async function getReports(req, res) {
                                   )
 
                               AND p.status = 'paid'
+                              AND NOT EXISTS (SELECT 1 FROM orders ro WHERE ro.id = p.order_id AND ro.status::text IN ('cancelled', 'rejected'))
                         ) AS total_payments,
 
                         (

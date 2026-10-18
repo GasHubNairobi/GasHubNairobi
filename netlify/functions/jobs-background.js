@@ -27,6 +27,8 @@ exports.handler = async (event) => {
             const withdrawals = require("../../backend/controllers/withdrawal-controller");
             await withdrawals.notifyWaiting();
             await withdrawals.runScheduledPayout();
+            await require("../../backend/controllers/payout-planner-controller").runDue();
+            await require("../../backend/utils/dealer-payouts").tick();
         } else if (body.job === "reminders") {
             await require("../../backend/utils/messaging-scheduler").runAll();
         } else {

@@ -38,9 +38,10 @@
         removeMatching(sessionStorage);
     }
     function serverLogout() {
-        var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, 4000);
+        var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, 8000);
         var opts = { credentials: "same-origin", cache: "no-store", signal: ctl.signal };
-        return fetch("/api/auth/csrf", opts)
+        return Promise.resolve(window.GasHubPush ? window.GasHubPush.leave() : null)   /* stop phone alerts for this person first */
+            .then(function () { return fetch("/api/auth/csrf", opts); })
             .then(function (r) { return r.json(); })
             .then(function (d) {
                 return fetch("/api/auth/logout", Object.assign({}, opts, {

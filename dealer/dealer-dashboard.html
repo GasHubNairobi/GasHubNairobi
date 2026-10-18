@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#d97706">
@@ -84,7 +85,7 @@
                 <a href="dealer-orders.html" class="nav-item">
                     <i class="fa-solid fa-clipboard-list nav-icon" aria-hidden="true"></i>
                     <span>Orders</span>
-                    <span class="nav-badge" id="sidebarOrdersBadge">0</span>
+                    <span class="nav-badge" id="sidebarOrdersBadge" hidden>0</span>
                 </a>
 
                 <a href="dealer-messengers.html" class="nav-item">
@@ -120,7 +121,7 @@
                 <a href="dealer-messages.html" class="nav-item">
                     <i class="fa-solid fa-comments nav-icon" aria-hidden="true"></i>
                     <span>Messages</span>
-                    <span class="nav-badge info" id="sidebarMessagesBadge">0</span>
+                    <span class="nav-badge info" id="sidebarMessagesBadge" hidden>0</span>
                 </a>
 
                 <a href="dealer-profile.html" class="nav-item">
@@ -284,9 +285,9 @@
                         <div class="stat-body">
                             <h3 class="stat-value" id="totalOrders">0</h3>
                             <div class="stat-breakdown">
-                                <span><strong>0</strong> Refills</span>
+                                <span><strong id="ordersRefillsCount">0</strong> Refills</span>
                                 <span class="breakdown-dot">&bull;</span>
-                                <span><strong>0</strong> New Sets</span>
+                                <span><strong id="ordersNewSetsCount">0</strong> New Sets</span>
                             </div>
                         </div>
                     </article>
@@ -346,7 +347,7 @@
                                     <option value="7days">Last 7 Days</option>
                                     <option value="30days" selected>Last 30 Days</option>
                                     <option value="90days">Last 90 Days</option>
-                                    <option value="year">Full Year</option>
+                                    <option value="year">Last 12 Months</option>
                                 </select>
                             </div>
                         </div>
@@ -356,15 +357,15 @@
                             <div class="analytics-metrics-ribbon">
                                 <div class="metric-pill">
                                     <span class="pill-label">Period Revenue</span>
-                                    <strong class="pill-value" id="periodRevenue">KSh 945,000</strong>
+                                    <strong class="pill-value" id="periodRevenue">KSh 0</strong>
                                 </div>
                                 <div class="metric-pill">
                                     <span class="pill-label">Total Cylinders</span>
-                                    <strong class="pill-value" id="periodOrders">342 Units</strong>
+                                    <strong class="pill-value" id="periodOrders">0 Units</strong>
                                 </div>
                                 <div class="metric-pill">
                                     <span class="pill-label">Completion Rate</span>
-                                    <strong class="pill-value success" id="periodCompletedOrders">98.4%</strong>
+                                    <strong class="pill-value success" id="periodCompletedOrders">-</strong>
                                 </div>
                             </div>
 
@@ -572,67 +573,11 @@
     <!-- =====================================================
          TIKTOK-STYLE BLUE VERIFICATION PAYMENT MODAL
          ===================================================== -->
-    <div class="modal-backdrop" id="verificationModalBackdrop" hidden>
-        <div class="modal-dialog modal-dialog-sm" role="dialog" aria-modal="true" aria-labelledby="verificationModalTitle">
-            <div class="modal-header">
-                <div class="modal-header-title">
-                    <div class="modal-icon-badge verified">
-                        <svg viewBox="0 0 24 24" class="tiktok-badge-svg-modal" aria-hidden="true">
-                            <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
-                            <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 id="verificationModalTitle">Request Blue Badge Verification</h2>
-                        <span class="modal-subtitle">Official GasHub &amp; EPRA Dealer Badge</span>
-                    </div>
-                </div>
-                <button type="button" class="btn-modal-close" id="closeVerificationModalBtn" aria-label="Close dialog">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <form id="verificationForm">
-                <div class="modal-body">
-                    <div class="verification-perks-box">
-                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Official TikTok-style Blue Check Badge on your outlet profile</span></div>
-                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>Top ranking in customer cylinder searches on GasHub App</span></div>
-                        <div class="perk-row"><i class="fa-solid fa-circle-check text-success"></i> <span>EPRA Safety Compliance digital certificate seal</span></div>
-                    </div>
-
-                    <div class="verification-fee-pill">
-                        <span>Admin Verification Fee:</span>
-                        <strong id="verificationFeeAmount">KSh 2,500 / Year</strong>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="verifyOutletName" class="form-label required">Depot / Outlet Name</label>
-                        <input type="text" id="verifyOutletName" class="form-control" required placeholder="e.g. GasHub Dealer business">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="verifyEpraLicense" class="form-label required">EPRA License Number</label>
-                        <input type="text" id="verifyEpraLicense" class="form-control" required placeholder="e.g. EPRA/LPG/2026/8942">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="verifyMpesaPhone" class="form-label required">M-Pesa Phone Number (for STK Prompt)</label>
-                        <input type="tel" id="verifyMpesaPhone" class="form-control" required placeholder="07XX XXX XXX or 2547XX XXX XXX">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" id="cancelVerificationBtn">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="submitVerificationBtn">
-                        <i class="fa-solid fa-mobile-screen-button fa-sm"></i>
-                        <span>Pay KSh 2,500 via M-Pesa</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="gashub-core.js"></script>
+    <script src="dealer-verification.js" defer></script>
     <script src="dealer-logout.js"></script>
+    <script src="dealer-alerts.js" defer></script>
     <script src="dealer-dashboard.js"></script>
     <script>
         (function() {
@@ -640,7 +585,7 @@
             if (el) el.textContent = new Date().getFullYear();
         })();
     </script>
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="dealer-mobile.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
 </body>
 </html>

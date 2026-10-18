@@ -1,0 +1,32 @@
+.pp-body{padding:0 20px 20px}
+.pp-sum{width:100%;max-width:560px;border-collapse:collapse;margin-bottom:18px;font-size:15px}
+.pp-sum td{padding:8px 0;border-bottom:1px solid #e5e9f2}
+.pp-sum td:last-child{text-align:right;font-weight:700;white-space:nowrap}
+.pp-sum tr.sub td{color:#64748b;font-size:13px;padding-left:14px}
+.pp-sum tr.total td{border-top:2px solid #0f172a;border-bottom:0;font-size:18px;font-weight:800;padding-top:12px}
+.pp-sum tr.short td:last-child{color:#dc2f45}.pp-sum tr.ok td:last-child{color:#15935a}
+.pp-funds{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:start;max-width:820px}
+.pp-funds label,.pp-sched label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.pp-funds input,.pp-sched input,.pp-sched select{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px;box-sizing:border-box;background:#fff}
+.pp-funds small,.pp-sched small{display:block;margin-top:5px;color:#64748b;font-size:12px}
+.pp-funds .link-button{align-self:end;padding:11px 20px;font-size:14px}
+.pp-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;margin-bottom:18px}
+.pp-two .content-card{margin-bottom:0}
+.pp-sched{padding:0 20px 20px;display:grid;gap:12px}
+.pp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pp-check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.pp-check input{width:auto;margin-top:3px}
+.pp-actions{display:flex;gap:10px;flex-wrap:wrap}
+.pp-next{padding:10px 14px;background:#eef4ff;border-radius:10px;font-size:13px;color:#1e3a8a}
+.pp-last{padding:10px 14px;background:#f1f5f9;border-radius:10px;font-size:13px;color:#334155}
+.pp-tag{display:inline-block;margin-left:8px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;vertical-align:middle}
+.pp-tag.on{background:#e3f6ec;color:#15935a}.pp-tag.off{background:#f1f5f9;color:#64748b}.pp-tag.bad{background:#fde8eb;color:#dc2f45}
+.pp-pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#f1f5f9;color:#475569}
+.pp-pill.good{background:#e3f6ec;color:#15935a}.pp-pill.warn{background:#fff4e0;color:#b45309}.pp-pill.bad{background:#fde8eb;color:#dc2f45}
+.pp-num{text-align:right;font-weight:700;white-space:nowrap}
+.pp-muted{color:#64748b;font-size:12px}
+@media(max-width:560px){.pp-row{grid-template-columns:1fr}}
+.pp-row[hidden]{display:none}
+.link-button{padding:10px 18px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.link-button:hover{background:#f1f5f9}.link-button.ok{border-color:#15935a;color:#15935a}
+.link-button.go{background:#1f4fd8;border-color:#1f4fd8;color:#fff}.link-button.go:hover{background:#1a43b8}.link-button:disabled{opacity:.5;cursor:default}

@@ -153,7 +153,7 @@
     function renderHero() {
         const li = loggedIn(), c = info();
         $("#profileName").textContent = li ? (c.name || "Customer") : "Welcome to GasHub";
-        $("#profileSub").textContent = li ? (c.email || c.phone || "Signed in") : "Sign in to see your orders, rewards and favourites.";
+        $("#profileSub").textContent = li ? (c.email || c.phone || "Signed in") : "";
         $("#guestCta").hidden = li;
         $("#statsRow").hidden = !li;
         const ms = $("#memberSince"), d = c.since ? new Date(c.since) : null;
@@ -218,6 +218,7 @@
         orders.forEach(o => {
             const s = String(o.status || o.orderStatus || "").trim().toLowerCase().replace(/\s+/g, "");
             if (s === "completed" || s === "complete" || s === "delivered") done++;
+            if (["cancelled", "canceled", "rejected"].includes(s) || o.refund_status || String(o.paymentStatus || o.payment_status || "").toLowerCase() === "refunded") return;   /* refunded money is not "spent" */
             spent += Number(o.total || o.totalAmount || o.amount || o.price || 0);
         });
         paintStats(orders.length, done, spent);
@@ -459,6 +460,9 @@
     /* ================= EARN MORE POINTS: invite friends, share our pages, follow us ================= */
     let earn = null, earnTimer = null, clockOffset = 0;
     const SOC_MARK = { facebook: "f", instagram: "ig", tiktok: "tt", youtube: "yt", x: "X" };
+    /* the real brand logos (images/*-logo.svg) */
+    const SOC_LOGO = { facebook: "facebook-brand", instagram: "instagram", tiktok: "tiktok", youtube: "youtube", x: "x" };
+    const socImg = (p, size) => SOC_LOGO[p] ? `<img src="images/${SOC_LOGO[p]}-logo.svg" alt="" width="${size}" height="${size}" style="flex:none">` : "";
 
     const inviteLink = () => `${location.origin}/customer-register.html?ref=${encodeURIComponent(earn.referralCode)}`;
     const inviteText = () => `Hi! I use GasHub to find gas dealers and get gas delivered. Join with my link:\n${inviteLink()}`;
@@ -485,7 +489,7 @@
         else if (f.started) btn = `<button type="button" class="btn yellow" data-claim="${esc(f.platform)}" data-at="${esc(f.canClaimAt || "")}" data-pts="${f.points}">Claim +${f.points}</button>`;
         else btn = `<button type="button" class="btn primary" data-follow="${esc(f.platform)}">Follow</button>`;
         return `<div class="follow-row">
-            <span class="soc ${esc(f.platform)}" aria-hidden="true">${esc(SOC_MARK[f.platform] || f.name[0])}</span>
+            <span class="soc ${esc(f.platform)}" aria-hidden="true">${socImg(f.platform, 22) || esc(SOC_MARK[f.platform] || f.name[0])}</span>
             <div class="follow-text"><strong>${esc(f.name)}</strong><span>Follow us and earn ${f.points} points</span></div>${btn}</div>`;
     }
 
@@ -541,7 +545,7 @@
         /* every account the admin switched on is shown here (also the ones with no points), as plain links */
         if (hasSocial) {
             html += `<div class="earn-block"><h3>Find GasHub online</h3><div class="follow-row" style="flex-wrap:wrap;gap:8px">${Object.entries(earn.socialLinks).map(([p, x]) =>
-                `<a class="btn outline" target="_blank" rel="noopener" href="${esc(x.url)}">${esc(x.name)}</a>`).join("")}</div></div>`;
+                `<a class="btn outline" target="_blank" rel="noopener" href="${esc(x.url)}" style="display:inline-flex;align-items:center;gap:6px">${socImg(p, 18)}${esc(x.name)}</a>`).join("")}</div></div>`;
         }
         box.innerHTML = html;
         tickClaims(); earnTimer = setInterval(tickClaims, 1000);

@@ -22,12 +22,17 @@ MPESA_CALLBACK_BASE_URL=
 MPESA_CALLBACK_SECRET=
 # true = also check the customer's typed M-Pesa code against real paybill/till payments (needs the one-time step below)
 MPESA_C2B_ENABLED=false
+# OPTIONAL, default off: true lets ONE number both receive customer payments and send payouts/refunds (MPESA_SHORTCODE = MPESA_B2C_SHORTCODE).
+# Keep that account funded for payouts; payments and payouts then share one balance.
+MPESA_ALLOW_SAME_SHORTCODE=false
 # optional: accept callbacks only from Safaricom's IPs
 MPESA_CALLBACK_IP_ALLOWLIST=false
 # MPESA_ALLOWED_IPS=
 
 # =========================================================
 # BANK PAYMENT - what the customer sees
+# NOTE: you can now enter these in Admin > Settings > Super Admin Area > Bank Account Details instead.
+# Once saved there, the admin values are used and these .env lines are ignored (kept only as a fallback).
 # =========================================================
 BANK_NAME=
 BANK_ACCOUNT_NAME=

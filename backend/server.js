@@ -53,7 +53,7 @@ const { projectPath } = require("./utils/paths");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-if (process.env.TRUST_PROXY || isServerless) {
+if (process.env.TRUST_PROXY || isServerless || process.env.RENDER) {   /* Render sets RENDER=true and puts its proxy in front of the app */
     app.set(
         "trust proxy",
         Number(process.env.TRUST_PROXY) || 1
@@ -78,10 +78,13 @@ if (!isServerless) app.use(require("./utils/compress").compress());
 // Maintenance mode (switched on by the super admin in Admin Settings)
 app.use(require("./utils/maintenance").maintenanceGate);
 
-app.use(express.json({ limit: "10mb" }));
+// Netlify Functions accept at most ~6 MB per request, so on Netlify the app answers a clear "too large" message at 5 MB
+// instead of Netlify cutting the request off with an unreadable error.
+const BODY_LIMIT = isServerless ? "5mb" : "10mb";
+app.use(express.json({ limit: BODY_LIMIT }));
 app.use(express.urlencoded({
     extended: true,
-    limit: "10mb"
+    limit: BODY_LIMIT
 }));
 
 /* Netlify safety net: on Netlify the request body can reach Express as a raw Buffer (or string) that the normal body parsers
@@ -116,26 +119,6 @@ app.use((req, res, next) => {
         console.error("[body-fallback]", e.message);
     }
     next();
-});
-
-/* TEMPORARY diagnostic (remove once logins work): shows what shape of request body reaches the server. It never returns the values. */
-app.all("/api/_diag/echo", (req, res) => {
-    const ev = req.apiGateway && req.apiGateway.event;
-    const b = req.body;
-    res.json({
-        ok: true,
-        serverless: !!process.env.GASHUB_SERVERLESS,
-        method: req.method,
-        contentType: req.headers["content-type"] || null,
-        contentLengthHeader: req.headers["content-length"] || null,
-        parsedBodyType: b === undefined ? "undefined" : Array.isArray(b) ? "array" : typeof b,
-        parsedBodyKeys: b && typeof b === "object" ? Object.keys(b) : [],
-        eventBodyType: ev ? (ev.body === null || ev.body === undefined ? "none" : typeof ev.body) : "no-event",
-        eventBodyLength: ev && typeof ev.body === "string" ? ev.body.length : null,
-        eventIsBase64: ev ? !!ev.isBase64Encoded : null,
-        publicUrlSet: !!process.env.PUBLIC_URL,
-        dbConfigured: !!(process.env.DATABASE_URL || (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD))
-    });
 });
 
 // ============================================================
@@ -176,6 +159,32 @@ const staticCache = {
         }
     }
 };
+
+/* ---- Android app links: lets https links to this site open the GasHub app when it is installed ----
+   /.well-known/assetlinks.json is built from the package name saved in Admin > Settings > GasHub Mobile App and the
+   ANDROID_SHA256_CERT_FINGERPRINTS setting (comma separated; copy it from Play Console > App integrity > App signing). */
+app.get("/.well-known/assetlinks.json", async (req, res) => {
+    try {
+        const g = require("./utils/gashub-settings");
+        const pkg = String(process.env.ANDROID_PACKAGE_NAME || (await g.getAppConfig()).packageId || "").trim();
+        const prints = String(process.env.ANDROID_SHA256_CERT_FINGERPRINTS || "").split(/[\s,;]+/).map((x) => x.trim().toUpperCase()).filter((x) => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(x));
+        res.set("Cache-Control", "public, max-age=300").type("application/json");
+        if (!pkg || !prints.length) return res.send("[]");
+        res.send(JSON.stringify([{ relation: ["delegate_permission/common.handle_all_urls"], target: { namespace: "android_app", package_name: pkg, sha256_cert_fingerprints: prints } }]));
+    } catch (e) { res.status(200).type("application/json").send("[]"); }
+});
+
+/* The install manifest. Once the app is live on Google Play it names the Android app, so Chrome can tell the page whether it is installed. */
+app.get("/manifest.webmanifest", async (req, res) => {
+    try {
+        const m = JSON.parse(require("fs").readFileSync(require("path").join(frontendPath, "manifest.webmanifest"), "utf8"));
+        try {
+            const g = require("./utils/gashub-settings"), cfg = await g.getAppConfig(), url = g.appLink(cfg);
+            if (cfg.packageId && url && (await g.playStoreLive(cfg))) { m.related_applications = [{ platform: "play", url, id: cfg.packageId }]; m.prefer_related_applications = false; }
+        } catch (e) { /* keep the plain manifest */ }
+        res.set("Cache-Control", "public, max-age=300").type("application/manifest+json").send(JSON.stringify(m));
+    } catch (e) { res.status(404).end(); }
+});
 
 app.use(express.static(frontendPath, staticCache));
 
@@ -335,9 +344,60 @@ app.use(
     },
     express.static(adminPath, {
         index: false,
-        dotfiles: "deny"
+        dotfiles: "deny",
+        setHeaders(res, filePath) {
+            if (/\.html?$/i.test(filePath) && !/admin-login\.html$/i.test(filePath)) res.setHeader("Cache-Control", "no-store, private");
+        }
     })
 );
+
+// ============================================================
+// DEALER PAGE AUTHENTICATION
+// ============================================================
+// Same idea as the admin pages: every dealer .html page except the public login / application pages is only
+// served to a browser holding a valid dealer session cookie (set at dealer login). On Netlify these pages are NOT on the CDN
+// (scripts/build-netlify.js leaves them out), so this function is the only way to reach them.
+
+const { dealerSessions, DEALER_SESSION_COOKIE, dealerCookieOptions, APP_SESSION_MS, APP_COOKIE_MS } = require("./middleware/dealer-authentication");
+const PUBLIC_DEALER_PAGES = new Set(["/dealer-login.html", "/dealer-application.html"]);
+
+async function requireDealerPage(req, res, next) {
+    const toLogin = () => {
+        res.clearCookie(DEALER_SESSION_COOKIE, dealerCookieOptions());
+        res.setHeader("Cache-Control", "no-store, private");
+        return res.redirect(302, "/dealer/dealer-login.html");
+    };
+    try {
+        const token = readCookie(req, DEALER_SESSION_COOKIE);
+        const session = token ? await dealerSessions.get(token) : null;
+        if (!session) return toLogin();
+
+        const result = await pool.query(
+            `SELECT u.status AS user_status, u.must_change_password, u.onboarding_completed, d.status AS dealer_status
+             FROM users u INNER JOIN dealers d ON d.user_id = u.id
+             WHERE u.id = $1 AND d.id = $2 AND u.role = 'dealer' LIMIT 1`,
+            [session.userId, session.dealerId]
+        );
+        const a = result.rows[0];
+        const pendingFirstLogin = Boolean(a && a.must_change_password && !a.onboarding_completed);
+        if (!a || a.user_status !== "active" || (a.dealer_status !== "active" && !pendingFirstLogin)) {
+            await dealerSessions.delete(token);
+            return toLogin();
+        }
+        /* app sessions never run out while the dealer keeps using the app: renew them each time a page opens */
+        if (session.app) {
+            try {
+                await dealerSessions.touch(token, APP_SESSION_MS);
+                res.cookie(DEALER_SESSION_COOKIE, token, dealerCookieOptions({ maxAge: APP_COOKIE_MS }));
+            } catch (e) { console.error("Could not renew app session:", e.message); }
+        }
+        res.setHeader("Cache-Control", "no-store, private");
+        return next();
+    } catch (error) {
+        console.error("Dealer page authentication error:", error);
+        return toLogin();
+    }
+}
 
 // ============================================================
 // DEALER STATIC FILES
@@ -345,7 +405,29 @@ app.use(
 
 app.use(
     "/dealer",
-    express.static(dealerPath, staticCache)
+    (req, res, next) => {
+        let pathname;
+        try {
+            pathname = decodeURIComponent(req.path || "/");
+        } catch {
+            return res.status(400).send("Invalid path");
+        }
+        if (/\.html?$/i.test(pathname) && !PUBLIC_DEALER_PAGES.has(pathname.toLowerCase())) {
+            return requireDealerPage(req, res, next);
+        }
+        // "/dealer" or "/dealer/" opens the login page
+        if (pathname === "/" || pathname === "") return res.redirect(302, "/dealer/dealer-login.html");
+        return next();
+    },
+    express.static(dealerPath, {
+        ...staticCache,
+        index: false,
+        setHeaders(res, filePath) {
+            // signed-in pages must never be kept by the browser or a shared cache
+            if (/\.html?$/i.test(filePath) && !/dealer-(login|application)\.html$/i.test(filePath)) res.setHeader("Cache-Control", "no-store, private");
+            else staticCache.setHeaders(res, filePath);
+        }
+    })
 );
 
 // ============================================================
@@ -410,6 +492,8 @@ app.use(
 // Customer <-> dealer chat
 const messageRoutes = require("./routes/message-routes");
 app.use("/api/messages", messageRoutes);
+app.use("/api/push", require("./routes/push-routes"));   /* phone push notifications */
+app.use("/api/cron", require("./routes/cron-routes"));       /* lets an outside pinger run the minute jobs (keeps Render free awake) */
 
 app.use(
     "/api/admin/complaints",
@@ -495,7 +579,7 @@ app.use(
             return res.status(400).json({ success: false, message: "The request body is not valid JSON." });
         }
         if (error && error.type === "entity.too.large") {
-            return res.status(413).json({ success: false, message: "The request is too large." });
+            return res.status(413).json({ success: false, message: "The request is too large. Use smaller photos (or fewer at a time) and try again." });
         }
 
         console.error(
@@ -524,7 +608,8 @@ function warmup() {
         warmedUp = Promise.all([
             withTimeout(require("./utils/payment-flow").ensurePaymentFlowColumns(), 6000),
             withTimeout(require("./utils/order-times").ensureOrderTimeColumns(), 6000),
-            withTimeout(require("./utils/account-indexes").ensureRoleScopedAccountIndexes(), 6000)
+            withTimeout(require("./utils/account-indexes").ensureRoleScopedAccountIndexes(), 6000),
+            withTimeout(require("./utils/rls-guard").ensureRowLevelSecurity(), 6000)
         ]);
     }
     return warmedUp;
@@ -607,6 +692,11 @@ async function startServer() {
                 .catch((e) => console.error("Order time columns:", e.message));
         }
 
+        // Keep Supabase's public REST API locked out of every table (idempotent)
+        if (databaseConnected) {
+            require("./utils/rls-guard").ensureRowLevelSecurity().catch(() => {});
+        }
+
         // One email may be both a customer and a dealer: make the database allow it (idempotent, runs in the background)
         if (databaseConnected) {
             Promise.resolve(require("./utils/account-indexes").ensureRoleScopedAccountIndexes())
@@ -619,6 +709,9 @@ async function startServer() {
 
         // Automated customer reminders (selected item, restock) - the admin sets the timing
         require("./utils/messaging-scheduler").start();
+
+        // Every minute: automatic dealer payouts + M-Pesa prompts whose callback never arrived (always-on server only)
+        require("./utils/background").start();
 
         server.on("error", (error) => {
             if (error && error.code === "EADDRINUSE") {

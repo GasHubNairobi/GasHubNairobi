@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <!-- light / dark / system theme (chosen on the Profile page): script first, stylesheet last -->
     <script src="gashub-theme.js"></script>
     <meta charset="UTF-8">
@@ -101,7 +102,6 @@
                                 <div>
                                     <p class="card-step">PAYMENT</p>
                                     <h2 id="pvTitle">Choose how to pay</h2>
-                                    <p>Use your GasHub Coins, then pay by Cash on delivery, M-Pesa or Bank.</p>
                                 </div>
                             </div>
                             <div id="pvBox"><p class="pv-note">Loading your order...</p></div>
@@ -134,11 +134,6 @@
                         Complete your order
                     </h1>
 
-                    <p>
-                        Review your order, provide your delivery
-                        details and select your preferred payment
-                        method.
-                    </p>
 
                 </div>
 
@@ -175,10 +170,6 @@
                                     Customer Information
                                 </h2>
 
-                                <p>
-                                    Enter the details we can use
-                                    to contact you about your order.
-                                </p>
 
                             </div>
 
@@ -273,10 +264,6 @@
                                     Delivery Option
                                 </h2>
 
-                                <p>
-                                    Choose how you would like to
-                                    receive your order.
-                                </p>
 
                             </div>
 
@@ -352,10 +339,6 @@
                                     Delivery Details
                                 </h2>
 
-                                <p>
-                                    We use the location you pinned. Add the house,
-                                    building or directions so the rider finds you.
-                                </p>
 
                             </div>
 
@@ -529,7 +512,6 @@
                             <strong>Pay after your dealer confirms</strong>
                             <p style="margin:6px 0 0">Place your order first. When the dealer confirms it, we send you an SMS and an email.
                             You then choose how to pay on your order page: <b>Cash on delivery</b>, <b>M-Pesa</b> or <b>Bank</b>.</p>
-                            <p style="margin:6px 0 0;font-size:12px;opacity:.8">You can also use your GasHub Coins for a discount there. Coins work on online payments (M-Pesa or Bank).</p>
                         </div>
                     </div>
 
@@ -548,10 +530,6 @@
                                     Payment Method
                                 </h2>
 
-                                <p>
-                                    Select your preferred payment
-                                    method.
-                                </p>
 
                             </div>
 
@@ -671,10 +649,6 @@
                                     Additional Information
                                 </h2>
 
-                                <p>
-                                    Add any information that may
-                                    help us process your order.
-                                </p>
 
                             </div>
 
@@ -717,10 +691,6 @@
                     </button>
 
 
-                    <p class="secure-note">
-                        Your order details will be securely
-                        submitted to GasHub for processing.
-                    </p>
 
                 </section>
 
@@ -922,7 +892,6 @@
         <div class="loc-sheet" role="dialog" aria-modal="true" aria-labelledby="locTitle">
             <button type="button" class="loc-close" id="locClose" aria-label="Close">&times;</button>
             <h2 id="locTitle">Pin your delivery location</h2>
-            <p class="loc-help">Tap the map to drop a pin, drag it to adjust, or use your current location.</p>
             <button type="button" class="pay-btn ghost" id="locCurrent">Use my current location</button>
             <div class="loc-map-box">
                 <div id="locMap"></div>
@@ -945,8 +914,8 @@
     <script src="customer-selection-tracker.js" defer></script>
 
     <script src="customer-review-popup.js" defer></script>
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="gashub-assistant.js" defer></script>
+    <script src="/gashub-app-banner.js" defer></script>
 </body>
 </html>
 

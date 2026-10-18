@@ -8,6 +8,7 @@
 const { pool } = require("../config/database-config");
 const mpesa = require("../utils/mpesa-service");
 const { markOrderPaid } = require("../utils/order-fulfilment");
+const { getPaymentMethods, getPaymentAccount } = require("../utils/gashub-settings");
 
 let ready = false;
 async function ensureTable() {
@@ -49,13 +50,17 @@ const PROMPT_LIFETIME_MS = 3 * 60 * 1000;
 const clean = (v, max) => String(v == null ? "" : v).trim().slice(0, max);
 
 /* GET /api/payments/mpesa/config : tells the checkout whether to offer the phone prompt (no secrets) */
-function getConfig(req, res) {
+async function getConfig(req, res) {
     res.set("Cache-Control", "no-store");
-    res.json({ success: true, enabled: mpesa.isConfigured(), verifyEnabled: mpesa.c2bEnabled() });
+    let on = true;
+    try { on = (await getPaymentMethods()).mpesa_prompt; } catch (e) { /* settings table missing: stay on */ }
+    res.json({ success: true, enabled: on && mpesa.isConfigured(), verifyEnabled: mpesa.c2bEnabled() });
 }
 
 /* POST /api/payments/mpesa/stk-push  { order_id, phone }   (any "amount" sent by the browser is ignored) */
 async function stkPush(req, res) {
+    let failCtx = null;      /* set once the order is known, so a prompt that could not be sent is still counted */
+    try { if (!(await getPaymentMethods()).mpesa_prompt) return res.status(503).json({ success: false, code: "mpesa_prompt_off", message: "The M-Pesa phone prompt is switched off right now. Please use another payment method." }); } catch (e) { /* settings table missing: stay on */ }
     if (!mpesa.isConfigured()) return res.status(503).json({ success: false, code: "mpesa_disabled", message: "M-Pesa phone payments are not switched on yet. Please try again shortly or choose another payment method." });
     const phone = mpesa.toMsisdn((req.body || {}).phone);
     if (!phone) return res.status(400).json({ success: false, message: "Enter a valid Safaricom number, e.g. 0712345678." });
@@ -85,6 +90,7 @@ async function stkPush(req, res) {
         const recent = (await pool.query("SELECT COUNT(*)::int AS n FROM mpesa_stk_requests WHERE order_id = $1 AND created_at > NOW() - interval '15 minutes'", [String(o.id)])).rows[0].n;
         if (recent >= 5) return res.status(429).json({ success: false, message: "Too many payment attempts for this order. Please wait 15 minutes and try again." });
 
+        failCtx = { orderId: String(o.id), customerId: String(o.customer_id), phone, amount: Math.ceil(due) };
         const sent = await mpesa.stkPush({ phone, amount: due, reference: o.order_number, description: "GasHub order" });
         await pool.query(
             `INSERT INTO mpesa_stk_requests (order_id, customer_id, phone, amount, merchant_request_id, checkout_request_id)
@@ -92,7 +98,56 @@ async function stkPush(req, res) {
         res.json({ success: true, checkoutRequestId: sent.checkoutRequestId, message: "Check your phone and enter your M-Pesa PIN." });
     } catch (e) {
         console.error("STK push error:", e && e.message);   /* never log keys or the full Safaricom reply */
+        /* a prompt that could not even be sent counts as a failed prompt (two of them unlock the backup Till) */
+        if (failCtx) await pool.query(
+            `INSERT INTO mpesa_stk_requests (order_id, customer_id, phone, amount, checkout_request_id, status, result_code, result_desc, completed_at)
+             VALUES ($1, $2, $3, $4, $5, 'failed', 'SEND', 'The prompt could not be sent', NOW())`,
+            [failCtx.orderId, failCtx.customerId, failCtx.phone, failCtx.amount, "SENDFAIL-" + require("crypto").randomBytes(10).toString("hex")]).catch(() => {});
         res.status(e && e.daraja ? 502 : 500).json({ success: false, message: "We couldn't send the prompt to that number. Check it and try again." });
+    }
+}
+
+/* GET /api/payments/mpesa/manual?order_id=...   (signed-in customer, own order only)
+   The backup way to pay: GasHub's M-Pesa Till (set in Admin > Settings > Super Admin Area). It is NOT public. It is handed out only when
+     - the backup Till switch is on and a Till is saved, AND
+     - the customer chose M-Pesa for this order, AND
+     - the phone prompt failed to reach them MANUAL_AFTER_FAILED_PROMPTS times (could not be sent, expired, or failed), or the prompt is switched off / not set up.
+   A prompt the customer cancelled on their own phone, or that was paid, does not count. */
+const MANUAL_AFTER_FAILED_PROMPTS = 2;
+async function manualOptions(req, res) {
+    res.set("Cache-Control", "no-store");
+    const no = (reason, extra) => res.json({ success: true, available: false, reason, ...(extra || {}) });
+    try {
+        await ensureTable();
+        await require("../utils/payment-flow").ensurePaymentFlowColumns();
+        const ref = clean(req.query.order_id, 60);
+        const o = (await pool.query(
+            "SELECT id, status, payment_method, payment_method_chosen, payment_status, total_amount, amount_paid FROM orders WHERE customer_id = $1 AND (order_number = $2 OR id::text = $2)",
+            [req.user.id, ref])).rows[0];
+        if (!o) return res.status(404).json({ success: false, message: "Order not found." });
+        if (o.payment_status === "paid" || ["cancelled", "rejected", "pending"].includes(String(o.status))) return no("not_payable");
+        if (o.payment_method_chosen === false || String(o.payment_method).toLowerCase() !== "mpesa") return no("not_mpesa");
+
+        const sw = await getPaymentMethods();
+        if (!sw.manual_till) return no("off");
+        const till = await getPaymentAccount();
+        if (!till.number || (till.number === mpesa.b2cShortcode() && !mpesa.allowSameShortcode())) return no("not_set");
+
+        const promptOn = sw.mpesa_prompt && mpesa.isConfigured();
+        const failed = promptOn ? (await pool.query(
+            `SELECT COUNT(*)::int AS n FROM mpesa_stk_requests
+              WHERE order_id = $1 AND (status IN ('failed', 'timeout')
+                 OR (status = 'pending' AND created_at < NOW() - interval '100 seconds'))`, [String(o.id)])).rows[0].n : 0;
+        if (promptOn && failed < MANUAL_AFTER_FAILED_PROMPTS) return no("prompt_first", { failed, needed: MANUAL_AFTER_FAILED_PROMPTS });
+
+        const due = Math.round((Number(o.total_amount) - (Number(o.amount_paid) || 0)) * 100) / 100;
+        res.json({
+            success: true, available: true, reason: promptOn ? "prompt_failed" : "no_prompt", failed, due,
+            type: till.type, number: till.number, account_number: till.account_number, account_name: till.account_name, instructions: till.instructions
+        });
+    } catch (e) {
+        console.error("Manual till error:", e && e.message);
+        res.status(500).json({ success: false, message: "We could not load the payment details. Please try again." });
     }
 }
 
@@ -121,6 +176,7 @@ async function settlePaid(checkoutRequestId, { receipt, resultDesc }) {
             "UPDATE mpesa_stk_requests SET status = 'paid', result_code = '0', result_desc = $2, mpesa_receipt = $3, points_awarded = $4, completed_at = NOW() WHERE id = $1",
             [r.id, clean(resultDesc, 200) || "Paid", receipt || null, result.pointsAwarded || 0]);
         await client.query("COMMIT");
+        if (!result.alreadyPaid) await require("../utils/push-service").orderPaid(result.order);
         return { ...r, status: "paid", mpesa_receipt: receipt || null, points_awarded: result.pointsAwarded || 0 };
     } catch (e) {
         await client.query("ROLLBACK").catch(() => {});
@@ -143,7 +199,11 @@ async function settleFailed(checkoutRequestId, code, desc) {
 /* POST /api/payments/mpesa/callback/:secret  (called by Safaricom, not by browsers). Always answers 200 quickly. */
 async function callback(req, res) {
     if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();   /* look like nothing is here */
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
+    /* a dealer's verification payment? It is finished here BEFORE answering (Netlify may stop the function right after it answers) */
+    try {
+        if (await require("./dealer-verification-controller").handleCallback(req.body)) return res.json({ ResultCode: 0, ResultDesc: "Accepted" });
+    } catch (e) { console.error("Verification callback error:", e && e.message); }
+    /* Netlify stops a function the moment it answers, so the payment is fully processed FIRST and Safaricom is answered last. */
     try {
         await ensureTable();
         const cb = req.body && req.body.Body && req.body.Body.stkCallback;
@@ -172,6 +232,8 @@ async function callback(req, res) {
         /* "pending": leave it, the status check below will settle it */
     } catch (e) {
         console.error("M-Pesa callback processing error:", e && e.message);
+    } finally {
+        if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     }
 }
 
@@ -219,10 +281,13 @@ function c2bValidation(req, res) {
 /* POST /api/payments/mpesa/c2b/confirmation/:secret : saved so the code can be checked later (also works if the customer pays before typing the code) */
 async function c2bConfirmation(req, res) {
     if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     try {
         await ensureTable();
         const b = req.body || {};
+        /* only money received on the TILL counts as a customer payment. A top-up of the Paybill (or anything else) is never recorded,
+           so nobody can use its M-Pesa code to claim an order was paid. */
+        const to = clean(b.BusinessShortCode, 20);
+        if (to && !mpesa.depositNumbers().includes(to)) { console.warn("M-Pesa C2B notice for another shortcode ignored."); return; }
         const id = clean(b.TransID, 20).toUpperCase();
         const amount = Number(b.TransAmount);
         if (!/^[A-Z0-9]{8,12}$/.test(id) || !(amount > 0)) return;
@@ -230,6 +295,7 @@ async function c2bConfirmation(req, res) {
             `INSERT INTO mpesa_c2b_payments (trans_id, amount, msisdn, bill_ref, trans_time, raw) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (trans_id) DO NOTHING`,
             [id, amount, clean(b.MSISDN, 40), clean(b.BillRefNumber, 60), clean(b.TransTime, 20), JSON.stringify(b).slice(0, 5000)]);
     } catch (e) { console.error("M-Pesa C2B confirmation error:", e && e.message); }
+    finally { if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" }); }   /* answered AFTER saving: Netlify stops a function once it answers */
 }
 
 /* POST /api/payments/mpesa/verify-code  { order_id, code }
@@ -275,9 +341,10 @@ async function verifyCode(req, res) {
             if (!t) { await client.query("ROLLBACK"); return res.json({ success: true, status: "not_found", message: "We could not find a payment with that code yet. Check the code, wait a minute and try again, or pay again." }); }
             if (t.claimed_order_id && t.claimed_order_id !== String(o.id)) { await client.query("ROLLBACK"); return res.json({ success: true, status: "already_used", message: "That code was already used for another order. Check the code or pay again." }); }
             if (Number(t.amount) + 0.001 < due) { await client.query("ROLLBACK"); return res.json({ success: true, status: "short", received: Number(t.amount), due, message: "We found KSh " + Number(t.amount).toLocaleString("en-KE") + " but this order needs KSh " + due.toLocaleString("en-KE") + ". Please pay the rest or contact GasHub." }); }
-            await markOrderPaid(client, o.id, { amount: Number(t.amount), method: "mpesa", mpesaReceipt: code, phone: t.msisdn || null, notes: "M-Pesa code checked automatically", confirmedBy: "M-Pesa" });
+            const c2bPaid = await markOrderPaid(client, o.id, { amount: Number(t.amount), method: "mpesa", mpesaReceipt: code, phone: t.msisdn || null, notes: "M-Pesa code checked automatically", confirmedBy: "M-Pesa" });
             await client.query("UPDATE mpesa_c2b_payments SET claimed_order_id = $2, claimed_at = NOW() WHERE id = $1", [t.id, String(o.id)]);
             await client.query("COMMIT");
+        if (!c2bPaid.alreadyPaid) await require("../utils/push-service").orderPaid(c2bPaid.order);
             return res.json({ success: true, status: "paid", message: "Payment received. Thank you!" });
         } catch (e) {
             await client.query("ROLLBACK").catch(() => {});
@@ -290,4 +357,23 @@ async function verifyCode(req, res) {
     }
 }
 
-module.exports = { getConfig, stkPush, callback, status, c2bValidation, c2bConfirmation, verifyCode };
+/* Safety net for Netlify (called every minute by netlify/functions/cron-minute.js): a customer may close the page before the
+   callback is processed. Any prompt still "pending" after 20 seconds is checked with Safaricom and settled (paid / failed). */
+async function reconcilePending() {
+    if (!mpesa.isConfigured()) return 0;
+    await ensureTable();
+    const rows = (await pool.query(
+        "SELECT checkout_request_id, created_at FROM mpesa_stk_requests WHERE status = 'pending' AND created_at < NOW() - interval '20 seconds' AND created_at > NOW() - interval '2 hours' ORDER BY created_at LIMIT 10")).rows;
+    let done = 0;
+    for (const r of rows) {
+        try {
+            const q = await mpesa.stkQuery(r.checkout_request_id);
+            if (q.state === "paid") { await settlePaid(r.checkout_request_id, { receipt: null, resultDesc: q.desc }); done++; }
+            else if (q.state === "failed") { await settleFailed(r.checkout_request_id, q.code, q.desc); done++; }
+            else if (Date.now() - new Date(r.created_at).getTime() > PROMPT_LIFETIME_MS) { await settleFailed(r.checkout_request_id, "1037", "The prompt expired before it was paid."); done++; }
+        } catch (e) { console.error("M-Pesa reconcile error:", e && e.message); }
+    }
+    return done;
+}
+
+module.exports = { reconcilePending, getConfig, manualOptions, stkPush, callback, status, c2bValidation, c2bConfirmation, verifyCode };

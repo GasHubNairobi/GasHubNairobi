@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <!-- light / dark / system theme (chosen on the Profile page): script first, stylesheet last -->
     <script src="gashub-theme.js"></script>
     <meta charset="UTF-8">
@@ -12,6 +13,7 @@
     <link rel="stylesheet" href="customer-cards.css">
     <link rel="stylesheet" href="gashub-theme.css">
     <script src="gashub-ban-guard.js"></script>
+    <link rel="stylesheet" href="/gashub-desktop.css">
 </head>
 <body>
     <script src="customer-nav.js" data-active="products" data-sidebar="true" data-tabs="true"></script>
@@ -42,7 +44,6 @@
         <section class="page-hero">
             <div class="hero-inner">
                 <p class="hero-eyebrow">Gas &amp; accessories</p>
-                <p class="hero-text">Compare prices, dealers and delivery time from dealers near you.</p>
                 <label class="search-box">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
                     <input type="search" id="productSearch" placeholder="Search gas, cylinders, brands..." autocomplete="off" aria-label="Search products">
@@ -54,10 +55,11 @@
         <section class="controls">
             <div class="type-chips" id="typeChips" role="tablist" aria-label="Product type">
                 <button type="button" class="chip active" data-type="all">All</button>
-                <button type="button" class="chip" data-type="gas">Gas</button>
-                <button type="button" class="chip" data-type="cylinder">Cylinders</button>
-                <button type="button" class="chip" data-type="gas-cylinder">Gas + Cylinder</button>
-                <button type="button" class="chip" data-type="accessory">Accessories</button>
+                <button type="button" class="chip" data-type="refill">Refill</button>
+                <button type="button" class="chip" data-type="cylinder">New Gas Cylinders</button>
+                <button type="button" class="chip" data-type="empty">Empty</button>
+                <button type="button" class="chip" data-type="accessory">Gas Accessories</button>
+                <button type="button" class="chip" data-type="commercial">Commercial Gas</button>
             </div>
 
             <div class="filter-row">
@@ -119,8 +121,11 @@
     <script src="customer-product-card.js"></script>
     <script src="customer-product.js"></script>
     <script src="customer-review-popup.js" defer></script>
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="gashub-assistant.js" defer></script>
     <script src="customer-pay-prompt.js" defer></script>
+    <script src="customer-notifications.js" defer></script>
+    <script src="customer-download.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
+    <script src="/gashub-app-banner.js" defer></script>
 </body>
 </html>

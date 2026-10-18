@@ -44,7 +44,7 @@ M-PESA / BANK ROUTES + CODE CHECKING: see ENV-PAYMENT-FIELDS.txt (env block to p
 
 MINIMUM COINS TO SPEND (admin) + COINS ON THE CHECKOUT PAGE
 - Admin > Settings > "GasHub Coins & Exchange Rate": new field "Coins a customer must have before they can spend them" (saved with the rate;
-  stored in the "points" setting as minRedeem, default 301). The server uses it everywhere (checkout coins, profile, /api/points/config).
+  stored in the "points" setting as minRedeem, default 30). The server uses it everywhere (checkout coins, profile, /api/points/config).
 - customer-checkout.html pay mode: coins are offered only AFTER the customer picks M-Pesa or Bank (not cash). Switching "Activate my coins" on
   applies the discount straight away; "Change amount" lets them use fewer coins.
 - The order summary shows a "GasHub Coins discount" box right under the product: a hint before activation, "- KSh X" once activated.

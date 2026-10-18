@@ -379,3 +379,6 @@ img { max-width: 100%; display: block; }
 /* delete lock message */
 .lock-note { margin-bottom: 10px; padding: 8px 10px; border-radius: 8px; background: var(--blue-soft); color: var(--blue-dark); font-size: 12px; font-weight: 600; }
 .btn.danger.outline:disabled { opacity: .45; }
+
+/* real brand logos: shown on a white disc with a thin border */
+.soc.facebook, .soc.instagram, .soc.tiktok, .soc.youtube, .soc.x { background: #fff; border: 1px solid #e2e6f0; }

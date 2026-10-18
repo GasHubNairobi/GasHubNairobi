@@ -851,3 +851,25 @@ select:focus-visible {
     font-weight: 700;
     text-decoration: none;
 }
+
+
+/* =========================================================
+   FORGOT / RESET PASSWORD PANELS
+   ========================================================= */
+[hidden] { display: none !important; }
+.field-hint { display: block; margin-top: 6px; font-size: 12px; color: var(--text-muted); min-height: 1em; }
+.panel-back { text-align: center; margin-top: 16px; font-size: 13px; }
+.panel-back a { color: var(--primary-dark); font-weight: 600; }
+.panel-back a:hover { text-decoration: underline; }
+.auth-message.info { display: block; color: #1e40af; background: #eff6ff; border: 1px solid #bfdbfe; }
+.auth-message .msg-action { display: inline-block; margin-top: 6px; font-weight: 700; text-decoration: underline; cursor: pointer; background: none; border: 0; color: inherit; font-size: inherit; padding: 0; }
+.auth-button.secondary { background: #fff; color: var(--dark); border: 1.5px solid var(--border); }
+.auth-button.secondary:disabled { opacity: .6; cursor: not-allowed; }
+.sent-icon { text-align: center; font-size: 42px; color: var(--primary); margin: 4px 0 10px; }
+.sent-text { text-align: center; color: var(--text); font-size: 14px; line-height: 1.55; margin-bottom: 12px; }
+.sent-tips { margin: 0 0 18px 20px; color: var(--text-muted); font-size: 13px; line-height: 1.7; }
+.strength { display: flex; gap: 5px; margin-top: 8px; }
+.strength span { flex: 1; height: 5px; border-radius: 4px; background: var(--border); transition: background var(--transition); }
+.strength[data-level="1"] span:nth-child(1) { background: #dc2626; }
+.strength[data-level="2"] span:nth-child(-n+2) { background: #f59e0b; }
+.strength[data-level="3"] span { background: #16a34a; }

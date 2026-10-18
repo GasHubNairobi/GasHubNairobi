@@ -405,17 +405,6 @@ const GasHubStockApp = (() => {
         if (cancelDeleteBtn) cancelDeleteBtn.addEventListener("click", closeDeleteModal);
         if (confirmDeleteBtn) confirmDeleteBtn.addEventListener("click", executeDeleteProduct);
 
-        /* Blue Badge Verification Modal Listeners */
-        const btnRequestVerification = document.getElementById("btnRequestVerification");
-        const closeVerificationModalBtn = document.getElementById("closeVerificationModalBtn");
-        const cancelVerificationBtn = document.getElementById("cancelVerificationBtn");
-        const verificationForm = document.getElementById("verificationForm");
-
-        if (btnRequestVerification) btnRequestVerification.addEventListener("click", openVerificationModal);
-        if (closeVerificationModalBtn) closeVerificationModalBtn.addEventListener("click", closeVerificationModal);
-        if (cancelVerificationBtn) cancelVerificationBtn.addEventListener("click", closeVerificationModal);
-        if (verificationForm) verificationForm.addEventListener("submit", handleVerificationSubmit);
-
         const closeQuickAdjustBtn = document.getElementById("closeQuickAdjustBtn");
         const cancelQuickAdjustBtn = document.getElementById("cancelQuickAdjustBtn");
         if (closeQuickAdjustBtn) closeQuickAdjustBtn.addEventListener("click", closeQuickAdjustModal);
@@ -1143,13 +1132,10 @@ const GasHubStockApp = (() => {
 
         const compress = window.GasHubCore && window.GasHubCore.readImageCompressed
             ? window.GasHubCore.readImageCompressed(file)
-            : new Promise((resolve) => {
-                const r = new FileReader();
-                r.onload = (ev) => resolve(ev.target.result);
-                r.readAsDataURL(file);
-            });
+            : Promise.reject(new Error("Photo tools did not load. Refresh the page and try again."));
 
-        compress.then((dataUrl) => {
+        compress.catch((err) => { showToast((err && err.message) || "Could not use that photo.", "error"); return null; }).then((dataUrl) => {
+            if (!dataUrl) return;
             const photoPreview = document.getElementById("productPhotoPreview");
             const photoPlaceholder = document.getElementById("photoPlaceholder");
             const btnRemovePhoto = document.getElementById("btnRemovePhoto");
@@ -1230,6 +1216,7 @@ const GasHubStockApp = (() => {
         const modalProductImage = document.getElementById("modalProductImage");
 
         if (skuInput) skuInput.readOnly = true;
+        if (typeInput && !typeInput._ghAccWatch) { typeInput._ghAccWatch = true; typeInput.addEventListener("change", applyAccessoryFields); }
 
         if (productId) {
             const item = state.products.find((p) => p.id === productId);
@@ -1242,7 +1229,7 @@ const GasHubStockApp = (() => {
             brandInput.value = item.brand;
             nameInput.value = item.name;
             typeInput.value = item.type;
-            sizeInput.value = item.size;
+            sizeInput.value = item.type === "accessory" ? "" : item.size;
             valveInput.value = item.valve || "20mm Clip-On";
             stockInput.value = item.stock;
             emptyInput.value = item.emptyStock || 0;
@@ -1275,6 +1262,7 @@ const GasHubStockApp = (() => {
             }
         }
 
+        applyAccessoryFields();
         backdrop.hidden = false;
         if (brandInput) brandInput.focus();
     }
@@ -1282,6 +1270,18 @@ const GasHubStockApp = (() => {
     function closeProductModal() {
         const backdrop = document.getElementById("productModalBackdrop");
         if (backdrop) backdrop.hidden = true;
+    }
+
+    /* Gas Accessories have no cylinder size or valve fitting: hide both fields and don't ask for them */
+    function applyAccessoryFields() {
+        const typeInput = document.getElementById("modalType");
+        const sizeInput = document.getElementById("modalSize");
+        const valveInput = document.getElementById("modalValve");
+        const acc = !!typeInput && typeInput.value === "accessory";
+        [sizeInput, valveInput].forEach((el) => { const g = el && el.closest(".form-group"); if (g) g.hidden = acc; });
+        if (sizeInput) { sizeInput.required = !acc; if (acc) sizeInput.value = ""; }
+        if (valveInput && acc) valveInput.value = "N/A";
+        else if (valveInput && valveInput.value === "N/A") valveInput.value = "20mm Clip-On";
     }
 
     function handleProductFormSubmit(e, keepOpen = false) {
@@ -1320,8 +1320,8 @@ const GasHubStockApp = (() => {
             brand,
             name,
             type: typeInput.value,
-            size: sizeInput.value.trim() || "13kg",
-            valve: valveInput.value,
+            size: typeInput.value === "accessory" ? "Standard Kit" : (sizeInput.value.trim() || "13kg"),
+            valve: typeInput.value === "accessory" ? "N/A" : valveInput.value,
             stock: Math.max(0, parseInt(stockInput.value, 10) || 0),
             emptyStock: Math.max(0, parseInt(emptyInput.value, 10) || 0),
             lowStockLimit: Math.max(1, parseInt(limitInput.value, 10) || 5),
@@ -1411,84 +1411,12 @@ const GasHubStockApp = (() => {
     }
 
     /* =========================================================
-       TIKTOK-STYLE BLUE BADGE VERIFICATION ENGINE
+       BLUE BADGE VERIFICATION
+       Handled by dealer-verification.js (server checked, paid with M-Pesa). These stay only because other code calls them.
        ========================================================= */
-    function checkVerificationStatus() {
-        const isVerified = localStorage.getItem("gashub_dealer_verified") === "true";
-        const badges = document.querySelectorAll(".tiktok-verified-badge");
-        const btns = document.querySelectorAll(".btn-request-verification");
-
-        badges.forEach((b) => {
-            if (isVerified) {
-                b.classList.add("verified-active");
-                b.style.display = "inline-flex";
-            } else {
-                b.classList.remove("verified-active");
-                b.style.display = "none";
-            }
-        });
-
-        btns.forEach((btn) => {
-            if (isVerified) {
-                btn.classList.add("is-verified");
-                btn.innerHTML = `<i class="fa-solid fa-circle-check fa-sm text-success"></i> <span>EPRA Verified Outlet</span>`;
-                btn.disabled = true;
-            } else {
-                btn.classList.remove("is-verified");
-                btn.innerHTML = `
-                    <svg viewBox="0 0 24 24" class="tiktok-badge-svg-sm" aria-hidden="true">
-                        <path fill="#20d5ec" d="M12 0l2.5 3.5 4.3-.7 1.4 4.1 4.1 1.4-.7 4.3 3.5 2.5-3.5 2.5.7 4.3-4.1 1.4-1.4 4.1-4.3-.7L12 24l-2.5-3.5-4.3.7-1.4-4.1-4.1-1.4.7-4.3L-1.9 9l3.5-2.5-.7-4.3 4.1-1.4 1.4-4.1 4.3.7L12 0z"/>
-                        <path fill="#fff" d="M9.8 16.2l-3.5-3.5 1.4-1.4 2.1 2.1 6.3-6.3 1.4 1.4-7.7 7.7z"/>
-                    </svg>
-                    <span id="verificationBtnText">Request Verification</span>
-                `;
-                btn.disabled = false;
-            }
-        });
-    }
-
-    function openVerificationModal() {
-        const backdrop = document.getElementById("verificationModalBackdrop");
-        if (!backdrop) return;
-        const outletInput = document.getElementById("verifyOutletName");
-        if (outletInput && !outletInput.value) {
-            outletInput.value = "";
-        }
-        backdrop.hidden = false;
-    }
-
-    function closeVerificationModal() {
-        const backdrop = document.getElementById("verificationModalBackdrop");
-        if (backdrop) backdrop.hidden = true;
-    }
-
-    function handleVerificationSubmit(e) {
-        e.preventDefault();
-        const phoneInput = document.getElementById("verifyMpesaPhone");
-        const phone = phoneInput ? phoneInput.value.trim() : "";
-        if (!phone) {
-            showToast("Please enter a valid M-Pesa phone number.", "error");
-            return;
-        }
-
-        const submitBtn = document.getElementById("submitVerificationBtn");
-        const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "";
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-sm"></i> Sending M-Pesa STK Prompt...`;
-        }
-
-        setTimeout(() => {
-            localStorage.setItem("gashub_dealer_verified", "true");
-            checkVerificationStatus();
-            closeVerificationModal();
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnHtml;
-            }
-            showToast("M-Pesa payment received! TikTok-style Blue Checkmark badge is now active on your profile.", "success");
-        }, 1200);
-    }
+    function checkVerificationStatus() { if (window.GasHubVerification) window.GasHubVerification.refresh(); }
+    function openVerificationModal() { if (window.GasHubVerification) window.GasHubVerification.open(); }
+    function closeVerificationModal() { /* the pop-up closes itself */ }
 
     /* =========================================================
        QUICK ADJUST MODAL

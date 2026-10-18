@@ -2,6 +2,7 @@ console.log("[GasHub] admin-dealer-controller v4 loaded (delete clears applicati
 const bcrypt = require("bcryptjs");
 const { pool } = require("../config/database-config");
 const { generateCode } = require("../utils/assistant");
+const { getDefaultVerificationFee } = require("../utils/gashub-settings");
 const { VERIFICATION_ACTIVE_SQL, attachDealerCommunityStats, ensureWorkingHoursColumn, attachWorkingHours } = require("./dealer-controller");
 
 async function createDealer(req, res) {
@@ -210,7 +211,8 @@ async function getCommercialSettings(req, res) {
       [req.params.id]
     );
     if (!r.rows.length) return res.status(404).json({ success: false, message: "Dealer not found." });
-    return res.json({ success: true, settings: r.rows[0] });
+    const defaultFee = await getDefaultVerificationFee().catch(() => null);
+    return res.json({ success: true, settings: r.rows[0], default_verification_fee: defaultFee });
   } catch (error) {
     console.error("Get dealer commercial settings error:", error);
     return res.status(500).json({ success: false, message: "Unable to load commercial settings. Check the backend logs." });

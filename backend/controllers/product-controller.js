@@ -1,5 +1,22 @@
 const productModel = require("../models/product-model");
-const { generateCode, normalizeStatus, formatProduct } = require("../utils/assistant");
+const { generateCode, normalizeStatus, formatProduct: formatProductRow } = require("../utils/assistant");
+/* Public pages get a smaller, faster copy of Cloudinary pictures (resized + WebP/AVIF). The dealer pages use the original link. */
+const cloudinary = require("../config/cloudinary-config");
+/* Admin-saved product photo: same rules as the dealer page. A small data URL goes to Cloudinary (when set up) and only its link is stored;
+   a Cloudinary link or a local /Images/ path is kept; anything else (huge text, links from other sites) is refused. Returns the value to store,
+   or false when it must be refused. */
+async function resolveAdminImage(value) {
+    const v = cloudinary.stripTransformation(String(value == null ? "" : value).trim());
+    if (!v) return null;
+    if (/^\/?[Ii]mages\/[A-Za-z0-9._\/-]{1,200}$/.test(v)) return v;
+    if (cloudinary.DATA_URL.test(v) && v.length <= 400000) {
+        if (!cloudinary.isConfigured()) return v;
+        try { return await cloudinary.uploadDataUrl(v, "product"); } catch (e) { console.error("Cloudinary upload failed:", e && e.message); return false; }
+    }
+    if (cloudinary.isConfigured() ? cloudinary.isCloudinaryUrl(v) : /^https:\/\/[^\s]{1,500}$/i.test(v)) return v;
+    return false;
+}
+const formatProduct = (row) => { const p = formatProductRow(row); p.image = cloudinary.optimizeUrl(p.image, 700); return p; };
 const { getDealerCommunityStats } = require("./dealer-controller");
 const { ensureLastSeenColumn, LAST_SEEN_SQL, ONLINE_SQL } = require("../utils/dealer-presence");
 
@@ -116,8 +133,7 @@ async function getProducts(req, res) {
 
         res.status(500).json({
             success: false,
-            message: "Unable to load products.",
-            detail: error.message
+            message: "Unable to load products."
         });
     }
 
@@ -206,7 +222,7 @@ async function getProductById(req, res) {
 
 async function createProduct(req, res) {
     try {
-        const {
+        let {
             name,
             product_code,
             category,
@@ -219,6 +235,8 @@ async function createProduct(req, res) {
             stock_quantity,
             featured
         } = req.body;
+        image = await resolveAdminImage(image);
+        if (image === false) return res.status(400).json({ success: false, message: "Use a PNG, JPG or WebP picture under 400 KB." });
 
         if (
             !name ||
@@ -354,7 +372,7 @@ async function createProduct(req, res) {
 
 async function updateProduct(req, res) {
         try {
-            const {
+            let {
                 name,
                 product_code,
                 category,
@@ -367,6 +385,8 @@ async function updateProduct(req, res) {
                 stock_quantity,
                 featured
             } = req.body;
+        image = await resolveAdminImage(image);
+        if (image === false) return res.status(400).json({ success: false, message: "Use a PNG, JPG or WebP picture under 400 KB." });
 
             if (
                 !name ||

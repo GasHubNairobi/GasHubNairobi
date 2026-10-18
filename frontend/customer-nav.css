@@ -46,3 +46,15 @@ html[data-theme="dark"] .gh-d-user { background: linear-gradient(135deg, #1b2750
 @media (min-width: 900px) { .gh-tabs { display: none; } body.gh-has-tabs { padding-bottom: 0 !important; } }
 @media (max-width: 899px) { body.gh-has-tabs { padding-bottom: calc(var(--gh-tab-h) + env(safe-area-inset-bottom, 0)); } }
 @media print { .gh-tabs, .gh-drawer, .gh-scrim { display: none !important; } }
+
+/* ---------- Account card at the bottom of the menu ---------- */
+.gh-d-acct { display: flex; align-items: center; gap: 12px; margin: 4px 2px 8px; padding: 12px 14px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--gh-soft), transparent 140%); border: 1px solid var(--gh-line); box-shadow: 0 6px 16px rgba(16, 35, 63, .07); }
+.gh-d-acct-av { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 16px; color: #fff;
+    background: linear-gradient(135deg, #4a78ff, var(--gh-blue-d)); box-shadow: 0 0 0 3px var(--gh-soft); }
+.gh-d-acct-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.gh-d-acct-txt small { font-size: 10px; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; color: var(--gh-muted); }
+.gh-d-acct-txt strong { font-size: 14px; color: var(--gh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh-d-acct-st { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: #1c8b52; }
+.gh-d-acct-st i { width: 8px; height: 8px; border-radius: 50%; background: #1c8b52; box-shadow: 0 0 0 3px rgba(28, 139, 82, .18); }
+.gh-d-acct-st.off { color: var(--gh-muted); } .gh-d-acct-st.off i { background: #9aa6bf; box-shadow: none; }

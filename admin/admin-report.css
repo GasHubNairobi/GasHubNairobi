@@ -1571,3 +1571,26 @@ body.modal-open {
 /* ===== Imported from admin-report.css ===== */
 /* Reports page */
 .report-toolbar,.report-filters,.filters-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}.report-grid,.charts-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.report-chart,.chart-card{min-width:0;background:#fff;border:1px solid #e5eaf2;border-radius:16px;padding:20px;box-shadow:0 8px 24px #101d3608}.report-chart canvas,.chart-card canvas{max-width:100%}.report-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}@media(max-width:800px){.report-grid,.charts-grid{grid-template-columns:1fr}.report-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* ===== print / download buttons, verify a report, report register ===== */
+.report-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.report-actions-note { font-size: 12px; color: #64748b; flex: 1 1 260px; }
+.verify-form { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 0; }
+.verify-form input { flex: 1 1 260px; min-width: 0; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font: 600 15px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .5px; text-transform: uppercase; }
+.verify-result { margin-top: 14px; padding: 14px 16px; border-radius: 12px; border: 1px solid; font-size: 14px; line-height: 1.5; }
+.verify-result.ok { background: #effaf3; border-color: #b7e4c7; color: #14532d; }
+.verify-result.bad { background: #fff1f2; border-color: #fecdd3; color: #9f1239; }
+.verify-result strong { display: block; font-size: 16px; margin-bottom: 4px; }
+.verify-result dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; margin: 8px 0 0; }
+.verify-result dt { color: #475569; }
+.verify-result dd { margin: 0; font-weight: 600; word-break: break-word; }
+.mono-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; white-space: nowrap; }
+.content-card[hidden], .verify-result[hidden] { display: none !important; }   /* the hidden attribute must win over the card's own display rule */
+
+/* spacing fixes: the filter form and the new cards sat flush against the card edge; long amounts wrapped inside the stat cards */
+#reportFilterForm { padding: 18px 24px 22px; }
+.report-actions { margin-top: 18px; }
+.verify-form { padding: 8px 24px 4px; }
+.verify-result { margin: 14px 24px 22px; }
+.report-stats .stat-value { white-space: normal; overflow-wrap: normal !important; word-break: normal !important; font-size: clamp(15px, 1.3vw, 19px); line-height: 1.2; }   /* wraps at the space after KSh, never inside the number */

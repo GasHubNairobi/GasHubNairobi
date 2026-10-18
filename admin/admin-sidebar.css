@@ -124,3 +124,29 @@ body.gh-collapsed .gh-sb-status { justify-content: center; }
     body.gh-collapsed .gh-sb-link { justify-content: flex-start; padding: 10px 12px; }
     .gh-sb-toggle { display: none; }
 }
+
+/* ---------- Account card at the bottom of the sidebar ---------- */
+.gh-sb-footer { padding: 14px 12px 16px; gap: 12px; border-top: 1px solid #ffffff14; background: linear-gradient(180deg, transparent, #0b1629 70%); }
+.gh-sb-account {
+    display: grid; gap: 12px; padding: 14px; border-radius: 16px;
+    background: linear-gradient(145deg, #1b2c4f 0%, #14233f 60%, #112038 100%);
+    border: 1px solid #ffffff1a; box-shadow: 0 10px 24px rgba(0, 0, 0, .28), inset 0 1px 0 #ffffff14;
+}
+.gh-sb-avatar {
+    position: relative; flex: 0 0 44px; width: 44px; height: 44px; font-size: 15px; letter-spacing: .5px;
+    background: linear-gradient(135deg, #5b82ff, #2f55d4); box-shadow: 0 0 0 3px #ffffff1f, 0 6px 14px rgba(47, 85, 212, .45);
+}
+.gh-sb-avatar-dot { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: #3ddc84; border: 2px solid #14233f; }
+.gh-sb-user { gap: 12px; }
+.gh-sb-user-label { color: #7f93b8; font-size: 10px; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; }
+.gh-sb-user-meta strong { font-size: 14px; line-height: 1.3; }
+.gh-sb-role {
+    align-self: flex-start; margin-top: 4px; padding: 2px 9px; border-radius: 20px;
+    background: #4267e833; color: #b7c8ff; font-size: 10.5px; font-weight: 700; letter-spacing: .3px; text-transform: capitalize;
+}
+.gh-sb-account .gh-sb-status { padding: 7px 10px; border-radius: 10px; background: #3ddc8414; color: #9ae8bd; font-size: 11.5px; font-weight: 600; }
+.gh-sb-logout { border-radius: 12px; background: #ffffff0f; }
+body.gh-collapsed .gh-sb-account { padding: 10px 6px; background: none; border-color: transparent; box-shadow: none; }
+body.gh-collapsed .gh-sb-user-label, body.gh-collapsed .gh-sb-role { display: none; }
+@media (max-width: 900px) { body.gh-collapsed .gh-sb-user-label, body.gh-collapsed .gh-sb-role { display: revert; }
+    body.gh-collapsed .gh-sb-account { padding: 14px; background: linear-gradient(145deg, #1b2c4f, #112038); border-color: #ffffff1a; } }

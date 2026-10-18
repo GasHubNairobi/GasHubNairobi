@@ -13,7 +13,7 @@
 .po-amount{font-size:18px;font-weight:800;color:#15803d;text-align:right}
 .po-pill{display:inline-block;margin-top:6px;border-radius:99px;padding:4px 10px;font-size:11px;font-weight:800}
 .po-paid{background:#dcfce7;color:#166534}.po-scheduled{background:#dbeafe;color:#1e40af}
-.po-on_hold{background:#fef3c7;color:#92400e}.po-failed{background:#fee2e2;color:#991b1b}
+.po-on_hold{background:#fef3c7;color:#92400e}.po-sending{background:#e0f2fe;color:#075985}.po-failed{background:#fef3c7;color:#92400e}
 .po-details{margin-top:10px}
 .po-details summary{cursor:pointer;font-size:12px;font-weight:700;color:#1d4ed8}
 .po-table-wrap{overflow:auto;margin-top:8px}

@@ -12,8 +12,8 @@
   NODE_VERSION = "20"
   # Netlify's secrets scan matches text, not meaning: harmless words such as "postgres" or "http://localhost:3000" in the
   # example/docs files look like values set in the dashboard. No real secrets are in the repo.
-  SECRETS_SCAN_OMIT_PATHS = ".env.example,NETLIFY-SUPABASE-DEPLOY.md,README.md,ADMIN-SECURITY-FIX.txt,backend/package-lock.json"
-  SECRETS_SCAN_OMIT_KEYS = "APP_BASE_URL,PUBLIC_URL,DB_HOST,DB_NAME,DB_PORT,PORT,NODE_ENV"
+  SECRETS_SCAN_OMIT_PATHS = ".env.example,package-lock.json,backend/package-lock.json,ADMIN-SECURITY-FIX.txt,DEALER-APPLICATION-ADMIN-INTEGRATION.txt,ENV-AUTO-PAYOUT.txt,ENV-PAYMENT-FIELDS.txt,ENV-WITHDRAWAL-ACCOUNT.txt,PAYOUT-PLANNER.md,INSTALL-CHANGES.txt,INSTALL-MESSAGING.txt,LIVE-TRACKING-NOTES.txt,LOGIN-BRANDING-FIX-NOTES.txt,NETLIFY-SUPABASE-DEPLOY.md,ORDER-CONTACT-MESSENGER-CHANGES.txt,PAY-AFTER-CONFIRMATION-NOTES.txt,PAYMENT-CONFIRMATION-NOTES.txt,PROFILE-REWARDS-CHANGES.txt,PURCHASES-AND-SERVER-CHANGES.txt,README.md,README.txt,REPORT-SECURITY.txt,VERIFICATION-PAYMENT.txt,WITHDRAWAL-CHANGES.txt,ENV-DEALER-PAYOUTS.txt,ONLINE-PAYMENT-SWITCHES-NOTES.txt,PUSH-NOTIFICATIONS-SETUP.txt,APP-LINKS-SETUP.txt"
+  SECRETS_SCAN_OMIT_KEYS = "APP_BASE_URL,MPESA_CALLBACK_BASE_URL,MPESA_B2C_INITIATOR_NAME,PUBLIC_URL,DB_HOST,DB_NAME,DB_PORT,PORT,NODE_ENV,X_REQUEST_EMAIL,SMTP_SECURE,SMTP_PORT,SMTP_HOST,SMTP_FROM,MPESA_ENV,MPESA_TRANSACTION_TYPE,MPESA_C2B_ENABLED,MPESA_CALLBACK_IP_ALLOWLIST,BANK_API_ENABLED,AT_SANDBOX,AT_USERNAME,GASHUB_WITHDRAWAL_ACCOUNT_TYPE,GASHUB_WITHDRAWAL_ACCOUNT_NAME,MPESA_B2C_COMMAND,ANDROID_PACKAGE_NAME,ANDROID_SHA256_CERT_FINGERPRINTS"
 
 [functions]
   directory = "netlify/functions"
@@ -21,7 +21,9 @@
   # Files the backend reads at run time (the admin pages are private, so they ship with the function instead of the CDN)
   included_files = [
     "admin/*.html",
+    "dealer/*.html",
     "frontend/customer-home.html",
+    "frontend/manifest.webmanifest",
     "backend/assets/email/*",
     "backend/allow-customer-and-dealer-same-email.sql"
   ]
@@ -37,6 +39,25 @@
   schedule = "0 * * * *"        # delete customer accounts after their 7-day wait
 
 # ---- routing ----
+# 0) The bare address opens the customer home page straight from the CDN (no function wake-up, no "Opening GasHub..." screen)
+[[redirects]]
+  from = "/"
+  to = "/customer-home.html"
+  status = 200
+  force = true
+
+# 0b) Android app links file + dynamic manifest come from the function (see backend/server.js)
+[[redirects]]
+  from = "/.well-known/assetlinks.json"
+  to = "/.netlify/functions/api/.well-known/assetlinks.json"
+  status = 200
+  force = true
+[[redirects]]
+  from = "/manifest.webmanifest"
+  to = "/.netlify/functions/api/manifest.webmanifest"
+  status = 200
+  force = true
+
 # 1) The API
 [[redirects]]
   from = "/api/*"
@@ -49,6 +70,13 @@
 [[redirects]]
   from = "/admin/*"
   to = "/.netlify/functions/api/admin/:splat"
+  status = 200
+
+# 2b) Private dealer pages: same idea. Only dealer-login.html / dealer-application.html are on the CDN; every other
+#     dealer .html page is served by the function after it checks the dealer's login cookie.
+[[redirects]]
+  from = "/dealer/*"
+  to = "/.netlify/functions/api/dealer/:splat"
   status = 200
 
 # 3) Anything else that is not a real file: same behaviour as server.js
@@ -65,6 +93,7 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     Permissions-Policy = "geolocation=(self), camera=(self), microphone=()"
 
 # images are kept by the phone for a week; pages, scripts and styles are re-checked each visit
@@ -84,3 +113,27 @@
   for = "/admin/images/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# phone notifications: the service worker must always be re-checked, and the install manifests need their own type
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+[[headers]]
+  for = "/*.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=3600"

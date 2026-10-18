@@ -5,8 +5,14 @@ if (!process.env.NODE_ENV) process.env.NODE_ENV = "production";
 
 exports.handler = async () => {
     try {
+        /* settle M-Pesa phone prompts whose callback was missed (customer closed the page) */
+        await require("../../backend/controllers/mpesa-controller").reconcilePending();
+    } catch (error) {
+        console.error("cron-minute (mpesa reconcile) failed:", error.message);
+    }
+    try {
         const { hasMinuteWork } = require("../../backend/controllers/withdrawal-controller");
-        if (await hasMinuteWork()) {
+        if ((await hasMinuteWork()) || (await require("../../backend/utils/dealer-payouts").hasWork()) || (await require("../../backend/controllers/payout-planner-controller").hasWork())) {
             await require("../../backend/utils/jobs").triggerJob("minute");
         }
     } catch (error) {

@@ -2,7 +2,7 @@
 const { pool } = require("../config/database-config");
 const { formatOrderStatus, formatPaymentStatus } = require("../utils/assistant");
 
-const DEFAULT_COMMISSION_RATE = 5; // same default the dealer sees on their own commission page
+const { commissionPct, dealerSale, money } = require("../utils/dealer-money");
 
 /* Columns this feature reads. Created if missing so no SQL has to be run by hand. */
 let columnsReady = false;
@@ -28,23 +28,25 @@ async function ensureColumns() {
   columnsReady = true;
 }
 
-/* Commission is charged on the goods (subtotal), not on the delivery fee. */
+/* Commission is charged on the goods the dealer sold (after the dealer's own discount), not on the delivery fee.
+   Same maths as the dealer's Payouts and Sales pages: see utils/dealer-money.js. */
 function withCommission(order) {
   const saved = order.dealer_commission_rate;
-  const rate = saved === null || saved === undefined ? DEFAULT_COMMISSION_RATE : Number(saved);
-  const subtotal = Number(order.subtotal);
-  const base = Number.isFinite(subtotal) && order.subtotal !== null
-    ? subtotal
-    : Math.max(0, Number(order.total_amount || 0) - Number(order.delivery_fee || 0));
-  const amount = Math.round(base * rate) / 100;
+  const rate = commissionPct(saved);
+  const hasSubtotal = order.subtotal !== null && order.subtotal !== undefined && Number.isFinite(Number(order.subtotal));
+  const sale = dealerSale({
+    ...order,
+    subtotal: hasSubtotal ? order.subtotal : Math.max(0, Number(order.total_amount || 0) - Number(order.delivery_fee || 0))
+  }, rate);
   return {
     ...order,
     commission_rate: rate,
     commission_is_default: saved === null || saved === undefined,
-    commission_base: base,
-    commission_amount: amount,
-    delivery_fee_charged: Number(order.delivery_fee) || 0,           /* the dealer's delivery charge: not part of the commission */
-    dealer_payout: Math.round((base - amount + (Number(order.delivery_fee) || 0)) * 100) / 100,
+    commission_base: sale.goods,
+    commission_amount: sale.commission,
+    delivery_fee_charged: sale.delivery,                              /* the dealer's delivery charge: not part of the commission */
+    dealer_gross: money(sale.goods + sale.delivery),                  /* goods + delivery, before commission */
+    dealer_payout: sale.earned,
     status_label: formatOrderStatus(order.status),
     payment_status_label: formatPaymentStatus(order.payment_status)
   };

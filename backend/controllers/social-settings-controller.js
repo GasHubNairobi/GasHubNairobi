@@ -15,7 +15,7 @@ const { pool } = require("../config/database-config");
 const { sign, verify, readCookie, cookieBase, startSession, safeNext } = require("../utils/session");
 const { clean, isEmail, normalizePhone, isPhone, publicCustomer, findConflict, insertCustomer, conflictFromError } = require("../utils/customer-accounts");
 
-const PUBLIC_URL = () => (process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/+$/, "");
+const PUBLIC_URL = () => require("../utils/site-url").siteUrl();
 const OAUTH_COOKIE = "gashub_oauth";
 const SOCIAL_COOKIE = "gashub_social";
 

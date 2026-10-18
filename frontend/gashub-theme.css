@@ -293,3 +293,10 @@
 :root[data-theme="dark"] .gh-t-txt b { color: #eef1ff; }
 :root[data-theme="dark"] .gh-t-x { background: #232c4d; color: #c9d0ea; }
 :root[data-theme="dark"] .gpts.pending { background: #1b2447; border-color: #3a4468; color: #a3acd0; }
+
+/* About page: areas that use --blue-dark as a BACKGROUND (it turns light in dark mode) stay deep blue */
+[data-theme="dark"] .ab-hero { background: linear-gradient(135deg, #0d1a4d, #1b3fa8 70%); }
+[data-theme="dark"] .story-date { background: linear-gradient(145deg, #0d1a4d, #1b3fa8); }
+[data-theme="dark"] .ab-band.dark { background: #0d1a4d; }
+[data-theme="dark"] .num-card:hover, [data-theme="dark"] .val-card:hover { border-color: #3a4a85; }
+[data-theme="dark"] .cta-btn.yellow { color: #141b34; }

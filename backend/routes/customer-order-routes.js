@@ -5,6 +5,8 @@ const selections = require("../controllers/customer-selection-controller");
 const tracking = require("../controllers/tracking-controller");
 const { requireUser } = require("../middleware/user-authentication");
 const { requireCsrf } = require("../utils/session");
+const { rateLimit } = require("../utils/rate-limit");
+const complaintLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 15 });
 
 const noStore = (req, res, next) => { res.set("Cache-Control", "no-store"); next(); };
 
@@ -17,6 +19,7 @@ my.post("/reviews", requireUser, requireCsrf, reviews.submitReview);
 my.post("/reviews/skip", requireUser, requireCsrf, reviews.skipReview);
 /* item the customer opened checkout for (feeds the admin's "selected item" reminder) */
 my.post("/selections", requireUser, requireCsrf, selections.recordSelection);
+my.get("/notifications", requireUser, require("../controllers/message-controller").customerNotifications);
 my.get("/orders", requireUser, c.listMyOrders);
 my.get("/orders/:orderId", requireUser, c.getMyOrder);
 my.get("/orders/:orderId/tracking", requireUser, tracking.getMyTracking);
@@ -25,6 +28,8 @@ my.post("/orders/:orderId/payment-method", requireUser, requireCsrf, c.choosePay
 my.post("/orders/:orderId/points", requireUser, requireCsrf, c.applyOrderPoints);
 my.post("/orders/:orderId/payment-code", requireUser, requireCsrf, c.submitPaymentCode);
 my.patch("/orders/:orderId/cancel", requireUser, requireCsrf, c.cancelMyOrder);
+/* "Report an issue" after cancelling an order: goes to the admin's complaints page with the whole order attached */
+my.post("/complaints", complaintLimit, requireUser, requireCsrf, require("../controllers/complaint-controller").createMyComplaint);
 
 /* /api/points/...  GasHub points */
 const points = express.Router();

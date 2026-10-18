@@ -1,0 +1,24 @@
+REPORTS: PRINT, DOWNLOAD PDF AND THE SECRET REPORT CODE (Admin > Reports)
+
+Print Report and Download PDF both:
+ - ask the server to work the report out again (so the paper always matches the database),
+ - give that copy a secret report code, e.g. GHR-000123-7K3M9QXB, and save it in the report register (table report_records, created
+   automatically the first time, nothing to run),
+ - put the GasHub logo, a big faint logo watermark, a diagonal GASHUB watermark, the code as small repeating microtext above and below the
+   content, and the code + fingerprint + "Page x of y" in the footer on EVERY page.
+
+The code is made with a secret key that only the server knows (stored once in the gashub_settings table under report_signing, never sent to
+the browser). Nobody can invent a valid code, and a code only verifies if the register entry is untouched.
+To check a paper or PDF: Admin > Reports > "Verify a Report", type the code. It shows who prepared it, when, the period and the main
+figures at that time. If the code is not found, or any figure on the paper is different, the copy is not genuine.
+
+What is in each report type (print / PDF contain every row, nothing is cut off; lists stop only at 5,000 rows and the report says so):
+ Overview  = orders by status, payments by method/status, every product, every customer who ordered
+ Orders    = orders by status + the full Order Register (every order)
+ Payments  = payments by method/status + the full Payment Register (every payment, with M-Pesa code)
+ Customers = every customer who ordered in the period
+ Products  = every product sold in the period
+Days are counted in Nairobi time (a day runs 00:00 to 23:59 East Africa Time).
+
+Fixes on the page itself: Product and Customer tables now show the right figures (they were showing 0 / dashes), the Payment table shows the
+method, the report type now changes what is shown, and the report loads when the page opens.

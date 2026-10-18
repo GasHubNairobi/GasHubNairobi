@@ -5,13 +5,21 @@
 const { pool } = require("../config/database-config");
 const bank = require("../utils/bank-service");
 const { markOrderPaid } = require("../utils/order-fulfilment");
+const { getPaymentMethods } = require("../utils/gashub-settings");
 
 const clean = (v, max) => String(v == null ? "" : v).trim().slice(0, max);
 
-function getConfig(req, res) {
+async function getConfig(req, res) {
     res.set("Cache-Control", "no-store");
-    const configured = bank.isConfigured();
-    res.json({ success: true, configured, verifyEnabled: bank.apiEnabled(), ...(configured ? bank.details() : {}) });
+    try {
+        const on = (await getPaymentMethods()).bank;
+        if (!on) return res.json({ success: true, enabled: false, configured: false, verifyEnabled: false });
+        const configured = await bank.isConfigured();
+        res.json({ success: true, enabled: true, configured, verifyEnabled: bank.apiEnabled(), ...(configured ? await bank.details() : {}) });
+    } catch (e) {
+        console.error("Bank config error:", e && e.message);
+        res.json({ success: true, enabled: true, configured: false, verifyEnabled: false });
+    }
 }
 
 async function verify(req, res) {

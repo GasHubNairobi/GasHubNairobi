@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1f4fd8">
@@ -10,10 +11,12 @@
     <!-- theme script first, so the page never flashes the wrong colours -->
     <script src="gashub-theme.js"></script>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"></noscript>
     <link rel="stylesheet" href="customer-profile.css">
     <link rel="stylesheet" href="gashub-theme.css">
     <script src="gashub-ban-guard.js"></script>
+    <link rel="stylesheet" href="/gashub-desktop.css">
 </head>
 <body>
     <script src="customer-nav.js" data-active="profile" data-sidebar="true" data-tabs="true"></script>
@@ -44,7 +47,7 @@
                     </div>
                     <div class="who-text">
                         <h1 id="profileName">Welcome to GasHub</h1>
-                        <p id="profileSub">Sign in to see your orders, rewards and favourites.</p>
+                        <p id="profileSub"></p>
                         <span class="since" id="memberSince" hidden></span>
                     </div>
                 </div>
@@ -65,7 +68,6 @@
                 <!-- not logged in -->
                 <div class="guest-cta" id="guestCta">
                     <a href="customer-login.html" class="btn yellow block">Sign in or log in</a>
-                    <p>New to GasHub? You can create your account on the same page.</p>
                 </div>
 
                 <!-- logged in -->
@@ -138,7 +140,6 @@
                 </button>
                 <div class="panel" id="rewardsPanel" hidden>
                     <div id="rewardsGuest" hidden>
-                        <p class="hint" style="margin-bottom:10px">Sign in to see your GasHub points.</p>
                         <a href="customer-login.html" class="btn yellow block">Sign in or log in</a>
                     </div>
                     <div id="rewardsBody" hidden>
@@ -196,7 +197,6 @@
                             <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>Auto
                         </button>
                     </div>
-                    <p class="hint" style="margin-top:6px">Auto switches between light and dark to match your phone's setting.</p>
                 </div>
             </section>
 
@@ -248,7 +248,6 @@
         <div class="sheet-card" role="dialog" aria-label="Change password">
             <button type="button" class="sheet-x" data-close aria-label="Close">×</button>
             <h2>Change password</h2>
-            <p>Enter your current password and choose a new one.</p>
             <form id="passwordForm" novalidate>
                 <div class="form-message" id="passwordMessage"></div>
                 <div class="field"><label for="currentPassword">Current password</label><input type="password" id="currentPassword" autocomplete="current-password"><span class="err" id="currentPasswordError"></span></div>
@@ -285,7 +284,6 @@
         <div class="sheet-card" role="dialog" aria-label="Edit delivery pin">
             <button type="button" class="sheet-x" data-close aria-label="Close">×</button>
             <h2>Edit delivery pin</h2>
-            <p>Use your current location, or tap the map to drop a pin. Drag the pin to adjust it. Your delivery address stays the same.</p>
             <button type="button" class="btn primary block" id="pinCurrentBtn">Use my current location</button>
             <div class="map-box"><div id="pinMap"></div><div class="map-msg" id="pinMapMsg" hidden></div></div>
             <p class="hint" id="pinStatus" style="margin-bottom:10px">No pin selected.</p>
@@ -319,13 +317,16 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <!-- MOBILE BOTTOM NAV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" defer></script>
     <script src="customer-logout.js"></script>
     <script src="customer-photo.js"></script>
     <script src="customer-profile.js"></script>
     <script src="customer-review-popup.js" defer></script>
-    <script src="/gashub-maintenance-guard.js"></script>
     <script src="gashub-assistant.js" defer></script>
     <script src="customer-pay-prompt.js" defer></script>
+    <script src="customer-notifications.js" defer></script>
+    <script src="customer-download.js" defer></script>
+    <script src="/gashub-push.js" defer></script>
+    <script src="/gashub-app-banner.js" defer></script>
 </body>
 </html>

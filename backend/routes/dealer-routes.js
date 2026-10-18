@@ -13,11 +13,25 @@ const { requireUser } = require("../middleware/user-authentication");
 
 // Canonical endpoint used by dealer pages that call /api/dealers/login.
 router.post("/login", require("../utils/rate-limit").rateLimit({ windowMs: 15 * 60 * 1000, max: 30 }), authenticationController.loginDealer);
+// Forgot / reset password (public: the dealer is signed out when they need these)
+{
+    const reset = require("../controllers/password-reset-controller");
+    const { rateLimit: rl } = require("../utils/rate-limit");
+    const forgotLimit = rl({ windowMs: 15 * 60 * 1000, max: 8 });
+    const resetLimit = rl({ windowMs: 15 * 60 * 1000, max: 20 });
+    router.post("/forgot-password", forgotLimit, reset.dealerForgot);
+    router.post("/reset-password/check", resetLimit, reset.dealerCheck);
+    router.post("/reset-password", resetLimit, reset.dealerReset);
+}
 // Ends the dealer session on the server (always succeeds, even if the token is already gone).
 router.post("/logout", async (req, res) => {
     try {
-        const token = require("../utils/assistant").getBearerToken(req);
-        if (token) await require("../middleware/dealer-authentication").dealerSessions.delete(token);
+        const { dealerSessions, DEALER_SESSION_COOKIE, dealerCookieOptions } = require("../middleware/dealer-authentication");
+        const bearer = require("../utils/assistant").getBearerToken(req);
+        if (bearer) await dealerSessions.delete(bearer);
+        const m = /(?:^|;\s*)gashub_dealer_session=([^;]+)/.exec(req.headers.cookie || "");
+        if (m) { try { await dealerSessions.delete(decodeURIComponent(m[1])); } catch (e) { /* ignore */ } }
+        res.clearCookie(DEALER_SESSION_COOKIE, dealerCookieOptions());
     } catch (e) { /* ignore: logging out must never fail */ }
     res.json({ success: true });
 });
@@ -26,6 +40,11 @@ router.get("/products/mine", requireDealer, dealerProductController.listMyProduc
 router.post("/products/sync", requireDealer, dealerProductController.syncMyProducts);
 router.put("/logo/mine", requireDealer, controller.updateMyLogo);
 router.get("/profile/mine", requireDealer, controller.getMyProfile);
+const verificationController = require("../controllers/dealer-verification-controller");
+const { rateLimit } = require("../utils/rate-limit");
+router.get("/verification/mine", requireDealer, verificationController.getMine);
+router.post("/verification/pay", rateLimit({ windowMs: 10 * 60 * 1000, max: 20 }), requireDealer, verificationController.pay);
+router.get("/verification/status", rateLimit({ windowMs: 60 * 1000, max: 60, local: true }), requireDealer, verificationController.status);
 router.get("/payouts/mine", requireDealer, require("../controllers/admin-payout-controller").getMyPayouts);
 const dealerPurchaseController = require("../controllers/dealer-purchase-controller");
 router.get("/purchases/mine", requireDealer, dealerPurchaseController.listMine);
@@ -36,6 +55,7 @@ router.put("/profile/mine", requireDealer, controller.updateMyProfile);
 router.get("/working-hours/mine", requireDealer, controller.getMyWorkingHours);
 router.put("/working-hours/mine", requireDealer, controller.updateMyWorkingHours);
 router.post("/heartbeat", requireDealer, messageController.heartbeat);
+router.get("/alerts", requireDealer, messageController.dealerAlerts);
 router.get("/messages/conversations", requireDealer, messageController.dealerConversations);
 router.get("/messages/thread", requireDealer, messageController.dealerThread);
 router.post("/messages", requireDealer, messageController.dealerSend);
@@ -45,6 +65,7 @@ router.put("/riders/mine/:id", requireDealer, dealerOrderController.updateRider)
 router.delete("/riders/mine/:id", requireDealer, dealerOrderController.removeRider);
 router.get("/reviews/mine", requireDealer, reviewController.getMyDealerReviews);
 router.get("/orders/mine", requireDealer, dealerOrderController.listOrders);
+router.get("/sales/mine", requireDealer, require("../controllers/dealer-sales-controller").getMySales);
 router.get("/orders/:orderId/route", requireDealer, dealerOrderController.getOrderRoute);
 router.patch("/orders/:orderId", requireDealer, dealerOrderController.updateOrder);
 router.post("/orders/:orderId/tracking-link", requireDealer, trackingController.createTrackingLink);

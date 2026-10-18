@@ -1,11 +1,84 @@
-.msgr-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; padding: 4px 22px 22px; align-items: end; }
-.msgr-filters label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: #475569; }
-.msgr-filters select, .msgr-filters input { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; background: #fff; color: #14233f; min-width: 0; }
+/* GasHub admin: Messengers page styling.
+   Scoped to this page's own classes (msgr-*) plus light touches on the shared cards/tables, so other admin pages are not affected. */
+:root { --msgr-navy: #0b2a6b; --msgr-blue: #1d4ed8; --msgr-sky: #e8f0ff; --msgr-gold: #f5b301; --msgr-ink: #14233f; --msgr-mute: #64748b; --msgr-line: #e3e8f2; }
+
+/* ---------- hero banner ---------- */
+.msgr-hero { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+    margin-bottom: 20px; padding: 22px 26px; border-radius: 16px; color: #fff;
+    background: linear-gradient(120deg, var(--msgr-navy) 0%, #1741a6 58%, #2563eb 100%); box-shadow: 0 10px 26px rgba(11, 42, 107, .22); }
+.msgr-hero::before { content: ""; position: absolute; right: -60px; top: -70px; width: 240px; height: 240px; border-radius: 50%; background: rgba(245, 179, 1, .18); }
+.msgr-hero::after { content: ""; position: absolute; right: 120px; bottom: -90px; width: 190px; height: 190px; border-radius: 50%; background: rgba(255, 255, 255, .07); }
+.msgr-hero > * { position: relative; z-index: 1; }
+.msgr-hero h3 { margin: 0 0 6px; font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
+.msgr-hero p { margin: 0; max-width: 560px; font-size: 13.5px; line-height: 1.55; color: rgba(255, 255, 255, .82); }
+.msgr-hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+    background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .28); backdrop-filter: blur(4px); }
+.msgr-hero-badge i { width: 9px; height: 9px; border-radius: 50%; background: var(--msgr-gold); box-shadow: 0 0 0 4px rgba(245, 179, 1, .28); }
+
+/* ---------- stat cards (shared .stat-card, tinted for this page) ---------- */
+.admin-main .stats-grid .stat-card { border-radius: 14px; border: 1px solid var(--msgr-line); border-left: 4px solid var(--msgr-blue); }
+.admin-main .stats-grid .stat-card:nth-child(2) { border-left-color: #7c3aed; }
+.admin-main .stats-grid .stat-card:nth-child(3) { border-left-color: #16a34a; }
+.admin-main .stats-grid .stat-card:nth-child(4) { border-left-color: var(--msgr-gold); }
+.admin-main .stats-grid .stat-icon { border-radius: 12px; }
+
+/* ---------- cards ---------- */
+.admin-main .content-card { margin-bottom: 20px; border-radius: 16px; border: 1px solid var(--msgr-line); box-shadow: 0 2px 10px rgba(15, 23, 42, .04); }
+.admin-main .content-card .card-header { background: linear-gradient(180deg, #fbfcff, #f5f8ff); border-bottom: 1px solid var(--msgr-line); }
+.admin-main .content-card .card-header h3 { display: flex; align-items: center; gap: 10px; color: var(--msgr-ink); }
+.admin-main .content-card .card-header h3::before { content: ""; width: 5px; height: 18px; border-radius: 4px; background: linear-gradient(var(--msgr-blue), var(--msgr-gold)); }
+
+/* ---------- filters ---------- */
+.msgr-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; padding: 20px 22px 22px; align-items: end; }
+.msgr-filters label { display: flex; flex-direction: column; gap: 7px; font-size: 11.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--msgr-mute); }
+.msgr-filters select, .msgr-filters input { padding: 11px 13px; border: 1.5px solid #d5dcea; border-radius: 11px; font-size: 14px; font-weight: 500; letter-spacing: 0; text-transform: none;
+    background: #fff; color: var(--msgr-ink); min-width: 0; transition: border-color .15s, box-shadow .15s; }
+.msgr-filters select:hover, .msgr-filters input:hover { border-color: #aebbd6; }
+.msgr-filters select:focus, .msgr-filters input:focus { outline: none; border-color: var(--msgr-blue); box-shadow: 0 0 0 4px rgba(29, 78, 216, .13); }
 .msgr-filter-actions { display: flex; gap: 8px; }
-.msgr-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #e5edf9; color: #0b2a6b; white-space: nowrap; }
+.msgr-filter-actions .btn, .admin-main .table-tools .btn { border-radius: 11px; padding: 11px 18px; font-weight: 700; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+.msgr-filter-actions .btn:hover, .admin-main .table-tools .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(29, 78, 216, .16); }
+.msgr-filter-actions .btn-primary { background: linear-gradient(135deg, var(--msgr-blue), #2563eb); border: 0; color: #fff; }
+.msgr-filter-actions .btn-secondary, .admin-main .table-tools .btn-secondary { background: #fff; border: 1.5px solid #d5dcea; color: var(--msgr-navy); }
+
+/* ---------- tables ---------- */
+.admin-main .admin-table thead th { background: #f3f6fc; color: #51607a; border-bottom: 1px solid var(--msgr-line); }
+.admin-main .admin-table tbody tr { transition: background .12s; }
+.admin-main .admin-table tbody tr:hover { background: #f5f8ff; }
+.admin-main .admin-table tbody td { border-bottom: 1px solid #eef1f7; }
+.admin-main .admin-table td a { color: var(--msgr-blue); text-decoration: none; font-weight: 600; }
+.admin-main .admin-table td a:hover { text-decoration: underline; }
+
+/* messenger avatar + name */
+.msgr-person { display: flex; align-items: center; gap: 11px; }
+.msgr-avatar { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; letter-spacing: .02em; color: #fff;
+    background: linear-gradient(135deg, var(--msgr-blue), var(--msgr-navy)); box-shadow: 0 3px 8px rgba(11, 42, 107, .22); }
+.msgr-person strong { display: block; color: var(--msgr-ink); font-size: 13.5px; }
+.msgr-sub { display: block; margin-top: 2px; font-size: 12px; color: var(--msgr-mute); font-weight: 400; }
+
+/* count chips in the summary */
+.msgr-count { display: inline-block; min-width: 30px; padding: 3px 10px; border-radius: 8px; text-align: center; font-weight: 800; background: var(--msgr-sky); color: var(--msgr-navy); }
+.msgr-count.ok { background: #dcfce7; color: #166534; }
+.msgr-count.warn { background: #fef3c7; color: #92400e; }
+.msgr-count.zero { background: #f1f5f9; color: #94a3b8; }
+.msgr-time { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--msgr-ink); white-space: nowrap; }
+.msgr-time::before { content: "◷"; color: var(--msgr-gold); font-size: 14px; }
+
+/* pills */
+.msgr-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #e5edf9; color: var(--msgr-navy); white-space: nowrap; text-transform: capitalize; }
+.msgr-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .75; }
 .msgr-pill.ok { background: #dcfce7; color: #166534; }
 .msgr-pill.warn { background: #fef3c7; color: #92400e; }
 .msgr-pill.bad { background: #fee2e2; color: #991b1b; }
-.msgr-sub { display: block; font-size: 12px; color: #64748b; font-weight: 400; }
-.admin-table td .btn-link { background: none; border: 0; color: #1d4ed8; font-weight: 700; cursor: pointer; padding: 0; }
-@media (max-width: 640px) { .msgr-filters { padding: 4px 16px 18px; } }
+.msgr-pay { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; background: #ecfdf5; color: #047857; }
+.msgr-pay.cash { background: #fff7e6; color: #b45309; }
+
+.admin-table td .btn-link { background: var(--msgr-sky); border: 0; color: var(--msgr-blue); font-weight: 700; cursor: pointer; padding: 7px 12px; border-radius: 9px; white-space: nowrap; transition: background .12s, color .12s; }
+.admin-table td .btn-link:hover { background: var(--msgr-blue); color: #fff; }
+
+@media (max-width: 640px) {
+    .msgr-hero { padding: 18px; border-radius: 14px; }
+    .msgr-filters { padding: 16px; }
+    .msgr-filter-actions { width: 100%; }
+    .msgr-filter-actions .btn { flex: 1; }
+}

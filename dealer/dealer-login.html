@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/gashub-maintenance-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -43,11 +44,14 @@
                 <div id="appliedNotice" class="auth-message" style="display:none;margin-bottom:14px" role="status">Your dealer request has been received. Check your email later for the confirmation message and your login details.</div>
 
                 <div class="auth-header">
-                    <h2>Welcome back</h2>
-                    <p>Sign in to manage your dealer account.</p>
+                    <h2 id="panelTitle">Welcome back</h2>
+                    <p id="panelSub">Sign in to manage your dealer account.</p>
                 </div>
 
+                <div id="panelMessage" class="auth-message" role="alert" aria-live="polite"></div>
 
+
+                <div id="panelSignin">
                 <form id="dealerLoginForm" class="auth-form" autocomplete="off">
 
                     <!-- Email / Phone -->
@@ -160,6 +164,61 @@
                     </button>
 
                 </form>
+                </div><!-- /panelSignin -->
+
+                <!-- ============ PANEL: FORGOT PASSWORD ============ -->
+                <div id="panelForgot" hidden>
+                    <form id="forgotForm" class="auth-form" novalidate>
+                        <div class="form-group">
+                            <label for="forgotIdentifier">Email, phone, username or dealer code</label>
+                            <div class="input-wrapper">
+                                <i class="fa-regular fa-envelope input-icon"></i>
+                                <input type="text" id="forgotIdentifier" placeholder="The one you use to sign in" autocomplete="username" enterkeyhint="send" required>
+                            </div>
+                            <small class="field-hint">We'll email a reset link to the address on your dealer account.</small>
+                        </div>
+                        <button type="submit" class="auth-button" id="forgotButton"><span class="button-text">Send reset link</span><span class="button-loader" aria-hidden="true"><i class="fa-solid fa-spinner"></i></span></button>
+                    </form>
+                    <p class="panel-back"><a href="#" data-panel="signin">&larr; Back to sign in</a></p>
+                </div>
+
+                <!-- ============ PANEL: LINK SENT ============ -->
+                <div id="panelSent" hidden>
+                    <div class="sent-icon" aria-hidden="true"><i class="fa-solid fa-envelope-circle-check"></i></div>
+                    <p class="sent-text">If we found a matching dealer account, a reset link is on its way. It works once and expires in 30 minutes.</p>
+                    <ul class="sent-tips">
+                        <li>Check your spam or junk folder.</li>
+                        <li>Make sure you used the email on your dealer account.</li>
+                    </ul>
+                    <button type="button" class="auth-button secondary" id="resendButton" disabled><span class="button-text">Send again</span></button>
+                    <p class="panel-back"><a href="#" data-panel="signin">&larr; Back to sign in</a></p>
+                </div>
+
+                <!-- ============ PANEL: NEW PASSWORD ============ -->
+                <div id="panelReset" hidden>
+                    <form id="resetForm" class="auth-form" novalidate>
+                        <div class="form-group">
+                            <label for="resetPassword">New password</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="resetPassword" placeholder="At least 8 characters" autocomplete="new-password" enterkeyhint="next" required>
+                                <button type="button" class="password-toggle" data-target="resetPassword" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
+                            </div>
+                            <div class="strength" id="strength" data-level="0"><span></span><span></span><span></span></div>
+                            <small class="field-hint" id="strengthText"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="resetConfirm">Confirm new password</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="resetConfirm" placeholder="Type it again" autocomplete="new-password" enterkeyhint="go" required>
+                                <button type="button" class="password-toggle" data-target="resetConfirm" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <button type="submit" class="auth-button" id="resetButton"><span class="button-text">Save new password</span><span class="button-loader" aria-hidden="true"><i class="fa-solid fa-spinner"></i></span></button>
+                    </form>
+                    <p class="panel-back"><a href="#" data-panel="signin">&larr; Back to sign in</a></p>
+                </div>
                 <p class="login-privacy">By signing in you agree to the GasHub <a href="/privacy-policy.html?from=dealer" target="_blank" rel="noopener">Privacy Policy</a>.</p>
                 <p class="application-review-note" style="text-align:center;margin:12px 0 0">First login? Use the one-time username and temporary password sent by GasHub. You will set your own username and password after signing in.</p>
                 <div class="auth-footer dealer-apply-note">
@@ -191,6 +250,5 @@
     <script>if(/[?&]applied=1/.test(location.search)){var n=document.getElementById("appliedNotice");if(n){n.style.display="block";n.classList.add("success");n.style.color="#17653d";n.style.background="#e8f8ef";n.style.borderRadius="10px";n.style.padding="12px 14px";}}</script>
     <script src="dealer-auth.js"></script>
 
-    <script src="/gashub-maintenance-guard.js"></script>
 </body>
 </html>

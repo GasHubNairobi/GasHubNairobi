@@ -1578,3 +1578,7 @@ body.modal-open {
 .refund-done{margin-top:14px;border-top:1px solid #e5e7eb;padding-top:12px}
 .refund-done summary{cursor:pointer;font-weight:700;color:#475569}
 #refundsTableBody small{color:#64748b}
+
+/* automatic refunds */
+.refund-state{display:inline-block;padding:6px 10px;border-radius:8px;background:#fff4df;color:#96651d;font-weight:700;font-size:12px}
+.refund-error{display:inline-block;color:#a33f3f;font-weight:600;max-width:240px;white-space:normal;line-height:1.35;margin-bottom:4px}

@@ -186,6 +186,7 @@
         writeJSON(localStorage, "gasHubCustomerProfile", { fullName: customer.fullName, phone: customer.phone, email: customer.email, address: customer.address });
         writeJSON(localStorage, "gasHubCustomerSession", { email: customer.email, method, loggedInAt: new Date().toISOString(), remember: true });
         localStorage.setItem("gasHubLoggedIn", "true");
+        try { localStorage.setItem("gasHubReturning", "1"); } catch (e) { }   /* next visit to the sign-in page says "Welcome back" */
         if (c.photo && !localStorage.getItem("gasHubProfilePhoto")) writeJSON(localStorage, "gasHubProfilePhoto", c.photo);
         localStorage.removeItem("token"); sessionStorage.removeItem("token");
     }
