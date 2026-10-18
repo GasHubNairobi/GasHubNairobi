@@ -829,7 +829,7 @@
             return;
         }
         clearTimeout(armTimer); armTimer = null;
-        var cancelMessage = "";
+        var cancelMessage = "", cancelledOnServer = false;
         b.disabled = true; b.textContent = "Cancelling...";
         try {
             var tok = await R.csrf(), hdrs = R.authHeaders(true); if (tok) hdrs["X-CSRF-Token"] = tok;
@@ -844,12 +844,67 @@
                 order.refundStatus = "pending"; order.refundAmount = Number(done.refund.amount) || order.total; order.refundPhone = String(done.refund.phone || "");
             }
             if (done && done.message) cancelMessage = done.message;
+            cancelledOnServer = !!(done && done.success);
         } catch (e) { /* offline or no API: keep the local copy in step */ }
         persistCancel();
         order.stage = -1; order.raw.status = "Cancelled";
         b.disabled = false; b.textContent = "Cancel order";
         render(); flash(cancelMessage || "Your order has been cancelled.");
+        /* the order really was cancelled: offer to report what went wrong (it goes to GasHub with the whole order attached) */
+        if (cancelledOnServer) askReportIssue();
     });
+
+    /* ---------- "Report an issue" prompt shown right after cancelling ---------- */
+    var REPORT_REASONS = ["The dealer took too long", "Delivery fee was too high", "The price was not what I expected", "I couldn't reach the dealer", "Something else"];
+    function askReportIssue() {
+        if (document.getElementById("rptIssue")) return;
+        if (!document.getElementById("rptIssueCss")) {
+            var st = document.createElement("style"); st.id = "rptIssueCss";
+            st.textContent = "#rptIssue{position:fixed;inset:0;z-index:2147482000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,18,36,.55);font-family:inherit}" +
+                "#rptIssue .rpt-card{width:100%;max-width:420px;max-height:92vh;overflow:auto;background:#fff;color:#14213d;border-radius:18px;padding:22px 20px 18px;box-shadow:0 24px 60px rgba(8,16,34,.35)}" +
+                "#rptIssue h3{margin:0 0 6px;font-size:18px}#rptIssue p{margin:0 0 12px;font-size:14px;line-height:1.5;color:#5d6b82}" +
+                "#rptIssue .rpt-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}" +
+                "#rptIssue .rpt-chip{border:1.5px solid #d6deec;background:#f3f6fb;color:#14213d;border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}" +
+                "#rptIssue .rpt-chip.on{background:#1f4fd8;border-color:#1f4fd8;color:#fff}" +
+                "#rptIssue textarea{width:100%;box-sizing:border-box;min-height:84px;resize:vertical;padding:10px 12px;border:1.5px solid #d6deec;border-radius:12px;font:inherit;font-size:14px;background:#f3f6fb;color:#14213d}" +
+                "#rptIssue .rpt-err{color:#dc2f45;font-size:13px;font-weight:600;min-height:18px;margin:6px 0 0}" +
+                "#rptIssue .rpt-act{display:flex;gap:10px;margin-top:12px}#rptIssue .rpt-act button{flex:1;min-height:46px;border-radius:12px;border:1.5px solid transparent;font:inherit;font-size:15px;font-weight:800;cursor:pointer}" +
+                "#rptIssue .rpt-skip{background:transparent;border-color:#d6deec;color:#14213d}#rptIssue .rpt-send{background:#dc2f45;color:#fff}#rptIssue .rpt-send:disabled{opacity:.6;cursor:wait}" +
+                "@media (prefers-color-scheme:dark){#rptIssue .rpt-card{background:#16213a;color:#eef3fc}#rptIssue p{color:#a7b5cc}#rptIssue .rpt-chip,#rptIssue textarea{background:#1d2a47;border-color:#2a3856;color:#eef3fc}#rptIssue .rpt-skip{border-color:#2a3856;color:#eef3fc}}";
+            document.head.appendChild(st);
+        }
+        var box = document.createElement("div"); box.id = "rptIssue"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true");
+        box.innerHTML = '<div class="rpt-card"><h3>Did something go wrong?</h3>' +
+            '<p>Your order ' + esc(order.id) + ' is cancelled. If there was a problem with the dealer, the price or the delivery fee, tell us and GasHub will look into it. We will send the order details with your report.</p>' +
+            '<div class="rpt-chips">' + REPORT_REASONS.map(function (t) { return '<button type="button" class="rpt-chip">' + esc(t) + '</button>'; }).join("") + '</div>' +
+            '<textarea id="rptText" maxlength="1500" placeholder="Tell us what happened (optional)"></textarea><div class="rpt-err" id="rptErr"></div>' +
+            '<div class="rpt-act"><button type="button" class="rpt-skip">No, thanks</button><button type="button" class="rpt-send">Report issue</button></div></div>';
+        document.body.appendChild(box);
+
+        var reason = "";
+        function close() { if (box.parentNode) box.parentNode.removeChild(box); }
+        box.querySelectorAll(".rpt-chip").forEach(function (c) {
+            c.addEventListener("click", function () {
+                var was = c.classList.contains("on");
+                box.querySelectorAll(".rpt-chip").forEach(function (x) { x.classList.remove("on"); });
+                if (!was) { c.classList.add("on"); reason = c.textContent; } else reason = "";
+            });
+        });
+        box.querySelector(".rpt-skip").addEventListener("click", close);
+        var send = box.querySelector(".rpt-send");
+        send.addEventListener("click", async function () {
+            var text = box.querySelector("#rptText").value.trim(), err = box.querySelector("#rptErr");
+            if (!reason && !text) { err.textContent = "Pick a reason or write a few words."; return; }
+            err.textContent = ""; send.disabled = true; send.textContent = "Sending...";
+            try {
+                var tok = await R.csrf(), hdrs = R.authHeaders(true); if (tok) hdrs["X-CSRF-Token"] = tok;
+                var r = await fetch("/api/my/complaints", { method: "POST", headers: hdrs, credentials: "same-origin", body: JSON.stringify({ orderId: order.id, reason: reason, message: text }) });
+                var j = null; try { j = await r.json(); } catch (x) { }
+                if (!r.ok || !j || !j.success) { err.textContent = (j && j.message) || "We couldn't send your report. Please try again."; send.disabled = false; send.textContent = "Report issue"; return; }
+                close(); flash(j.message || "Your report was sent to GasHub.");
+            } catch (e) { err.textContent = "No connection. Please try again."; send.disabled = false; send.textContent = "Report issue"; }
+        });
+    }
 
     /* ================= START ================= */
     function showError() { $("orderLoading").hidden = true; $("orderContent").hidden = true; $("orderError").hidden = false; hideLoader(); }
