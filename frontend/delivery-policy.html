@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4fd8">
+<title>Delivery Policy | GasHub</title>
+<meta name="description" content="How GasHub delivery and pickup work in Kenya: delivery areas and fees, times, what to check when your gas arrives, and what happens if a delivery fails.">
+<link rel="icon" type="image/png" href="/Images/favicon.png">
+<script src="/gashub-theme.js"></script>
+<style>
+:root{
+    --blue:#1f4fd8;--blue-dark:#0f2a7a;--blue-soft:#eaf0ff;--yellow:#ffc20e;--red:#e03131;
+    --ink:#10233f;--muted:#53637c;--line:#e3e9f2;--bg:#f4f7fb;--card:#ffffff;--head:#0f2a7a;--table-head:#eef3fc;--note:#fff8e1;--note-line:#ffe08a;
+}
+html[data-theme="dark"]{
+    --blue:#3f6df0;--blue-soft:#1b2750;--ink:#e8eef9;--muted:#a3b3cc;--line:#26354d;--bg:#0c1524;--card:#111d31;--head:#a9c1ff;--table-head:#16243d;--note:#2a2410;--note-line:#5c4a12;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--blue)}
+.topbar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0)}
+.topbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800;font-size:19px}
+.brand img{height:34px;width:auto}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--blue);font-weight:700;text-decoration:none;font-size:15px;padding:8px 12px;border-radius:999px;background:var(--blue-soft)}
+.hero{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;padding:36px 16px 44px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--blue) 0 34%,var(--red) 34% 67%,var(--yellow) 67% 100%)}
+.hero-in{max-width:1080px;margin:0 auto}
+.hero h1{margin:0 0 8px;font-size:clamp(26px,5vw,38px);line-height:1.2}
+.hero p{margin:0;max-width:640px;color:#dbe6ff}
+.updated{display:inline-block;margin-top:14px;background:rgba(255,255,255,.14);padding:5px 12px;border-radius:999px;font-size:13px;color:#fff}
+.layout{max-width:1080px;margin:0 auto;padding:22px 16px 56px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+.toc{position:sticky;top:84px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;max-height:calc(100vh - 110px);overflow:auto}
+.toc h2{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.toc ol{margin:0;padding:0;list-style:none;counter-reset:t}
+.toc li{counter-increment:t}
+.toc a{display:block;padding:6px 8px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.35}
+.toc a::before{content:counter(t) ". ";color:var(--muted)}
+.toc a:hover,.toc a.on{background:var(--blue-soft);color:var(--blue)}
+.toc-toggle{display:none}
+.doc{min-width:0}
+.glance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.glance div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;border-top:4px solid var(--blue)}
+.glance div:nth-child(2){border-top-color:var(--red)}
+.glance div:nth-child(3){border-top-color:var(--yellow)}
+.glance div:nth-child(4){border-top-color:var(--blue-dark)}
+.glance b{display:block;margin-bottom:4px;font-size:15px}
+.glance span{color:var(--muted);font-size:14px;line-height:1.5;display:block}
+section.sec{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 22px;margin-bottom:16px}
+section.sec h2{margin:0 0 10px;font-size:21px;color:var(--head);line-height:1.3}
+section.sec h3{margin:20px 0 6px;font-size:16px}
+section.sec p,section.sec li{color:var(--muted)}
+section.sec ul{padding-left:20px;margin:8px 0}
+section.sec li{margin:4px 0}
+strong{color:var(--ink)}
+.note{background:var(--note);border:1px solid var(--note-line);border-radius:12px;padding:12px 14px;margin:14px 0;color:var(--ink)}
+.note p{margin:0;color:var(--ink)}
+.tbl{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+th{background:var(--table-head);color:var(--ink);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td:first-child{color:var(--ink);font-weight:600}
+.contact-box{display:grid;gap:10px;margin-top:12px}
+.contact-box a.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;background:var(--blue);color:#fff;font-weight:700;text-decoration:none}
+.contact-box a.btn.wa{background:#1e9e55}
+.contact-box a.btn.mail{background:var(--red)}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 16px calc(30px + env(safe-area-inset-bottom,0))}
+@media(max-width:1000px){.glance{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.glance{grid-template-columns:1fr}}
+@media(max-width:860px){
+    .layout{grid-template-columns:1fr;gap:14px}
+    .toc{position:static;max-height:none}
+    .toc-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;background:none;border:0;color:var(--ink);font:700 15px system-ui;padding:2px 2px 6px;cursor:pointer}
+    .toc h2{display:none}
+    .toc ol{display:none}
+    .toc.open ol{display:block}
+    section.sec{padding:20px 16px}
+}
+@media print{.topbar,.toc,.back{display:none}.layout{display:block}.hero{background:none;color:#000;padding:0}.hero p,.updated{color:#000}section.sec{border:0;padding:0}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+    <a class="brand" href="/customer-home.html"><img src="/Images/logo.png" alt="GasHub logo"><span>GasHub</span></a>
+    <a class="back" href="customer-login.html" id="backLink">&larr; Back</a>
+</div></div>
+
+<header class="hero"><div class="hero-in">
+    <h1>Delivery Policy</h1>
+    <p>How your gas gets from the dealer to your door, and what you should do when it arrives.</p>
+    <span class="updated">Last updated: 18 October 2026</span>
+</div></header>
+
+<div class="layout">
+
+<nav class="toc" id="toc" aria-label="Contents">
+    <button type="button" class="toc-toggle" id="tocToggle" aria-expanded="false">Contents <span>&#9662;</span></button>
+    <h2>Contents</h2>
+    <ol><li><a href="#how">How delivery works</a></li><li><a href="#areas">Delivery areas and charges</a></li><li><a href="#times">Delivery times</a></li><li><a href="#address">Your address and phone</a></li><li><a href="#receive">When your gas arrives</a></li><li><a href="#missed">Missed or failed delivery</a></li><li><a href="#contactinfo">Calling the dealer and messenger</a></li><li><a href="#safety">Gas safety at home</a></li><li><a href="#problems">If something goes wrong</a></li><li><a href="#contact">Contact us</a></li></ol>
+</nav>
+
+<main class="doc">
+
+<div class="glance"><div><b>Fees shown first</b><span>You see the delivery fee before you place the order.</span></div><div><b>Pickup is free</b><span>You can collect from the dealer instead.</span></div><div><b>Check on arrival</b><span>Look at the seal, valve and fittings before accepting.</span></div><div><b>Report quickly</b><span>Tell us right away about leaks, damage or missing items.</span></div></div>
+
+<section class="sec" id="how">
+    <h2>1. How delivery works</h2>
+    <ol style="padding-left:20px;color:var(--muted)">
+        <li>You choose a product and place your order, choosing <strong>delivery</strong> or <strong>pickup</strong>.</li>
+        <li>The dealer confirms the order.</li>
+        <li>You pay (online or cash, as allowed). Online payments must be confirmed before the gas is sent out.</li>
+        <li>The dealer assigns a <strong>messenger</strong> who delivers to your pinned location. You can follow progress on your order page, and track the delivery when live tracking is available.</li>
+        <li>You check the gas, pay cash if it is a cash order, and the order is completed.</li>
+    </ol>
+</section>
+
+<section class="sec" id="areas">
+    <h2>2. Delivery areas and charges</h2>
+    <ul>
+        <li>Each dealer delivers within the area they choose. If a dealer cannot deliver to you, they may reject the order or you may choose pickup.</li>
+        <li>The <strong>delivery fee</strong> (if any) is shown before you place your order. <strong>Pickup is free</strong>.</li>
+        <li>You will not be charged any delivery fee that was not shown to you before ordering.</li>
+    </ul>
+</section>
+
+<section class="sec" id="times">
+    <h2>3. Delivery times</h2>
+    <p>Delivery times shown in the app are <strong>estimates</strong>, based on the distance between the dealer and you. Real time depends on the dealer, traffic, weather and whether you can be reached. Dealers only deliver during their working hours. Orders placed when a dealer is closed will wait for them to open, or you may choose another dealer.</p>
+</section>
+
+<section class="sec" id="address">
+    <h2>4. Your address and phone</h2>
+    <ul>
+        <li>Pin your location on the map and add clear directions or a landmark.</li>
+        <li>Keep your phone on, with network, and be ready to answer. The messenger will call when close.</li>
+        <li>Make sure you or someone you trust is there to receive the gas.</li>
+    </ul>
+</section>
+
+<section class="sec" id="receive">
+    <h2>5. When your gas arrives</h2>
+    <ul>
+        <li>The messenger should be able to show who they are. Check that the order matches what you ordered.</li>
+        <li>Check the cylinder: the seal, valve and any regulator or hose. Do not accept a damaged or leaking cylinder.</li>
+        <li>For cash orders, pay only after you have checked the gas.</li>
+        <li>Tell us right away if something is wrong. Do not use gas you think is unsafe.</li>
+    </ul>
+</section>
+
+<section class="sec" id="missed">
+    <h2>6. Missed or failed delivery</h2>
+    <p>If the messenger cannot find you, cannot reach you, or nobody can receive the gas, the dealer may cancel the delivery or try again. A dealer may charge a fair re-delivery fee if the failure was caused by wrong details, but they must tell you first. If the order was paid online and is cancelled, our <a href="refund-policy.html">Refund and Cancellation Policy</a> applies.</p>
+</section>
+
+<section class="sec" id="contactinfo">
+    <h2>7. Calling the dealer and messenger</h2>
+    <p>You can call the dealer and the messenger while your order is open, and for 2 days after it ends. After that, their numbers are hidden to protect their privacy. For later problems, use the complaint option or contact us.</p>
+</section>
+
+<section class="sec" id="safety">
+    <h2>8. Gas safety at home</h2>
+    <ul>
+        <li>Keep cylinders upright, in a ventilated place, away from heat and flames.</li>
+        <li>Never use a cylinder or hose that looks damaged. Check for leaks with soapy water, not a flame.</li>
+        <li>If you smell gas: close the valve, open windows, avoid switches and flames, move outside and call the dealer or emergency services.</li>
+    </ul>
+</section>
+
+<section class="sec" id="problems">
+    <h2>9. If something goes wrong</h2>
+    <p>Late, wrong, damaged or missing orders can be reported through the complaint option on the order or by contacting us. See the <a href="refund-policy.html">Refund and Cancellation Policy</a> for what can be done.</p>
+</section>
+
+<section class="sec" id="contact">
+    <h2>10. Contact us</h2>
+    <p>Reach us using the details below. Please give your order number (and the phone number or email on your account) so we can help quickly.</p>
+    <div class="contact-box" id="contactBox"><p style="margin:0">Loading contact details&hellip;</p></div>
+    <p style="margin-top:14px">You can also use <strong>Contact us</strong> on your GasHub profile page once you are signed in.</p><p style="margin-top:14px">Related: <a href="terms.html">Terms of Use</a> &middot; <a href="refund-policy.html">Refund and Cancellation Policy</a> &middot; <a href="delivery-policy.html">Delivery Policy</a> &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
+</section>
+
+</main>
+</div>
+
+<footer>&copy; <span id="y"></span> GasHub. All rights reserved.</footer>
+
+<script>
+(function () {
+    "use strict";
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    /* Back button: return to whichever login page sent you here */
+    var qs = new URLSearchParams(location.search), from = (qs.get("from") || "").toLowerCase();
+    var back = document.getElementById("backLink");
+    var loggedIn = false;
+    try { loggedIn = !!(localStorage.getItem("gasHubLoggedIn") || localStorage.getItem("gasHubCustomer") || localStorage.getItem("customerToken")); } catch (e) { }
+    var fallback = from === "dealer" ? "/dealer/dealer-login.html"
+        : from === "admin" ? "/admin/admin-login.html"
+        : (from === "app" || (!from && loggedIn)) ? "/customer-home.html"
+        : "/customer-login.html";
+    back.setAttribute("href", fallback);
+    back.addEventListener("click", function (e) {
+        var ref = document.referrer, sameSite = ref && ref.indexOf(location.origin) === 0;
+        if (sameSite && history.length > 1) { e.preventDefault(); history.back(); }
+    });
+
+    /* Contents: collapsible on phones, highlight the section being read */
+    var toc = document.getElementById("toc"), tg = document.getElementById("tocToggle");
+    tg.addEventListener("click", function () {
+        var open = toc.classList.toggle("open");
+        tg.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    toc.addEventListener("click", function (e) { if (e.target.closest("a")) { toc.classList.remove("open"); tg.setAttribute("aria-expanded", "false"); } });
+    var links = [].slice.call(toc.querySelectorAll("a"));
+    if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                if (en.isIntersecting) {
+                    links.forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === "#" + en.target.id); });
+                }
+            });
+        }, { rootMargin: "-20% 0px -70% 0px" });
+        [].slice.call(document.querySelectorAll("section.sec")).forEach(function (s) { io.observe(s); });
+    }
+
+    /* Contact details come from the numbers set on the admin page */
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function intl(n) { n = String(n || "").replace(/[^\d]/g, ""); if (n.indexOf("0") === 0) n = "254" + n.slice(1); return n; }
+    var box = document.getElementById("contactBox");
+    fetch("/api/settings/contact", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (c) {
+        var h = "";
+        if (c && c.phone) h += '<a class="btn" href="tel:' + esc(c.phone) + '">Call ' + esc(c.phone) + "</a>";
+        if (c && c.whatsapp) h += '<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/' + esc(intl(c.whatsapp)) + '">WhatsApp ' + esc(c.whatsapp) + "</a>";
+        if (c && c.email) h += '<a class="btn mail" href="mailto:' + esc(c.email) + '">Email ' + esc(c.email) + "</a>";
+        if (c && c.hours) h += '<p style="margin:4px 0 0">' + esc(c.hours) + "</p>";
+        box.innerHTML = h || "<p style=\"margin:0\">Contact details will appear here once GasHub adds them. In the meantime, use Contact us on your profile page.</p>";
+    }).catch(function () {
+        box.innerHTML = "<p style=\"margin:0\">Use Contact us on your GasHub profile page, or the phone and WhatsApp numbers shown on the GasHub home page.</p>";
+    });
+})();
+</script>
+</body>
+</html>

@@ -66,6 +66,8 @@ router.delete("/riders/mine/:id", requireDealer, dealerOrderController.removeRid
 router.get("/reviews/mine", requireDealer, reviewController.getMyDealerReviews);
 router.get("/orders/mine", requireDealer, dealerOrderController.listOrders);
 router.get("/sales/mine", requireDealer, require("../controllers/dealer-sales-controller").getMySales);
+/* daily accounts: the dealer closes the day (cash held, online money owed by GasHub, commission, payouts) */
+router.get("/accounts/daily", requireDealer, require("../controllers/dealer-accounts-controller").getDailyAccounts);
 router.get("/orders/:orderId/route", requireDealer, dealerOrderController.getOrderRoute);
 router.patch("/orders/:orderId", requireDealer, dealerOrderController.updateOrder);
 router.post("/orders/:orderId/tracking-link", requireDealer, trackingController.createTrackingLink);

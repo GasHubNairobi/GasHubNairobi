@@ -1015,7 +1015,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (isSending(o)) return `<span class="refund-state">Sending to M-Pesa...</span>`;
                 const failed = o.refund_payout_state === "failed" || (o.refund_payout_state === "sending" && stale(o));
                 const why = failed ? `<small class="refund-error">${escapeHtml(o.refund_payout_error || "M-Pesa did not answer. Check your M-Pesa statement before sending again.")}</small><br>` : "";
-                return `${why}<button type="button" class="primary-button" data-refund-send="${ref}" data-refund-amount="${amt}" data-refund-phone="${ph}" data-refund-name="${escapeHtml(o.customer_name || "")}">${failed ? "Refund again" : "Refund now"}</button> ${manual}`;
+                return `${why}<button type="button" class="primary-button" data-refund-send="${ref}" data-refund-amount="${amt}" data-refund-phone="${ph}" data-refund-name="${escapeHtml(o.customer_name || "")}"${(o.refund_payout_state === "failed" && o.refund_payout_uncertain) || (o.refund_payout_state === "sending" && stale(o)) ? ' data-refund-risky="1"' : ""}>${failed ? "Refund again" : "Refund now"}</button> ${manual}`;
             };
             if (pending.some(isSending)) { clearTimeout(window.__refundPoll); window.__refundPoll = setTimeout(loadRefunds, 6000); }
             const count = document.getElementById("refundCount");
@@ -1088,9 +1088,14 @@ document.addEventListener("DOMContentLoaded", () => {
             tone: "warning"
         });
         if (!ok) return;
+        let statementChecked = false;
+        if (button.dataset.refundRisky === "1") {
+            if (!(await GasHubDialog.confirm({ title: "Did you check the M-Pesa statement?", message: "M-Pesa never answered for this refund, so the money may already have reached the customer. Open your M-Pesa statement now.\n\nIf the money IS there, press Go back and use Mark as refunded with its receipt code.\nOnly if it is NOT there, confirm below.", confirmText: "I checked: it was not sent", cancelText: "Go back", tone: "danger" }))) return;
+            statementChecked = true;
+        }
         button.disabled = true;
         try {
-            const result = await GasHubAdmin.adminApiRequest(`/api/admin/payments/refunds/${encodeURIComponent(orderRef)}/send`, { method: "POST", body: {} });
+            const result = await GasHubAdmin.adminApiRequest(`/api/admin/payments/refunds/${encodeURIComponent(orderRef)}/send`, { method: "POST", body: { statement_checked: statementChecked } });
             showMessage(result.message || "Refund sent.", "success");
         } catch (error) {
             showMessage(error.message || "Could not send this refund.");

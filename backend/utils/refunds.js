@@ -29,7 +29,8 @@ async function ensureRefundColumns(db = pool) {
             ADD COLUMN IF NOT EXISTS refund_conversation_id TEXT,
             ADD COLUMN IF NOT EXISTS refund_payout_started_at TIMESTAMPTZ,
             ADD COLUMN IF NOT EXISTS refund_payout_error TEXT,
-            ADD COLUMN IF NOT EXISTS refund_payout_by TEXT`);
+            ADD COLUMN IF NOT EXISTS refund_payout_by TEXT,
+            ADD COLUMN IF NOT EXISTS refund_payout_uncertain BOOLEAN NOT NULL DEFAULT FALSE`);
     await db.query("CREATE INDEX IF NOT EXISTS idx_orders_refund_status ON orders (refund_status) WHERE refund_status IS NOT NULL");
     /* A refunded payment must stop counting as money received. That needs a 'refunded' value in the payment status lists
        (enums). Without it the "refunded" updates below were silently skipped and the payment stayed "paid" for ever, so
@@ -167,7 +168,7 @@ async function listRefunds(db = pool) {
     await ensureRefundColumns(db);
     const r = await db.query(
         `SELECT o.id, o.order_number, o.status, o.refund_status, o.refund_amount, o.refund_phone, o.refund_requested_at, o.refunded_at,
-                o.refund_mpesa_receipt, o.refund_note, o.refunded_by, o.refund_payout_state, o.refund_payout_error, o.refund_payout_started_at, o.cancellation_reason, o.payment_method, o.mpesa_receipt_number,
+                o.refund_mpesa_receipt, o.refund_note, o.refunded_by, o.refund_payout_state, o.refund_payout_uncertain, o.refund_payout_error, o.refund_payout_started_at, o.cancellation_reason, o.payment_method, o.mpesa_receipt_number,
                 u.full_name AS customer_name, u.phone AS customer_phone, d.business_name AS dealer_name
            FROM orders o
            LEFT JOIN users u ON u.id = o.customer_id
@@ -193,7 +194,7 @@ const NOT_SET_UP = "Automatic M-Pesa refund is not set up yet. Add the MPESA_B2C
 const sendingFresh = (o) => o.refund_payout_state === "sending" && o.refund_payout_started_at && (Date.now() - new Date(o.refund_payout_started_at).getTime()) < SENDING_STALE_MS;
 
 /* Claims the refund and asks Safaricom to send the money. Returns { ok, code, message, send, phone }. Never throws. */
-async function startRefundPayout(orderRef, by) {
+async function startRefundPayout(orderRef, by, opts = {}) {
     let client;
     try {
         await ensureRefundColumns();
@@ -205,6 +206,10 @@ async function startRefundPayout(orderRef, by) {
         if (!o) { await client.query("ROLLBACK"); return { ok: false, code: 404, message: "Order not found." }; }
         if (o.refund_status !== "pending") { await client.query("ROLLBACK"); return { ok: false, code: 409, message: o.refund_status === "refunded" ? "This refund was already sent." : "This order has no refund waiting." }; }
         if (sendingFresh(o)) { await client.query("ROLLBACK"); return { ok: false, code: 409, message: "This refund is already being sent. Wait for M-Pesa to answer." }; }
+        if (((o.refund_payout_state === "failed" && o.refund_payout_uncertain) || o.refund_payout_state === "sending") && !opts.statementChecked) {
+            await client.query("ROLLBACK");
+            return { ok: false, needsCheck: true, code: 409, message: "M-Pesa never answered for this refund. The money may already have left. Open your M-Pesa statement first: if the money is there, press Mark as refunded with its receipt code; only if it is NOT there, confirm that you checked." };
+        }
         if (String(o.payment_method || "").toLowerCase() === "bank") { await client.query("ROLLBACK"); return { ok: false, code: 409, message: "This order was paid by bank transfer, so it cannot be refunded to M-Pesa automatically. Send it back through the bank, then press Mark as refunded." }; }
         const phone = mpesa.toMsisdn(o.refund_phone);
         if (!phone) { await client.query("ROLLBACK"); return { ok: false, code: 400, message: "The M-Pesa number this customer paid with is not valid. Send the refund by hand, then press Mark as refunded." }; }
@@ -212,7 +217,7 @@ async function startRefundPayout(orderRef, by) {
         if (!(send >= 1)) { await client.query("ROLLBACK"); return { ok: false, code: 409, message: "The refund amount is too small to send." }; }
         const originId = crypto.randomUUID();
         await client.query(
-            `UPDATE orders SET refund_payout_state = 'sending', refund_origin_id = $2, refund_payout_started_at = NOW(), refund_payout_error = NULL,
+            `UPDATE orders SET refund_payout_state = 'sending', refund_origin_id = $2, refund_payout_started_at = NOW(), refund_payout_error = NULL, refund_payout_uncertain = FALSE,
                     refund_payout_by = $3, updated_at = NOW() WHERE id = $1`, [o.id, originId, by || "Admin"]);
         await client.query("COMMIT");
         client.release(); client = null;
@@ -222,8 +227,9 @@ async function startRefundPayout(orderRef, by) {
             await pool.query("UPDATE orders SET refund_conversation_id = $2 WHERE id = $1", [o.id, r.conversationId]);
         } catch (e) {
             console.error("Refund B2C error:", o.order_number, e && e.message);
+            require("./error-alerts").alertMoney("A refund could not be sent", "Refund for order " + o.order_number + " was not accepted by M-Pesa. Check the M-Pesa statement before sending it again.\nError: " + (e && e.message));
             const reason = e && e.daraja ? e.message : "Could not reach M-Pesa. Check your M-Pesa statement before sending again.";
-            await pool.query("UPDATE orders SET refund_payout_state = 'failed', refund_payout_error = $2 WHERE id = $1 AND refund_origin_id = $3", [o.id, String(reason).slice(0, 300), originId]);
+            await pool.query("UPDATE orders SET refund_payout_state = 'failed', refund_payout_error = $2, refund_payout_uncertain = $4 WHERE id = $1 AND refund_origin_id = $3", [o.id, String(reason).slice(0, 300), originId, !(e && e.daraja)]);
             return { ok: false, code: 502, message: "M-Pesa did not accept the refund: " + reason };
         }
         return { ok: true, send, phone, order_number: o.order_number };
@@ -279,7 +285,8 @@ async function handleB2cResult(r) {
         } finally { client.release(); }
     } else {
         const why = String(r.ResultDesc || "M-Pesa could not send the refund.").slice(0, 300);
-        await pool.query("UPDATE orders SET refund_payout_state = 'failed', refund_payout_error = $2 WHERE id = $1 AND refund_origin_id = $3 AND refund_status = 'pending'", [row.id, why, origin]);
+        await pool.query("UPDATE orders SET refund_payout_state = 'failed', refund_payout_uncertain = FALSE, refund_payout_error = $2 WHERE id = $1 AND refund_origin_id = $3 AND refund_status = 'pending'", [row.id, why, origin]);
+        require("./error-alerts").alertMoney("A refund failed at M-Pesa", "Refund for order " + (row.order_number || row.id) + " failed: " + why);
     }
     return true;
 }
@@ -287,8 +294,9 @@ async function handleB2cTimeout(r) {
     const origin = r && String(r.OriginatorConversationID || "").slice(0, 80);
     if (!origin) return false;
     await ensureRefundColumns();
-    const u = await pool.query("UPDATE orders SET refund_payout_state = 'failed', refund_payout_error = $2 WHERE refund_origin_id = $1 AND refund_payout_state = 'sending' RETURNING id",
+    const u = await pool.query("UPDATE orders SET refund_payout_state = 'failed', refund_payout_uncertain = TRUE, refund_payout_error = $2 WHERE refund_origin_id = $1 AND refund_payout_state = 'sending' RETURNING id",
         [origin, "M-Pesa did not answer in time. Check your M-Pesa statement before sending again."]);
+    if (u.rows.length) require("./error-alerts").alertMoney("A refund timed out at M-Pesa", "A refund got no answer from M-Pesa. The money may or may not have left. Check the M-Pesa statement before sending it again.");
     return u.rows.length > 0;
 }
 

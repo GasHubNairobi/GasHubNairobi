@@ -19,9 +19,12 @@ function isCashMethod(method) {
     return String(method || "").toLowerCase() === "cash";
 }
 
-/* order needs: subtotal, discount_amount, points_used, delivery_fee, payment_method (missing columns count as 0) */
+/* order needs: subtotal (or total_amount), discount_amount, points_used, delivery_fee, payment_method (missing columns count as 0) */
 function dealerSale(order, pct) {
-    const subtotal = money(order.subtotal);
+    /* an old order may have no saved subtotal: work it back from the total (total = subtotal + delivery fee - discount) */
+    const hasSubtotal = order.subtotal !== null && order.subtotal !== undefined && order.subtotal !== "" && Number.isFinite(Number(order.subtotal));
+    const subtotal = hasSubtotal ? money(order.subtotal)
+        : Math.max(0, money(Number(order.total_amount || 0) - Number(order.delivery_fee || 0) + Math.max(0, Number(order.discount_amount) || 0)));
     const usedCoins = Number(order.points_used) > 0;
     const dealerDiscount = usedCoins ? 0 : Math.min(subtotal, Math.max(0, money(order.discount_amount)));
     const goods = money(subtotal - dealerDiscount);

@@ -593,8 +593,34 @@
         catch (e) { stkOn = false; }
         return stkOn;
     }
+    var stkBusy = false;
+    /* an order can only be paid once: ignore a second tap while a prompt is being sent or is waiting for the PIN */
     async function submitStk(ev) {
         ev.preventDefault();
+        if (stkBusy) return;
+        stkBusy = true;
+        try { await runStk(ev); } finally { stkBusy = false; }
+    }
+    /* the prompt window ran out here but the money may still arrive: keep checking quietly and confirm it when it does */
+    async function watchLate(checkoutRequestId) {
+        var until = Date.now() + 10 * 60 * 1000, oid = order.id;
+        while (Date.now() < until && order && order.id === oid) {
+            await new Promise(function (res) { setTimeout(res, 6000); });
+            try {
+                var s = await fetch("/api/payments/mpesa/status?order_id=" + encodeURIComponent(oid) + "&checkout_request_id=" + encodeURIComponent(checkoutRequestId), { credentials: "same-origin", cache: "no-store" });
+                var sj = s.ok ? await s.json().catch(function () { return null; }) : null;
+                if (!sj) continue;
+                if (sj.status === "paid" || sj.status === "duplicate") {
+                    var fresh = await fetchApi(oid);
+                    if (fresh) { order = normalize(fresh); payKey = ""; render(); }
+                    flash(sj.message || "Payment received. Thank you!");
+                    return;
+                }
+                if (sj.status && sj.status !== "pending") return;
+            } catch (e) { /* keep waiting */ }
+        }
+    }
+    async function runStk(ev) {
         var btn = $("stkBtn"), msg = $("stkMsg"), phone = $("stkPhone").value.trim();
         msg.className = "msg";
         if (!/^(\+?254|0)?[17]\d{8}$/.test(phone.replace(/\s+/g, ""))) { msg.className = "msg err"; msg.textContent = "Enter a valid Safaricom number, e.g. 0712345678."; return; }
@@ -611,16 +637,17 @@
                 var s = await fetch("/api/payments/mpesa/status?order_id=" + encodeURIComponent(order.id) + "&checkout_request_id=" + encodeURIComponent(j.checkoutRequestId), { credentials: "same-origin", cache: "no-store" });
                 var sj = s.ok ? await s.json().catch(function () { return null; }) : null;
                 if (!sj) continue;
-                if (sj.status === "paid") {
+                if (sj.status === "paid" || sj.status === "duplicate") {
                     var fresh = await fetchApi(order.id);
                     if (fresh) { order = normalize(fresh); payKey = ""; render(); }
-                    flash("Payment received. Thank you!");
+                    flash(sj.message || "Payment received. Thank you!");     /* e.g. "Payment received. KSh 1,500 was paid for order GH-1007. M-Pesa code: ..." */
                     return;
                 }
                 if (sj.status && sj.status !== "pending") { msg.className = "msg err"; msg.textContent = sj.message || "The payment did not go through."; btn.disabled = false; refreshManual(); return; }
             }
-            msg.className = "msg err"; msg.textContent = "No confirmation yet. If M-Pesa took the money it will show on this order shortly.";
+            msg.className = "msg err"; msg.textContent = "No confirmation yet. If you already entered your PIN we will keep checking and confirm it here. Do not pay again until this prompt has expired.";
             btn.disabled = false; refreshManual();
+            watchLate(j.checkoutRequestId);
         } catch (e) { msg.className = "msg err"; msg.textContent = "No connection. Please try again."; btn.disabled = false; }
     }
     /* the customer picks Cash on delivery / M-Pesa / Bank (only possible after the dealer confirmed the order) */

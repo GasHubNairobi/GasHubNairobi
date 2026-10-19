@@ -42,7 +42,7 @@ function ensureSchema() {
             await pool.query("ALTER TABLE points_withdrawals ADD COLUMN IF NOT EXISTS fee_ksh NUMERIC(12,2) NOT NULL DEFAULT 0");
             await pool.query("ALTER TABLE points_withdrawals ADD COLUMN IF NOT EXISTS net_ksh NUMERIC(12,2)");
             /* automatic M-Pesa payout (B2C): where each payment is up to. payout_state is empty, sending, failed or paid */
-            for (const col of ["payout_state TEXT", "payout_origin_id TEXT", "payout_conversation_id TEXT", "payout_receipt TEXT", "payout_error TEXT",
+            for (const col of ["payout_uncertain BOOLEAN NOT NULL DEFAULT FALSE", "payout_state TEXT", "payout_origin_id TEXT", "payout_conversation_id TEXT", "payout_receipt TEXT", "payout_error TEXT",
                                "payout_amount INTEGER", "payout_started_at TIMESTAMPTZ", "payout_by TEXT"]) {
                 await pool.query("ALTER TABLE points_withdrawals ADD COLUMN IF NOT EXISTS " + col);
             }
@@ -135,7 +135,9 @@ const shapeLive = (r, rate, fees) => {
 /* the admin also sees the rate */
 const shapeAdmin = (r, rate, fees) => ({ ...shapeLive(r, rate, fees), rate_ksh: isOpen(r) && rate > 0 ? rate : Number(r.rate_ksh),
     payout_state: r.payout_state || "", payout_error: r.payout_error || "", payout_receipt: r.payout_receipt || "", payout_by: r.payout_by || "",
-    payout_stale: r.payout_state === "sending" && !sendingFresh(r) });
+    payout_stale: r.payout_state === "sending" && !sendingFresh(r),
+    /* M-Pesa gave no answer: the money may have left, so the admin must check the statement before sending again or rejecting */
+    payout_risky: isOpen(r) && ((r.payout_state === "failed" && !!r.payout_uncertain) || (r.payout_state === "sending" && !sendingFresh(r))) });
 const currentRate = async () => Number((await getPointsConfig()).pointValueKsh) || 0;
 
 /* The GasHub account the money is sent FROM when paying customers (admin only). Stored in the "withdrawal_payout" setting. */
@@ -298,7 +300,7 @@ async function getSchedule() {
 }
 
 /* Claims one request and asks Safaricom to send the money. Returns { ok, code, message, row }. Never throws. */
-async function startPayout(id, by) {
+async function startPayout(id, by, opts = {}) {
     let client;
     try {
         await ensureSchema();
@@ -309,6 +311,10 @@ async function startPayout(id, by) {
         if (!cur) { await client.query("ROLLBACK"); return { ok: false, code: 404, message: "Withdrawal not found." }; }
         if (!isOpen(cur)) { await client.query("ROLLBACK"); return { ok: false, code: 409, message: `This withdrawal is already ${cur.status}.` }; }
         if (sendingFresh(cur)) { await client.query("ROLLBACK"); return { ok: false, code: 409, message: "This payment is already being sent. Wait for M-Pesa to answer." }; }
+        if (((cur.payout_state === "failed" && cur.payout_uncertain) || cur.payout_state === "sending") && !opts.statementChecked) {
+            await client.query("ROLLBACK");
+            return { ok: false, needsCheck: true, code: 409, message: "M-Pesa never answered for this payment. The money may already have left. Open your M-Pesa statement first: if the money is there, press Mark paid with its receipt code; only if it is NOT there, confirm that you checked." };
+        }
         const rateNow = await currentRate();
         if (!(rateNow > 0)) { await client.query("ROLLBACK"); return { ok: false, code: 409, message: "The GasHub Coin rate is not set, so the amount cannot be worked out." }; }
         const amount = money(Number(cur.points) * rateNow);
@@ -321,7 +327,7 @@ async function startPayout(id, by) {
         const originId = crypto.randomUUID();
         await client.query(
             `UPDATE points_withdrawals SET payout_state = 'sending', payout_origin_id = $2, payout_started_at = NOW(), payout_error = NULL, payout_by = $3,
-                    payout_amount = $4, amount_ksh = $5, rate_ksh = $6, fee_ksh = $7, net_ksh = $8 WHERE id = $1`,
+                    payout_amount = $4, amount_ksh = $5, rate_ksh = $6, fee_ksh = $7, net_ksh = $8, payout_uncertain = FALSE WHERE id = $1`,
             [id, originId, by, send, money(amount), money(rateNow), money(fee), net]);
         await client.query("COMMIT");
         client.release(); client = null;
@@ -331,8 +337,9 @@ async function startPayout(id, by) {
             await pool.query("UPDATE points_withdrawals SET payout_conversation_id = $2 WHERE id = $1", [id, r.conversationId]);
         } catch (e) {
             console.error("B2C payout error:", cur.reference, e && e.message);
+            require("../utils/error-alerts").alertMoney("A customer withdrawal could not be sent", "Withdrawal " + cur.reference + " was not accepted by M-Pesa. Check the M-Pesa statement before sending it again.\nError: " + (e && e.message));
             const reason = e && e.daraja ? e.message : "Could not reach M-Pesa. Check your M-Pesa statement before sending again.";
-            await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2 WHERE id = $1 AND payout_origin_id = $3", [id, String(reason).slice(0, 300), originId]);
+            await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2, payout_uncertain = $4 WHERE id = $1 AND payout_origin_id = $3", [id, String(reason).slice(0, 300), originId, !(e && e.daraja)]);   /* Safaricom refused = money NOT sent; no answer = may have left */
             return { ok: false, code: 502, message: "M-Pesa did not accept the payment: " + reason };
         }
         const row = (await pool.query("SELECT * FROM points_withdrawals WHERE id = $1", [id])).rows[0];
@@ -368,7 +375,7 @@ async function settleAutoPaid(row, receipt) {
 
 /* POST /api/payments/mpesa/b2c/result/:secret  and  /timeout/:secret   (Safaricom calls these) */
 async function b2cResult(req, res) {
-    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
+    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req)) return res.status(404).end();
     try {
         await ensureSchema();
         const r = req.body && req.body.Result;
@@ -392,20 +399,22 @@ async function b2cResult(req, res) {
             await settleAutoPaid(row, receipt);
         } else {
             const why = String(r.ResultDesc || "M-Pesa could not send the money.").slice(0, 300);
-            await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2 WHERE id = $1 AND payout_origin_id = $3 AND status IN ('pending','approved')", [row.id, why, origin]);
+            await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2, payout_uncertain = FALSE WHERE id = $1 AND payout_origin_id = $3 AND status IN ('pending','approved')", [row.id, why, origin]);
+            require("../utils/error-alerts").alertMoney("A customer withdrawal failed at M-Pesa", "Withdrawal " + (row.reference || row.id) + " failed: " + why);
         }
     } catch (e) { console.error("M-Pesa payout result error:", e && e.message); }
     finally { if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" }); }   /* answered AFTER saving (Netlify stops a function once it answers) */
 }
 async function b2cTimeout(req, res) {
-    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
+    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req)) return res.status(404).end();
     try {
         await ensureSchema();
         const r = req.body && req.body.Result;
         const origin = r && String(r.OriginatorConversationID || "").slice(0, 80);
         if (!origin) return;
-        await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_error = $2 WHERE payout_origin_id = $1 AND payout_state = 'sending'",
+        const timedOut = await pool.query("UPDATE points_withdrawals SET payout_state = 'failed', payout_uncertain = TRUE, payout_error = $2 WHERE payout_origin_id = $1 AND payout_state = 'sending' RETURNING reference",
             [origin, "M-Pesa did not answer in time. Check your M-Pesa statement before sending again."]);
+        if (timedOut.rows.length) require("../utils/error-alerts").alertMoney("A customer withdrawal timed out at M-Pesa", "Withdrawal " + timedOut.rows[0].reference + " got no answer from M-Pesa. The money may or may not have left. Check the M-Pesa statement before sending again.");
         await require("../utils/dealer-payouts").handleB2cTimeout(r).catch((e) => console.error("M-Pesa dealer payout timeout error:", e && e.message));
         await require("../utils/refunds").handleB2cTimeout(r).catch((e) => console.error("M-Pesa refund timeout error:", e && e.message));
     } catch (e) { console.error("M-Pesa payout timeout error:", e && e.message); }
@@ -639,6 +648,11 @@ async function updateAdmin(req, res) {
         const cur = (await client.query("SELECT * FROM points_withdrawals WHERE id = $1 FOR UPDATE", [id])).rows[0];
         if (!cur) { await client.query("ROLLBACK"); return res.status(404).json({ success: false, message: "Withdrawal not found." }); }
         if (sendingFresh(cur)) { await client.query("ROLLBACK"); return res.status(409).json({ success: false, message: "The money is being sent to M-Pesa right now. Wait for the result before changing this request." }); }
+        /* rejecting gives the coins back: if the money may already have left (M-Pesa never answered) the customer would be paid twice */
+        if (status === "rejected" && ((cur.payout_state === "failed" && cur.payout_uncertain) || cur.payout_state === "sending") && (req.body || {}).statement_checked !== true) {
+            await client.query("ROLLBACK");
+            return res.status(409).json({ success: false, code: "check_statement", message: "M-Pesa never answered for this payment. The money may already have left. Open your M-Pesa statement first: if the money is there, press Mark paid with its receipt code; only if it is NOT there, confirm that you checked. Rejecting gives the customer their coins back." });
+        }
         const allowed = cur.status === "pending" ? ["approved", "paid", "rejected"] : cur.status === "approved" ? ["paid", "rejected"] : [];
         if (!allowed.includes(status)) { await client.query("ROLLBACK"); return res.status(409).json({ success: false, message: `This withdrawal is already ${cur.status}.` }); }
         const by = (req.admin && (req.admin.full_name || req.admin.email)) || "Admin";
@@ -675,8 +689,8 @@ async function sendNow(req, res) {
     const id = parseInt(req.params.id, 10);
     if (!id) return res.status(400).json({ success: false, message: "Invalid request." });
     const by = (req.admin && (req.admin.full_name || req.admin.email)) || "Admin";
-    const r = await startPayout(id, by);
-    if (!r.ok) return res.status(r.code || 500).json({ success: false, message: r.message });
+    const r = await startPayout(id, by, { statementChecked: (req.body || {}).statement_checked === true });
+    if (!r.ok) return res.status(r.code || 500).json({ success: false, code: r.needsCheck ? "check_statement" : undefined, message: r.message });
     res.json({ success: true, message: `Sending KSh ${r.send.toLocaleString("en-KE")} to ${r.row.phone}. It is marked Paid as soon as M-Pesa confirms (usually a few seconds).`,
         withdrawal: shapeAdmin(r.row, Number(r.row.rate_ksh), await getFees()) });
 }

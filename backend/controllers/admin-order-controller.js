@@ -33,11 +33,7 @@ async function ensureColumns() {
 function withCommission(order) {
   const saved = order.dealer_commission_rate;
   const rate = commissionPct(saved);
-  const hasSubtotal = order.subtotal !== null && order.subtotal !== undefined && Number.isFinite(Number(order.subtotal));
-  const sale = dealerSale({
-    ...order,
-    subtotal: hasSubtotal ? order.subtotal : Math.max(0, Number(order.total_amount || 0) - Number(order.delivery_fee || 0))
-  }, rate);
+  const sale = dealerSale(order, rate);      /* an old order with no saved subtotal is handled inside dealerSale */
   return {
     ...order,
     commission_rate: rate,

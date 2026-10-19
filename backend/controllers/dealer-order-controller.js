@@ -309,6 +309,14 @@ async function updateOrder(req, res) {
         if (b.discount_amount != null && b.discount_amount !== "") {
             if (o.payment_status === "paid") { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "A discount can't be changed after the order is paid." }); }
             const disc = Math.max(0, Number(b.discount_amount) || 0);
+            /* the amount the customer is paying must not move under them: a code waiting for GasHub, or a phone prompt still open, was for the old total */
+            if (disc !== (Number(o.discount_amount) || 0)) {
+                const pendingPay = await client.query("SELECT 1 FROM payments WHERE order_id = $1 AND status::text = 'pending' LIMIT 1", [o.id]);
+                if (pendingPay.rows.length) { await client.query("ROLLBACK"); return res.status(409).json({ success: false, message: "The customer has already sent a payment that GasHub is confirming, so the discount can't be changed now." }); }
+                let livePrompt = false;
+                try { livePrompt = (await pool.query("SELECT 1 FROM mpesa_stk_requests WHERE order_id = $1 AND status = 'pending' AND created_at > NOW() - interval '4 minutes' LIMIT 1", [String(o.id)])).rows.length > 0; } catch (e) { /* no prompt table yet */ }
+                if (livePrompt) { await client.query("ROLLBACK"); return res.status(409).json({ success: false, message: "The customer has an M-Pesa prompt open right now, so the discount can't be changed. Try again in a few minutes." }); }
+            }
             /* the customer's GasHub Coins discount is stored in the same column and is paid for by GasHub: a dealer discount would wipe it out
                (coins spent, no discount) and the commission would be worked out wrongly */
             if (Number(o.points_used) > 0 && disc !== Number(o.discount_amount)) { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "The customer used GasHub Coins on this order, so a dealer discount can't be added." }); }

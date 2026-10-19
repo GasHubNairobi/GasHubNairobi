@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Money Check | GasHub Admin</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="stylesheet" href="admin-complaints.css">
+<style>
+/* Daily Money Check - GasHub look: navy + flame orange */
+.rc-hero{position:relative;display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:space-between;padding:22px 26px;margin-bottom:18px;border-radius:18px;color:#fff;overflow:hidden;
+  background:linear-gradient(120deg,#0b2160 0%,#12388f 55%,#1d4ed8 100%);box-shadow:0 10px 28px rgba(14,42,107,.22)}
+.rc-hero::after{content:"";position:absolute;right:-60px;top:-70px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(255,122,26,.55),rgba(255,122,26,0) 70%)}
+.rc-hero-brand{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+.rc-logo{width:84px;height:62px;object-fit:contain;background:#fff;border-radius:12px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.rc-hero h1{margin:0;font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.01em}
+.rc-hero p{margin:5px 0 0;font-size:14px;opacity:.85;max-width:520px}
+.rc-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:relative;z-index:1}
+.rc-bar input[type=date]{padding:10px 12px;border:0;border-radius:10px;font:inherit;font-weight:600;color:#0f172a;background:#fff}
+.rc-btn{padding:10px 18px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;font-weight:700;cursor:pointer;transition:.15s}
+.rc-btn:hover{background:rgba(255,255,255,.22)}
+.rc-btn.primary{background:#ff7a1a;border-color:#ff7a1a;color:#fff;box-shadow:0 4px 12px rgba(255,122,26,.4)}
+.rc-btn.primary:hover{background:#f06a0a}.rc-btn:disabled{opacity:.6;cursor:wait}
+.rc-banner{display:flex;align-items:center;gap:12px;padding:15px 18px;border-radius:14px;font-weight:700;margin-bottom:18px;border:1px solid transparent}
+.rc-banner::before{content:"";flex:0 0 12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 0 5px color-mix(in srgb,currentColor 18%,transparent)}
+.rc-banner.ok{background:#ecfdf5;color:#15803d;border-color:#bbf7d0}
+.rc-banner.bad{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+.rc-banner.watch{background:#fffbeb;color:#b45309;border-color:#fde68a}
+.rc-banner span{color:#0f172a;font-weight:600}
+.rc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:18px}
+.rc-stat{position:relative;background:#fff;border:1px solid #e8ebf0;border-radius:16px;padding:18px 18px 16px 22px;box-shadow:0 2px 10px rgba(15,23,42,.04);overflow:hidden}
+.rc-stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c,#1d4ed8)}
+.rc-stat small{display:block;color:#64748b;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.rc-stat strong{display:block;margin-top:8px;font-size:27px;font-weight:800;color:#0f172a;line-height:1.1}
+.rc-stat strong i{font-style:normal;font-size:14px;color:#94a3b8;font-weight:700;margin-right:4px}
+.rc-stat.in{--c:#16a34a}.rc-stat.dl{--c:#1d4ed8}.rc-stat.wd{--c:#7c3aed}.rc-stat.rf{--c:#ff7a1a}
+.rc-panel{background:#fff;border:1px solid #e8ebf0;border-radius:16px;padding:20px 22px;margin-bottom:18px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+.rc-panel h3{margin:0 0 10px;font-size:16px;color:#0f172a}
+.rc-method{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed #e2e8f0}
+.rc-method:last-of-type{border-bottom:0}
+.rc-method strong{color:#0e2a6b}
+.rc-section{margin:24px 2px 10px;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#64748b}
+.rc-issue{background:#fff;border:1px solid #e8ebf0;border-left:5px solid #ef4444;border-radius:14px;padding:16px 20px;margin-bottom:14px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+.rc-issue.watch{border-left-color:#f59e0b}
+.rc-issue h3{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0;font-size:16px;color:#0f172a}
+.rc-issue .admin-table-wrapper{margin-top:10px;border:1px solid #eef2f7;border-radius:10px;overflow:auto}
+.rc-oks{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px}
+.rc-ok{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e8ebf0;border-radius:12px;padding:12px 14px;font-weight:600;font-size:14px;color:#334155}
+.rc-ok svg{flex:0 0 22px}
+.rc-ok.off{background:#f8fafc;color:#64748b}
+.rc-tag{font-size:11px;font-weight:800;letter-spacing:.06em;padding:3px 10px;border-radius:999px;text-transform:uppercase;white-space:nowrap}
+.rc-tag.high{background:#fee2e2;color:#991b1b}.rc-tag.watch{background:#fef3c7;color:#92400e}.rc-tag.off{background:#e2e8f0;color:#475569}
+.rc-help{margin:8px 0 0;color:#475569;font-size:14px;line-height:1.5}
+.rc-note{color:#64748b;font-size:13px;margin-top:10px;line-height:1.5}
+.rc-letterhead{display:none}
+@media (max-width:640px){.rc-hero{padding:18px}.rc-hero h1{font-size:20px}.rc-logo{width:64px;height:48px}}
+@page{margin:14mm}
+@media print{
+  .rc-bar,.gh-sidebar,.mobile-menu-button,.admin-topbar{display:none!important}
+  .admin-main{margin:0!important}.admin-main>.admin-content{padding:0!important}
+  .rc-hero{background:none!important;color:#0f172a;box-shadow:none;padding:0 0 10px;border-bottom:3px solid #ff7a1a;border-radius:0}.rc-hero::after{display:none}
+  .rc-hero p{color:#475569}.rc-stat,.rc-panel,.rc-issue,.rc-ok{box-shadow:none;break-inside:avoid}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+<link rel="stylesheet" href="admin-shared.css">
+<link rel="stylesheet" href="admin-sidebar.css">
+    <script src="gashub-dialog.js"></script>
+</head>
+<body>
+    <aside class="gh-sidebar" id="ghSidebar" aria-label="Admin sidebar"></aside>
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">&#9776;</button>
+                <div><h2>Daily Money Check</h2></div>
+            </div>
+            <div class="admin-user-area">
+                <div class="admin-user-info"><strong id="adminUserName">Administrator</strong><span id="adminUserRole">Admin</span></div>
+            </div>
+        </header>
+        <section class="admin-content">
+            <div class="admin-message" id="rcMessage" role="alert"></div>
+            <div class="rc-hero">
+                <div class="rc-hero-brand">
+                    <img class="rc-logo" src="images/logo.png" alt="GasHub">
+                    <div>
+                        <h1>Daily Money Check</h1>
+                        <p id="rcDayLabel">Everything that came in and went out, and anything that does not add up.</p>
+                    </div>
+                </div>
+                <div class="rc-bar">
+                    <input type="date" id="rcDate" aria-label="Day">
+                    <button type="button" class="rc-btn primary" id="rcRefresh">Check now</button>
+                    <button type="button" class="rc-btn" id="rcPrint">Print / Save PDF</button>
+                </div>
+            </div>
+            <div id="rcBanner" class="rc-banner watch">Checking the money...</div>
+
+            <div class="rc-stats">
+                <div class="rc-stat in"><small>Received online</small><strong><i>KSh</i><span id="rcReceived">0</span></strong></div>
+                <div class="rc-stat dl"><small>Paid to dealers</small><strong><i>KSh</i><span id="rcDealers">0</span></strong></div>
+                <div class="rc-stat wd"><small>Customer withdrawals</small><strong><i>KSh</i><span id="rcWithdrawals">0</span></strong></div>
+                <div class="rc-stat rf"><small>Refunds sent</small><strong><i>KSh</i><span id="rcRefunds">0</span></strong></div>
+            </div>
+
+            <div class="rc-panel">
+                <h3>The day in numbers</h3>
+                <div id="rcMethods"></div>
+                <p class="rc-note" id="rcNet"></p>
+            </div>
+
+            <div id="rcIssues"></div>
+            <p class="rc-note" id="rcChecked"></p>
+        </section>
+    </main>
+    <script src="admin-sidebar.js"></script>
+<script src="admin-main.js"></script>
+    <script src="admin-reconciliation.js"></script>
+</body>
+</html>

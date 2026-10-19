@@ -46,9 +46,13 @@ function callbackUrl() {
 }
 
 /* constant-time comparison of the secret in the callback address */
+/* MPESA_CALLBACK_SECRET_PREVIOUS (optional) is also accepted, so the secret can be changed without losing payments that are already on their way. */
 function secretMatches(candidate) {
-    const a = Buffer.from(String(candidate || "")), b = Buffer.from(env("MPESA_CALLBACK_SECRET"));
-    return a.length === b.length && b.length > 0 && crypto.timingSafeEqual(a, b);
+    const a = Buffer.from(String(candidate || ""));
+    return [env("MPESA_CALLBACK_SECRET"), env("MPESA_CALLBACK_SECRET_PREVIOUS")].some((x) => {
+        const b = Buffer.from(x);
+        return b.length >= 24 && a.length === b.length && crypto.timingSafeEqual(a, b);
+    });
 }
 
 /* 07XXXXXXXX / 01XXXXXXXX / +2547XXXXXXXX / 2547XXXXXXXX  ->  2547XXXXXXXX (or null) */
@@ -176,13 +180,31 @@ async function b2cPay({ phone, amount, originId, remarks, occasion }) {
     return { conversationId: r.json.ConversationID || "", originId: r.json.OriginatorConversationID || originId };
 }
 
-/* Safaricom's published callback IPs. Only used when MPESA_CALLBACK_IP_ALLOWLIST=true; override with MPESA_ALLOWED_IPS (comma separated). */
+/* Safaricom's published callback IPs.
+   MPESA_CALLBACK_IP_ALLOWLIST=false  -> off (default)
+   MPESA_CALLBACK_IP_ALLOWLIST=log    -> TEST MODE: nothing is rejected, but every callback writes "M-Pesa callback from IP x.x.x.x (on/NOT on the list)"
+                                         to the Netlify function log. Make one real payment, check the IP shown is on the list, then switch to true.
+   MPESA_CALLBACK_IP_ALLOWLIST=true   -> callbacks from any other IP are rejected
+   Override the list with MPESA_ALLOWED_IPS (comma separated).
+   On Netlify the app sits behind a proxy, so the caller's real address is read from Netlify's own x-nf-client-connection-ip header
+   (Netlify sets it itself; a visitor cannot forge it). Anywhere else, req.ip is used. */
 const DEFAULT_IPS = ["196.201.214.200", "196.201.214.206", "196.201.213.114", "196.201.214.207", "196.201.214.208", "196.201.213.44",
     "196.201.212.127", "196.201.212.138", "196.201.212.129", "196.201.212.136", "196.201.212.74", "196.201.212.69"];
-function ipAllowed(ip) {
-    if (env("MPESA_CALLBACK_IP_ALLOWLIST").toLowerCase() !== "true") return true;
-    const list = env("MPESA_ALLOWED_IPS") ? env("MPESA_ALLOWED_IPS").split(",").map((s) => s.trim()) : DEFAULT_IPS;
-    return list.includes(String(ip || "").replace(/^::ffff:/, ""));
+function callerIp(reqOrIp) {
+    if (reqOrIp && typeof reqOrIp === "object") {
+        const nf = process.env.NETLIFY || process.env.GASHUB_SERVERLESS ? String((reqOrIp.headers || {})["x-nf-client-connection-ip"] || "").trim() : "";
+        return (nf || String(reqOrIp.ip || "")).replace(/^::ffff:/, "");
+    }
+    return String(reqOrIp || "").replace(/^::ffff:/, "");
+}
+function ipAllowed(reqOrIp) {
+    const mode = env("MPESA_CALLBACK_IP_ALLOWLIST").toLowerCase();
+    if (mode !== "true" && mode !== "log") return true;
+    const list = env("MPESA_ALLOWED_IPS") ? env("MPESA_ALLOWED_IPS").split(",").map((x) => x.trim()) : DEFAULT_IPS;
+    const ip = callerIp(reqOrIp), ok = list.includes(ip);
+    if (mode === "log") { console.warn("M-Pesa callback from IP " + (ip || "unknown") + " (" + (ok ? "on" : "NOT on") + " the allowed list); test mode, nothing rejected."); return true; }
+    if (!ok) console.warn("M-Pesa callback rejected: IP " + (ip || "unknown") + " is not on the allowed list.");
+    return ok;
 }
 
 module.exports = { allowSameShortcode, routeProblems, depositNumbers, b2cShortcode, b2cConfigured, b2cPay, c2bEnabled, registerC2bUrls, isConfigured, stkPush, stkQuery, toMsisdn, secretMatches, ipAllowed, callbackUrl };

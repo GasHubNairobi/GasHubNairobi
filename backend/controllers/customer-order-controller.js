@@ -194,6 +194,37 @@ async function getMyOrder(req, res) {
     }
 }
 
+/* ---- duplicate-order protection ----
+   The checkout page sends a one-time key (Idempotency-Key header) with every "Place order" tap. If the same key arrives again
+   (a double tap, a retry after a dropped connection, a phone that resent the request) the order that was already saved is
+   returned instead of a second one being created, so nobody is charged for two orders by mistake. */
+let idemReady = false;
+async function ensureIdempotencyColumn() {
+    if (idemReady) return;
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key TEXT");
+    await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS orders_customer_idem_idx ON orders (customer_id, idempotency_key) WHERE idempotency_key IS NOT NULL");
+    idemReady = true;
+}
+const readIdempotencyKey = (req) => {
+    const k = String((req.get && req.get("Idempotency-Key")) || (req.body && req.body.idempotency_key) || "").trim();
+    return /^[A-Za-z0-9_-]{16,80}$/.test(k) ? k : null;
+};
+/* the order already saved under this key (this customer only), or null */
+async function findOrderByKey(customerId, key) {
+    const r = await pool.query("SELECT * FROM orders WHERE customer_id = $1 AND idempotency_key = $2 LIMIT 1", [customerId, key]);
+    return r.rows[0] || null;
+}
+async function replayOrder(req, res, order) {
+    const items = await pool.query(
+        `SELECT product_id, product_name, cylinder_size, quantity, unit_price, total_price, product_image
+         FROM order_items WHERE order_id = $1 ORDER BY created_at`, [order.id]);
+    return res.status(200).json({
+        success: true, replayed: true,
+        message: "Order placed. The dealer will confirm it, then you can pay.",
+        order: shapeOrder({ ...order, customer_name: req.user.full_name, customer_phone: req.user.phone, customer_email: req.user.email }, items.rows)
+    });
+}
+
 /* POST /api/my/orders
    body: { items:[{product_id, quantity}] | product_id+quantity, payment_method, delivery_fee,
            delivery:{ option, county, town, address, landmark, notes, latitude, longitude }, phone, notes }
@@ -213,10 +244,20 @@ async function createMyOrder(req, res) {
 
     const requestedPoints = Math.max(0, Math.floor(Number(b.points_to_redeem) || 0));
 
+    const idemKey = readIdempotencyKey(req);
+    if (idemKey) {
+        try {
+            await ensureIdempotencyColumn();
+            const done = await findOrderByKey(req.user.id, idemKey);
+            if (done) return await replayOrder(req, res, done);   /* already placed: hand back the same order */
+        } catch (e) { console.error("Idempotency check error:", e && e.message); }
+    }
+
     const client = await pool.connect();
     try {
         await ensureRedeemColumns();
         await ensurePaymentFlowColumns();
+        await ensureIdempotencyColumn();   /* the insert below always writes this column */
         await client.query("BEGIN");
         let dealerId = null, subtotal = 0;
         const lines = [];
@@ -268,8 +309,8 @@ async function createMyOrder(req, res) {
                                  delivery_address, delivery_phone, delivery_notes, customer_notes,
                                  dealer_name_snapshot, dealer_location_snapshot, fulfilment,
                                  delivery_county, delivery_town, delivery_landmark, delivery_latitude, delivery_longitude,
-                                 discount_amount, discount_note, points_used, payment_method_chosen)
-             VALUES ($1, $2, $3, 'pending', $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, FALSE)
+                                 discount_amount, discount_note, points_used, payment_method_chosen, idempotency_key)
+             VALUES ($1, $2, $3, 'pending', $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, FALSE, $23)
              RETURNING *`,
             [generateOrderNumber(), req.user.id, dealerId, "mpesa",     /* placeholder until the customer chooses (payment_method_chosen = FALSE) */
              subtotal, fee, total,
@@ -278,7 +319,7 @@ async function createMyOrder(req, res) {
              dealer.business_name, dealer.location || null, pickup ? "pickup" : "delivery",
              clean(d.county, 80) || null, clean(d.town, 120) || null, clean(d.landmark, 200) || null,
              numOrNull(d.latitude), numOrNull(d.longitude),
-             discount, pointsUsed ? `${pointsUsed} GasHub points` : null, pointsUsed])).rows[0];
+             discount, pointsUsed ? `${pointsUsed} GasHub points` : null, pointsUsed, idemKey])).rows[0];
 
         if (pointsUsed > 0) {
             await client.query(
@@ -305,6 +346,10 @@ async function createMyOrder(req, res) {
             product_id: l.p.id, product_name: l.p.name, cylinder_size: l.p.cylinder_size, quantity: l.qty, unit_price: l.p.price, total_price: l.total, product_image: l.p.image }))) });
     } catch (error) {
         try { await client.query("ROLLBACK"); } catch (e) { /* ignore */ }
+        /* two taps at the very same moment: the second one hits the unique key, so hand back the first order */
+        if (error && error.code === "23505" && idemKey) {
+            try { const done = await findOrderByKey(req.user.id, idemKey); if (done) return await replayOrder(req, res, done); } catch (e) { /* fall through */ }
+        }
         console.error("Create my order error:", error);
         res.status(500).json({ success: false, message: "We couldn't place your order. Please try again." });
     } finally {
@@ -510,9 +555,20 @@ async function applyOrderPoints(req, res) {
         const wasCash = o.payment_method_chosen !== false && isCash(o.payment_method);
         const pending = await client.query("SELECT 1 FROM payments WHERE order_id = $1 AND status::text = 'pending' LIMIT 1", [o.id]);
         if (pending.rows.length) return stop(400, "GasHub is already confirming a payment for this order, so the coins can't be changed now.");
+        /* an M-Pesa prompt that is still open was sent for the OLD total: changing the total now would make the customer pay the wrong amount
+           (read on a separate connection: the prompt table may not exist yet, and a failed query must not break this transaction) */
+        try {
+            const live = await pool.query("SELECT 1 FROM mpesa_stk_requests WHERE order_id = $1 AND status = 'pending' AND created_at > NOW() - interval '4 minutes' LIMIT 1", [String(o.id)]);
+            if (live.rows.length) return stop(409, "An M-Pesa payment prompt is waiting on your phone. Finish or cancel it, wait about 3 minutes, then change your coins.");
+        } catch (e) { /* no prompt table yet = no prompts */ }
 
         const subtotal = Number(o.subtotal) || 0, fee = Number(o.delivery_fee) || 0, gross = subtotal + fee;
         const already = Number(o.points_used) || 0;
+        /* nothing to remove and nothing asked for: leave the order alone (otherwise the total would be reset and a discount the DEALER gave would be erased) */
+        if (already === 0 && requested === 0) {
+            await client.query("ROLLBACK");
+            return res.json({ success: true, message: "No GasHub Coins are applied to this order.", order: shapeOrder(o) });
+        }
         /* a discount the dealer gave is kept in the same column as the coins discount: coins would erase it, so they cannot be mixed */
         if (already === 0 && Number(o.discount_amount) > 0 && requested > 0) return stop(400, "The dealer already gave you a discount on this order, so coins can't be added to it.");
 

@@ -569,7 +569,7 @@ app.use(
 // ============================================================
 
 app.use(
-    (error, req, res, next) => {
+    async (error, req, res, next) => {
         if (res.headersSent) {
             return next(error);
         }
@@ -586,6 +586,9 @@ app.use(
             "Unhandled server error:",
             error
         );
+
+        /* email the admin (at most one email per 15 minutes for the same problem; never delays the reply by more than a few seconds) */
+        await require("./utils/error-alerts").alertError("Unexpected server error", error, { method: req.method, path: String(req.originalUrl || req.url).replace(/(\/payments\/mpesa\/(?:callback|c2b\/[a-z]+|b2c\/[a-z]+))\/[^/?#]+/i, "$1/***"),   /* never put the M-Pesa callback secret in an alert */ role: req.user && req.user.role });
 
         return res.status(500).json({
             success: false,
@@ -740,9 +743,12 @@ process.on("uncaughtException", (error) => {
         return;
     }
     console.error("Uncaught exception:", error);
-    process.exit(1);
+    require("./utils/error-alerts").alertError("The server crashed (uncaught exception)", error).finally(() => process.exit(1));
 });
-process.on("unhandledRejection", (reason) => console.error("Unhandled rejection:", reason));
+process.on("unhandledRejection", (reason) => {
+    console.error("Unhandled rejection:", reason);
+    require("./utils/error-alerts").alertError("Unhandled error in the background", reason instanceof Error ? reason : new Error(String(reason)));
+});
 
 // "npm start" runs this file directly. Netlify (netlify/functions/api.js) only imports the app.
 if (require.main === module) {

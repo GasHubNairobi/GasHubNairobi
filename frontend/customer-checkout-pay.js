@@ -62,10 +62,12 @@
         finished = true;
         var paid = paidStatus(order.paymentStatus), cash = order.method === "cash";
         $("pvSuccessTitle").textContent = paid ? "Payment successful" : (cash ? "Order confirmed" : "Payment submitted");
-        $("pvSuccessText").textContent = paid ? "We received " + money(order.amountPaid || order.total) + ". Thank you!"
+        var num = order.orderNumber || order.order_number || ref;
+        var code = lastReceipt || order.mpesaReceiptNumber || order.mpesaReceipt || order.mpesa_receipt_number || "";
+        $("pvSuccessText").textContent = paid ? "We received " + money(order.amountPaid || order.total) + " for order " + num + (code ? ". M-Pesa code: " + code : "") + ". Thank you!" + (extraNote ? " " + extraNote : "")
             : (cash ? "You will pay " + money(order.total) + " in cash on delivery." : "GasHub is confirming your payment.");
         $("pvSuccess").hidden = false;
-        setTimeout(function () { location.href = ordersUrl; }, 2800);
+        setTimeout(function () { location.href = ordersUrl; }, paid ? 7000 : 2800);   /* long enough to read the M-Pesa code */
     }
 
     /* ---------- summary ---------- */
@@ -328,14 +330,41 @@
         } catch (e) { res.innerHTML = '<p class="pv-msg err">No connection. Please try again.</p>'; btn.disabled = false; }
     }
     /* send the M-Pesa prompt to the phone, then wait for the answer */
+    var lastReceipt = "", extraNote = "", stkBusy = false;
+    /* an order can only be paid once: ignore a second tap while a prompt is being sent or is waiting for the PIN */
     async function submitStk(ev) {
         ev.preventDefault();
+        if (stkBusy || finished) return;
+        stkBusy = true;
+        try { await runStk(ev); } finally { stkBusy = false; }
+    }
+    /* GasHub has the money and is checking it: no more paying from this box (a second payment would only be a double payment) */
+    function lockPay() {
+        var b = $("stkBtn"); if (b) { b.disabled = true; b.textContent = "Payment received"; }
+    }
+    /* the prompt window ran out here but the money may still arrive: keep checking quietly and show the confirmation when it does */
+    async function watchLate(checkoutRequestId) {
+        var until = Date.now() + 10 * 60 * 1000;
+        while (!finished && Date.now() < until) {
+            await new Promise(function (res) { setTimeout(res, 6000); });
+            try {
+                var s = await fetch("/api/payments/mpesa/status?order_id=" + encodeURIComponent(order.id) + "&checkout_request_id=" + encodeURIComponent(checkoutRequestId), { credentials: "same-origin", cache: "no-store" });
+                var sj = s.ok ? await s.json().catch(function () { return null; }) : null;
+                if (!sj) continue;
+                if (sj.status === "paid" || sj.status === "duplicate") { lastReceipt = sj.receipt || lastReceipt; if (sj.status === "duplicate") extraNote = sj.message || ""; await reload(); return; }
+                if (sj.status === "confirming") { setMsg("stkMsg", sj.message || ""); lockPay(); return; }
+                if (sj.status && sj.status !== "pending") return;
+            } catch (e) { /* keep waiting */ }
+        }
+    }
+    async function runStk(ev) {
         var btn = $("stkBtn"), phone = $("stkPhone").value.trim();
         if (!/^(\+?254|0)?[17]\d{8}$/.test(phone.replace(/\s+/g, ""))) { setMsg("stkMsg", "Enter a valid Safaricom number, e.g. 0712345678.", true); return; }
         btn.disabled = true; setMsg("stkMsg", "Sending the prompt to your phone...");
         try {
             var r = await fetch("/api/payments/mpesa/stk-push", { method: "POST", headers: await headers(true), credentials: "same-origin", body: JSON.stringify({ order_id: order.id, phone: phone }) });
             var j = {}; try { j = await r.json(); } catch (x) { }
+            if (j.confirming) { setMsg("stkMsg", j.message || ""); lockPay(); return; }
             if (!r.ok || !j.checkoutRequestId) { setMsg("stkMsg", j.message || "We could not send the prompt. Please try again.", true); btn.disabled = false; revealCode(); refreshManual(); return; }
             setMsg("stkMsg", "Check your phone and enter your M-Pesa PIN...");
             var started = Date.now(), shown = false;
@@ -345,11 +374,18 @@
                 var s = await fetch("/api/payments/mpesa/status?order_id=" + encodeURIComponent(order.id) + "&checkout_request_id=" + encodeURIComponent(j.checkoutRequestId), { credentials: "same-origin", cache: "no-store" });
                 var sj = s.ok ? await s.json().catch(function () { return null; }) : null;
                 if (!sj) continue;
-                if (sj.status === "paid") { await reload(); return; }
+                if (sj.status === "paid" || sj.status === "duplicate") {
+                    lastReceipt = sj.receipt || lastReceipt;
+                    if (sj.status === "duplicate") extraNote = sj.message || "";
+                    setMsg("stkMsg", sj.status === "duplicate" ? (sj.message || "") : "Payment received. Thank you!");
+                    await reload(); return;
+                }
+                if (sj.status === "confirming") { setMsg("stkMsg", sj.message || ""); lockPay(); return; }
                 if (sj.status && sj.status !== "pending") { setMsg("stkMsg", (sj.message || "The payment did not go through.") + " You can pay again, or enter your M-Pesa code if you already paid.", true); btn.disabled = false; btn.textContent = "Pay again"; revealCode(); refreshManual(); return; }
             }
-            setMsg("stkMsg", "No confirmation yet. If M-Pesa took the money, enter your M-Pesa code below. Otherwise pay again.", true);
+            setMsg("stkMsg", "No confirmation yet. If you already entered your PIN we will keep checking and confirm it here. Do not pay again until this prompt has expired, or enter your M-Pesa code below.", true);
             btn.disabled = false; btn.textContent = "Pay again"; revealCode(); refreshManual();
+            watchLate(j.checkoutRequestId);
         } catch (e) { setMsg("stkMsg", "No connection. Please try again.", true); btn.disabled = false; }
     }
 

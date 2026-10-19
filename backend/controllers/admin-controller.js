@@ -314,10 +314,20 @@ async function updateAdminOrder(req, res) {
             }
 
             const closing = ["cancelled", "rejected"].includes(requestedStatus);
-            const before = closing
-                ? (await adminModel.query("SELECT id, status FROM orders WHERE id = $1", [req.params.id])).rows[0]
-                : null;
+            const before = (await adminModel.query("SELECT id, status, payment_status FROM orders WHERE id = $1", [req.params.id])).rows[0];
             if (closing) await ensureRefundColumns().catch((e) => console.error("Refund columns:", e.message));
+
+            /* Money rules, the same as the dealer's: an order is only completed once it is paid (a completed order is what a dealer
+               payout is made from), and a cancelled order is not re-opened (its stock was put back and its refund started). */
+            if (before) {
+                const was = String(before.status), paidNow = String(before.payment_status) === "paid";
+                if (requestedStatus === "completed" && !paidNow) {
+                    return res.status(400).json({ success: false, message: "This order is not paid yet, so it cannot be completed. Confirm the payment first (cash is confirmed by the dealer, M-Pesa and bank by GasHub)." });
+                }
+                if (["cancelled", "rejected"].includes(was) && requestedStatus !== was) {
+                    return res.status(400).json({ success: false, message: "This order was cancelled. A cancelled order cannot be re-opened; ask the customer to place a new order." });
+                }
+            }
 
             const result = await adminModel.query(
                 `

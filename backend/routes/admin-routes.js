@@ -43,6 +43,9 @@ router.put("/payout-planner/schedule", requireAdmin, plannerController.saveSched
 router.put("/payout-planner/funds", requireAdmin, plannerController.saveFunds);
 router.post("/payout-planner/run", requireAdmin, plannerController.runNow);
 
+/* daily money check: read-only report of what moved and what does not line up */
+router.get("/reconciliation", requireAdmin, require("../controllers/admin-reconciliation-controller").getReconciliation);
+
 router.get("/customers", requireAdmin, adminController.getCustomers);
 router.get("/customers/:id", requireAdmin, adminController.getCustomerById);
 const customerBanController = require("../controllers/admin-customer-ban-controller");

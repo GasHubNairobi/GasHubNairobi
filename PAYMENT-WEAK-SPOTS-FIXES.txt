@@ -1,0 +1,7 @@
+PAYMENT WEAK SPOTS - WHAT CHANGED
+1. verifyCode (typed M-Pesa code): now sends the same "paid more than the order costs" money alert as the phone-prompt path (KSh 1 or more over).
+2. stkPush: the order is locked (database advisory lock) from the checks until the prompt is saved, so a double tap cannot send two prompts.
+3. reconcilePending: recovery window 2 hours -> 24 hours (still 10 per minute run).
+4. settlePaid: a prompt flagged "Amount mismatch" is never auto-settled at the requested amount; it stays in Daily Money Check > review. The callback now records the amount Safaricom reported.
+5. Callback secret: Safaricom cannot send headers, so the secret must stay in the URL (Netlify may still log it). Now: error alerts never include it, and MPESA_CALLBACK_SECRET_PREVIOUS lets you rotate the secret without losing in-flight callbacks. After rotating, run backend/scripts/register-mpesa-c2b.js again.
+6. IP allowlist: reads Netlify's x-nf-client-connection-ip header. New test mode MPESA_CALLBACK_IP_ALLOWLIST=log (nothing rejected; log shows each callback's IP and whether it is on the list). Order: log -> one real payment -> check log -> true.

@@ -101,10 +101,25 @@ async function markOrderPaid(client, orderId, { amount, method, mpesaReceipt, ph
     const paidAmount = Number.isFinite(Number(amount)) && Number(amount) > 0 ? Number(amount) : Number(order.total_amount);
     const payMethod = String(method || order.payment_method || "mpesa").toLowerCase();
 
+    /* never mark an order paid for less than it costs (KSh 1 leeway: M-Pesa takes whole shillings). This can happen when the dealer
+       changed the delivery fee or discount after the customer's payment was started: the admin then sees this message. */
+    if (!order.payment_status || String(order.payment_status) !== "paid") {
+        const owed = Number(order.total_amount) || 0;
+        if (paidAmount + 1 < owed) {
+            const e = new Error(`The payment received (KSh ${paidAmount.toLocaleString("en-KE")}) is less than the order total (KSh ${owed.toLocaleString("en-KE")}), so the order was not marked paid. The order amount may have changed after the customer paid. Check the order, then collect the difference or refund.`);
+            e.status = 400; throw e;
+        }
+    }
+
     /* one M-Pesa code can only ever pay for one order */
     if (mpesaReceipt) {
+        /* a code whose payment was later REFUNDED still counts as used (that money already went back to the customer), and so does
+           a code stored on another order */
         const dup = await client.query(
-            "SELECT 1 FROM payments WHERE mpesa_receipt_number = $1 AND order_id <> $2 AND status::text = 'paid' LIMIT 1", [mpesaReceipt, order.id]);
+            `SELECT 1 FROM payments WHERE mpesa_receipt_number = $1 AND order_id <> $2 AND status::text IN ('paid', 'refunded')
+             UNION ALL
+             SELECT 1 FROM orders WHERE mpesa_receipt_number = $1 AND id <> $2
+             LIMIT 1`, [mpesaReceipt, order.id]);
         if (dup.rows.length) { const e = new Error("This M-Pesa code has already been used to pay for another order."); e.status = 409; throw e; }
     }
 
@@ -132,6 +147,15 @@ async function markOrderPaid(client, orderId, { amount, method, mpesaReceipt, ph
                 mpesa_receipt_number = COALESCE($2, mpesa_receipt_number), updated_at = NOW()
          WHERE id = $3`,
         [paidAmount, mpesaReceipt || null, order.id]);
+
+    /* the money that arrived on the till with this M-Pesa code now belongs to this order (the Daily Money Check lists unclaimed till money) */
+    if (mpesaReceipt) {
+        await client.query("SAVEPOINT gh_claim");
+        try {
+            await client.query("UPDATE mpesa_c2b_payments SET claimed_order_id = $2, claimed_at = NOW() WHERE trans_id = $1 AND claimed_order_id IS NULL", [mpesaReceipt, String(order.id)]);
+            await client.query("RELEASE SAVEPOINT gh_claim");
+        } catch (e) { await client.query("ROLLBACK TO SAVEPOINT gh_claim"); await client.query("RELEASE SAVEPOINT gh_claim"); }   /* table not created yet: nothing to claim */
+    }
 
     const pointsAwarded = await awardPointsForPaidOrder(client, { ...order, payment_status: "paid", payment_method: payMethod });
     const completedOrder = await completeIfDone(client, order.id);

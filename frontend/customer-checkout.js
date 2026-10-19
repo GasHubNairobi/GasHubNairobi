@@ -1176,6 +1176,27 @@ function collectCheckoutData() {
    PLACE ORDER
    ========================================================= */
 
+/* One-time key per "Place order" attempt. The same key is reused while the same order is being retried (even after a refresh),
+   and a new one is made as soon as anything about the order changes. */
+function orderAttemptKey(orderData) {
+    var sig = "";
+    try {
+        sig = JSON.stringify([orderData.product && orderData.product.id, orderData.product && orderData.product.quantity,
+            orderData.delivery && orderData.delivery.option, orderData.delivery && orderData.delivery.address,
+            orderData.payment && orderData.payment.pointsToRedeem, orderData.customer && orderData.customer.phone]);
+    } catch (e) { }
+    try {
+        var saved = JSON.parse(sessionStorage.getItem("gasHubOrderKey") || "null");
+        if (saved && saved.sig === sig && saved.key && Date.now() - saved.at < 30 * 60 * 1000) return saved.key;
+    } catch (e) { }
+    var key = "";
+    try { key = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ""; } catch (e) { }
+    if (!key) key = "k" + Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    key = key.replace(/[^A-Za-z0-9_-]/g, "");
+    try { sessionStorage.setItem("gasHubOrderKey", JSON.stringify({ sig: sig, key: key, at: Date.now() })); } catch (e) { }
+    return key;
+}
+
 placeOrderButton.addEventListener(
     "click",
     async function () {
@@ -1246,11 +1267,10 @@ placeOrderButton.addEventListener(
 
             const loc = (function () { try { return JSON.parse(localStorage.getItem("gasHubLocation")) || {}; } catch (e) { return {}; } })();
 
-            const response = await fetch("/api/my/orders", {
-                method: "POST",
-                credentials: "same-origin",
-                headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
-                body: JSON.stringify({
+            /* One-time key for this order: if the connection drops and the request is sent again (by us or by the phone),
+               the server hands back the order it already saved instead of making a second one. */
+            const idemKey = orderAttemptKey(orderData);
+            const orderBody = JSON.stringify({
                     product_id: orderData.product.id,
                     quantity: orderData.product.quantity,
                     /* no payment_method: the customer chooses it after the dealer confirms the order */
@@ -1268,8 +1288,29 @@ placeOrderButton.addEventListener(
                         latitude: orderData.delivery.option === "pickup" ? undefined : loc.latitude,
                         longitude: orderData.delivery.option === "pickup" ? undefined : loc.longitude
                     }
-                })
-            });
+                });
+
+            /* up to 3 tries with the SAME key when the connection fails or the server errors */
+            let response = null;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    response = await fetch("/api/my/orders", {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf, "Idempotency-Key": idemKey },
+                        body: orderBody
+                    });
+                    if (response.status < 500) break;
+                } catch (netErr) { response = null; }
+                if (attempt < 2) await new Promise(function (r) { setTimeout(r, 1200 * (attempt + 1)); });
+            }
+
+            if (!response) {
+                /* never got an answer: the order may or may not have been saved. Tapping again is safe (same key). */
+                showCheckoutMessage("We couldn't confirm whether your order went through. Check your connection and tap Place order again. It won't create a second order. You can also look in My Orders.", "error");
+                resetButton();
+                return;
+            }
 
             if (response.status === 401) {
                 window.location.href = "customer-login.html?next=" + encodeURIComponent(checkoutReturnUrl());
@@ -1286,6 +1327,7 @@ placeOrderButton.addEventListener(
             }
 
             const placed = result.order;
+            try { sessionStorage.removeItem("gasHubOrderKey"); } catch (e) { }
 
 
             /*
@@ -1528,12 +1570,22 @@ async function startPayment() {
     let checkoutId = "";
     try {
         const token = await csrfToken();
-        const r = await fetch("/api/payments/mpesa/stk-push", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
-            body: JSON.stringify({ order_id: placedOrder.orderId, phone: phone, amount: amount })
-        });
+        /* if the connection blinks, try once more: the server never sends two prompts to the same phone for one order */
+        let r = null;
+        for (let attempt = 0; attempt < 2 && !r; attempt++) {
+            try {
+                r = await fetch("/api/payments/mpesa/stk-push", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+                    body: JSON.stringify({ order_id: placedOrder.orderId, phone: phone, amount: amount })
+                });
+            } catch (netErr) {
+                if (attempt === 1) throw netErr;
+                await new Promise(function (res) { setTimeout(res, 1500); });
+                if (myRun !== payRun) return;
+            }
+        }
         if (myRun !== payRun) return;
         if (r.status === 401) {
             window.location.href = "customer-login.html?next=" + encodeURIComponent(checkoutReturnUrl());
@@ -1547,7 +1599,16 @@ async function startPayment() {
         }
     } catch (e) {
         if (myRun !== payRun) return;
-        finishWithError("We couldn't reach the payment service. Check your connection and try again.", "Prompt not sent");
+        /* the answer may have been lost on the way back: check whether the order is already paid before saying anything */
+        try {
+            const chk = await fetch("/api/my/orders/" + encodeURIComponent(placedOrder.orderId), { credentials: "same-origin", cache: "no-store" });
+            if (chk.ok) {
+                const cj = await chk.json().catch(function () { return null; });
+                if (cj && cj.order && paidStatus(cj.order.paymentStatus)) { paymentSucceeded({ status: "paid", receipt: cj.order.mpesaReceipt }); return; }
+            }
+        } catch (e2) { /* still offline */ }
+        if (myRun !== payRun) return;
+        finishWithError("We couldn't reach the payment service. If an M-Pesa prompt appears on your phone, go ahead and pay and we will confirm it. Otherwise check your connection and try again.", "Prompt not confirmed");
         return;
     }
 

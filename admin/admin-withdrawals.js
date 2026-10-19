@@ -230,13 +230,19 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!w) return;
         const act = btn.dataset.act;
         let note = "";
+        let statementChecked = false;
+        /* M-Pesa never answered: the money may have left, so the admin must look at the statement before sending again or rejecting */
+        if (w.payout_risky && (act === "send" || act === "rejected")) {
+            if (!(await GasHubDialog.confirm({ title: "Did you check the M-Pesa statement?", message: `M-Pesa never answered for ${w.customer_name}'s payment, so the money may already have reached ${w.phone}. Open your M-Pesa statement now.\n\nIf the money IS there, press Go back and use Mark paid with its receipt code.\nOnly if it is NOT there, confirm below.`, confirmText: "I checked: it was not sent", cancelText: "Go back", tone: "danger" }))) return;
+            statementChecked = true;
+        }
 
         if (act === "send") {
             const retry = w.payout_state === "failed" || w.payout_stale;
             if (!(await GasHubDialog.confirm({ title: retry ? "Send this payment again?" : "Send the money now?", message: `KSh ${ksh(w.net_ksh)} (KSh ${ksh(w.amount_ksh)} less KSh ${ksh(w.fee_ksh)} charge, at today\u2019s rate) will be sent to ${w.phone} (${w.customer_name}) by M-Pesa right now. It is marked Paid when M-Pesa confirms, and the customer is told by email and SMS.` + (retry ? " Check your M-Pesa statement first so the customer is not paid twice." : ""), confirmText: retry ? "Send again" : "Send now", tone: "primary" }))) return;
             btn.disabled = true;
             try {
-                const r = await GasHubAdmin.adminApiRequest(`/api/admin/withdrawals/${encodeURIComponent(w.id)}/send-now`, { method: "POST", body: {} });
+                const r = await GasHubAdmin.adminApiRequest(`/api/admin/withdrawals/${encodeURIComponent(w.id)}/send-now`, { method: "POST", body: { statement_checked: statementChecked } });
                 Object.assign(w, r.withdrawal || {});
                 stats(); render(); pollIfNeeded();
                 showMessage(r.message || "Sending.", "success");
@@ -261,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         btn.disabled = true;
         try {
-            const r = await GasHubAdmin.adminApiRequest(`/api/admin/withdrawals/${encodeURIComponent(w.id)}`, { method: "PATCH", body: { status: act, note } });
+            const r = await GasHubAdmin.adminApiRequest(`/api/admin/withdrawals/${encodeURIComponent(w.id)}`, { method: "PATCH", body: { status: act, note, statement_checked: statementChecked } });
             Object.assign(w, r.withdrawal || {});
             stats(); render();
             showMessage(r.message || "Updated.", "success");

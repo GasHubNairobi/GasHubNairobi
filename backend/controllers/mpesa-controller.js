@@ -9,6 +9,7 @@ const { pool } = require("../config/database-config");
 const mpesa = require("../utils/mpesa-service");
 const { markOrderPaid } = require("../utils/order-fulfilment");
 const { getPaymentMethods, getPaymentAccount } = require("../utils/gashub-settings");
+const { ensureRefundColumns, recordMoneyForCancelledOrder } = require("../utils/refunds");
 
 let ready = false;
 async function ensureTable() {
@@ -47,7 +48,21 @@ async function ensureTable() {
 }
 
 const PROMPT_LIFETIME_MS = 3 * 60 * 1000;
+
+/* Does the phone that paid the till belong to this customer? Safaricom sends the payer either as a plain 2547XXXXXXXX number (sandbox)
+   or as a SHA-256 hash of it (live). We compare it with the customer's own numbers: their account phone, the order's delivery phone and
+   the numbers prompts for this order were sent to. A code from any other phone is NOT claimed automatically: it goes to GasHub to confirm
+   by hand against the M-Pesa statement, so nobody can use somebody else's code on their own order. */
+function payerIsCustomer(msisdn, candidates) {
+    const raw = String(msisdn || "").trim();
+    const nums = [...new Set(candidates.map((c) => mpesa.toMsisdn(c)).filter(Boolean))];
+    if (!nums.length || !raw) return false;
+    if (/^[a-f0-9]{64}$/i.test(raw)) return nums.some((n) => require("crypto").createHash("sha256").update(n).digest("hex") === raw.toLowerCase());
+    const plain = mpesa.toMsisdn(raw.replace(/\D/g, ""));
+    return !!plain && nums.includes(plain);
+}
 const clean = (v, max) => String(v == null ? "" : v).trim().slice(0, max);
+const CONFIRMING_MSG = "We received your payment and we're confirming it. This usually takes a short while. You don't need to pay again. If it takes long, contact GasHub and quote your order number.";
 
 /* GET /api/payments/mpesa/config : tells the checkout whether to offer the phone prompt (no secrets) */
 async function getConfig(req, res) {
@@ -59,6 +74,7 @@ async function getConfig(req, res) {
 
 /* POST /api/payments/mpesa/stk-push  { order_id, phone }   (any "amount" sent by the browser is ignored) */
 async function stkPush(req, res) {
+    let locked = null;       /* the database connection that holds this order's lock while the prompt is sent */
     let failCtx = null;      /* set once the order is known, so a prompt that could not be sent is still counted */
     try { if (!(await getPaymentMethods()).mpesa_prompt) return res.status(503).json({ success: false, code: "mpesa_prompt_off", message: "The M-Pesa phone prompt is switched off right now. Please use another payment method." }); } catch (e) { /* settings table missing: stay on */ }
     if (!mpesa.isConfigured()) return res.status(503).json({ success: false, code: "mpesa_disabled", message: "M-Pesa phone payments are not switched on yet. Please try again shortly or choose another payment method." });
@@ -82,28 +98,47 @@ async function stkPush(req, res) {
         const due = Math.round((Number(o.total_amount) - (Number(o.amount_paid) || 0)) * 100) / 100;
         if (!(due >= 1)) return res.status(400).json({ success: false, message: "There is nothing left to pay on this order." });
 
+        /* The checks below and the sending of the prompt happen while this order is LOCKED (a database lock held until the prompt is saved),
+           so a double tap or two devices can never send two prompts: the second request waits, then sees the first one's prompt. */
+        locked = await pool.connect();
+        await locked.query("BEGIN");
+        await locked.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["stk-push:" + String(o.id)]);
+        /* the order may have been paid while we waited for the lock */
+        const fresh = (await locked.query("SELECT payment_status FROM orders WHERE id = $1", [o.id])).rows[0];
+        if (fresh && fresh.payment_status === "paid") { await locked.query("ROLLBACK"); locked.release(); locked = null; return res.status(400).json({ success: false, message: "This order is already paid." }); }
+
+        /* money for this order is already with GasHub and being checked by hand: a second payment now would only create a double payment */
+        const held = (await locked.query("SELECT 1 FROM mpesa_stk_requests WHERE order_id = $1 AND status = 'review' AND created_at > NOW() - interval '60 days' LIMIT 1", [String(o.id)])).rows[0];
+        if (held) { await locked.query("ROLLBACK"); return res.status(409).json({ success: false, confirming: true, message: CONFIRMING_MSG }); }
+
         /* one live prompt per order, and a limit on how often prompts can be sent (stops spamming a phone) */
-        const live = (await pool.query(
+        const live = (await locked.query(
             "SELECT checkout_request_id, phone, created_at FROM mpesa_stk_requests WHERE order_id = $1 AND status = 'pending' AND created_at > NOW() - interval '90 seconds' ORDER BY created_at DESC LIMIT 1", [String(o.id)])).rows[0];
-        if (live && live.phone === phone) return res.json({ success: true, checkoutRequestId: live.checkout_request_id, message: "The prompt is already on your phone." });
-        if (live) return res.status(429).json({ success: false, message: "A payment prompt was just sent. Wait a minute before sending another." });
-        const recent = (await pool.query("SELECT COUNT(*)::int AS n FROM mpesa_stk_requests WHERE order_id = $1 AND created_at > NOW() - interval '15 minutes'", [String(o.id)])).rows[0].n;
-        if (recent >= 5) return res.status(429).json({ success: false, message: "Too many payment attempts for this order. Please wait 15 minutes and try again." });
+        if (live && live.phone === phone) { await locked.query("ROLLBACK"); return res.json({ success: true, checkoutRequestId: live.checkout_request_id, message: "The prompt is already on your phone." }); }
+        if (live) { await locked.query("ROLLBACK"); return res.status(429).json({ success: false, message: "A payment prompt was just sent. Wait a minute before sending another." }); }
+        const recent = (await locked.query("SELECT COUNT(*)::int AS n FROM mpesa_stk_requests WHERE order_id = $1 AND created_at > NOW() - interval '15 minutes'", [String(o.id)])).rows[0].n;
+        if (recent >= 5) { await locked.query("ROLLBACK"); return res.status(429).json({ success: false, message: "Too many payment attempts for this order. Please wait 15 minutes and try again." }); }
 
         failCtx = { orderId: String(o.id), customerId: String(o.customer_id), phone, amount: Math.ceil(due) };
         const sent = await mpesa.stkPush({ phone, amount: due, reference: o.order_number, description: "GasHub order" });
-        await pool.query(
+        await locked.query(
             `INSERT INTO mpesa_stk_requests (order_id, customer_id, phone, amount, merchant_request_id, checkout_request_id)
              VALUES ($1, $2, $3, $4, $5, $6)`, [String(o.id), String(o.customer_id), phone, Math.ceil(due), sent.merchantRequestId, sent.checkoutRequestId]);
+        await locked.query("COMMIT");                       /* the lock is released here, with the prompt already on record */
         res.json({ success: true, checkoutRequestId: sent.checkoutRequestId, message: "Check your phone and enter your M-Pesa PIN." });
     } catch (e) {
         console.error("STK push error:", e && e.message);   /* never log keys or the full Safaricom reply */
-        /* a prompt that could not even be sent counts as a failed prompt (two of them unlock the backup Till) */
-        if (failCtx) await pool.query(
-            `INSERT INTO mpesa_stk_requests (order_id, customer_id, phone, amount, checkout_request_id, status, result_code, result_desc, completed_at)
-             VALUES ($1, $2, $3, $4, $5, 'failed', 'SEND', 'The prompt could not be sent', NOW())`,
-            [failCtx.orderId, failCtx.customerId, failCtx.phone, failCtx.amount, "SENDFAIL-" + require("crypto").randomBytes(10).toString("hex")]).catch(() => {});
+        /* a prompt that could not even be sent counts as a failed prompt (two of them unlock the backup Till). Written while the lock is still held. */
+        if (failCtx) {
+            const sql = `INSERT INTO mpesa_stk_requests (order_id, customer_id, phone, amount, checkout_request_id, status, result_code, result_desc, completed_at)
+                         VALUES ($1, $2, $3, $4, $5, 'failed', 'SEND', 'The prompt could not be sent', NOW())`;
+            const vals = [failCtx.orderId, failCtx.customerId, failCtx.phone, failCtx.amount, "SENDFAIL-" + require("crypto").randomBytes(10).toString("hex")];
+            try { if (!locked) throw new Error("no lock"); await locked.query(sql, vals); await locked.query("COMMIT"); }
+            catch (x) { if (locked) await locked.query("ROLLBACK").catch(() => {}); await pool.query(sql, vals).catch(() => {}); }
+        }
         res.status(e && e.daraja ? 502 : 500).json({ success: false, message: "We couldn't send the prompt to that number. Check it and try again." });
+    } finally {
+        if (locked) { await locked.query("ROLLBACK").catch(() => {}); locked.release(); }   /* no-op after a COMMIT; frees the lock on any other exit */
     }
 }
 
@@ -151,9 +186,16 @@ async function manualOptions(req, res) {
     }
 }
 
-/* Marks a prompt (and its order) paid. Safe to call many times and from several places at once. */
+/* Marks a prompt (and its order) paid. Safe to call many times and from several places at once.
+   Money safety (the prompt amount is fixed when it is sent, the order can change afterwards):
+     - the order was cancelled meanwhile  -> the money is recorded and a REFUND is started (it used to be left with nobody owed back)
+     - the order was already paid         -> NOT paid a second time: the prompt goes to "review" and you are alerted to refund the duplicate
+     - the order now costs MORE than the prompt paid -> NOT marked paid: "review" + alert (it used to be marked fully paid)
+   A receipt that is known is also marked as used in the till's received-money list, so it cannot be typed again for another order. */
 async function settlePaid(checkoutRequestId, { receipt, resultDesc }) {
+    await ensureRefundColumns().catch((e) => console.error("Refund columns:", e && e.message));   /* before BEGIN: it may ALTER tables */
     const client = await pool.connect();
+    const alerts = [];                                  /* sent AFTER the commit, so an alert problem can never undo money handling */
     try {
         await client.query("BEGIN");
         const r = (await client.query("SELECT * FROM mpesa_stk_requests WHERE checkout_request_id = $1 FOR UPDATE", [checkoutRequestId])).rows[0];
@@ -163,11 +205,46 @@ async function settlePaid(checkoutRequestId, { receipt, resultDesc }) {
                 await client.query("UPDATE mpesa_stk_requests SET mpesa_receipt = $1 WHERE id = $2", [receipt, r.id]);
                 await client.query("UPDATE orders SET mpesa_receipt_number = COALESCE(mpesa_receipt_number, $1) WHERE id::text = $2", [receipt, r.order_id]);
                 await client.query("UPDATE payments SET mpesa_receipt_number = COALESCE(mpesa_receipt_number, $1), transaction_code = COALESCE(transaction_code, $1) WHERE order_id::text = $2 AND status::text = 'paid'", [receipt, r.order_id]);
+                await client.query("UPDATE mpesa_c2b_payments SET claimed_order_id = $2, claimed_at = NOW() WHERE trans_id = $1 AND claimed_order_id IS NULL", [receipt, String(r.order_id)]);
             }
             await client.query("COMMIT");
             return { ...r, status: "paid", mpesa_receipt: r.mpesa_receipt || receipt || null };
         }
-        const o = (await client.query("SELECT id FROM orders WHERE id::text = $1", [r.order_id])).rows[0];
+        /* A prompt flagged "Amount mismatch" (Safaricom's callback said a different amount was paid) must never be settled automatically:
+           the Safaricom query does not return the real amount, so it would be marked paid at the REQUESTED amount. A person decides. */
+        if (r.status === "review" && /^Amount mismatch/i.test(String(r.result_desc || ""))) { await client.query("ROLLBACK"); return null; }
+        const review = async (why, alertTitle, alertText) => {
+            await client.query("UPDATE mpesa_stk_requests SET status = 'review', result_desc = $2, mpesa_receipt = COALESCE($3, mpesa_receipt) WHERE id = $1 AND status <> 'paid'", [r.id, why, receipt || null]);
+            await client.query("COMMIT");
+            console.error("M-Pesa payment needs review:", checkoutRequestId, why);
+            require("../utils/error-alerts").alertMoney(alertTitle, alertText + "\nPrompt: " + checkoutRequestId + "\nReceipt: " + (receipt || "not known yet") + "\nAmount paid: KSh " + r.amount + "\nThen open Admin > Daily Money Check.");
+            return null;
+        };
+        const o = (await client.query("SELECT id, status, payment_status, total_amount, amount_paid FROM orders WHERE id::text = $1 FOR UPDATE", [r.order_id])).rows[0];
+        if (!o) return await review("Order not found", "M-Pesa money received for an order that no longer exists", "The customer paid a prompt, but its order was not found.");
+
+        if (["cancelled", "rejected"].includes(String(o.status))) {
+            /* the customer paid (or the prompt was still open) when the order was cancelled: the money is real, so it goes to Refunds */
+            await recordMoneyForCancelledOrder(client, o.id, { amount: Number(r.amount), method: "mpesa", mpesaReceipt: receipt || null, confirmedBy: "M-Pesa prompt paid after the order was cancelled" });
+            await client.query("UPDATE mpesa_stk_requests SET status = 'paid', result_code = '0', result_desc = $2, mpesa_receipt = $3, points_awarded = 0, completed_at = NOW() WHERE id = $1",
+                [r.id, "Paid after the order was cancelled: refund started", receipt || null]);
+            if (receipt) await client.query("UPDATE mpesa_c2b_payments SET claimed_order_id = $2, claimed_at = NOW() WHERE trans_id = $1 AND claimed_order_id IS NULL", [receipt, String(o.id)]);
+            await client.query("COMMIT");
+            console.warn("M-Pesa prompt paid for a cancelled order, refund started:", checkoutRequestId);
+            require("../utils/error-alerts").alertMoney("A cancelled order was paid by M-Pesa: refund started", "A customer's M-Pesa prompt was paid after their order was cancelled. KSh " + r.amount + " was added to Admin > Payments > Refunds.\nPrompt: " + checkoutRequestId);
+            return { ...r, status: "paid", mpesa_receipt: receipt || null, points_awarded: 0 };
+        }
+        if (String(o.payment_status) === "paid") {
+            return await review("Order already paid: customer paid twice, a refund is needed", "A customer paid an M-Pesa prompt for an order that was already paid",
+                "The order was already paid (another prompt, an M-Pesa code or a bank payment), so this second payment was NOT added to the order. Check the M-Pesa statement and refund the duplicate.");
+        }
+        const stillDue = Math.round((Number(o.total_amount) - (Number(o.amount_paid) || 0)) * 100) / 100;
+        if (Number(r.amount) + 0.001 < stillDue) {
+            return await review("Amount no longer matches the order", "An M-Pesa prompt paid less than the order now costs",
+                "The order total changed after the prompt was sent, so the prompt paid less than the order needs. The order was NOT marked paid. Order needs KSh " + stillDue + ".");
+        }
+        if (Number(r.amount) - stillDue >= 1) alerts.push(["An M-Pesa prompt paid more than the order costs", "The order total went down after the prompt was sent (for example GasHub Coins were applied). The customer paid KSh " + r.amount + " for KSh " + stillDue + ". Refund the difference if needed.\nPrompt: " + checkoutRequestId]);
+
         const result = await markOrderPaid(client, o.id, {
             amount: Number(r.amount), method: "mpesa", mpesaReceipt: receipt || null, phone: r.phone,
             notes: "M-Pesa prompt paid automatically", confirmedBy: "M-Pesa"
@@ -175,7 +252,9 @@ async function settlePaid(checkoutRequestId, { receipt, resultDesc }) {
         await client.query(
             "UPDATE mpesa_stk_requests SET status = 'paid', result_code = '0', result_desc = $2, mpesa_receipt = $3, points_awarded = $4, completed_at = NOW() WHERE id = $1",
             [r.id, clean(resultDesc, 200) || "Paid", receipt || null, result.pointsAwarded || 0]);
+        if (receipt) await client.query("UPDATE mpesa_c2b_payments SET claimed_order_id = $2, claimed_at = NOW() WHERE trans_id = $1 AND claimed_order_id IS NULL", [receipt, String(o.id)]);
         await client.query("COMMIT");
+        alerts.forEach((a) => require("../utils/error-alerts").alertMoney(a[0], a[1]));
         if (!result.alreadyPaid) await require("../utils/push-service").orderPaid(result.order);
         return { ...r, status: "paid", mpesa_receipt: receipt || null, points_awarded: result.pointsAwarded || 0 };
     } catch (e) {
@@ -183,6 +262,7 @@ async function settlePaid(checkoutRequestId, { receipt, resultDesc }) {
         if (e && e.status === 409) {   /* the same M-Pesa code already paid another order: needs a human to look */
             await pool.query("UPDATE mpesa_stk_requests SET status = 'review', result_desc = $2 WHERE checkout_request_id = $1 AND status <> 'paid'", [checkoutRequestId, "Receipt already used on another order"]).catch(() => {});
             console.error("M-Pesa payment needs review (duplicate receipt):", checkoutRequestId);
+            require("../utils/error-alerts").alertMoney("M-Pesa payment needs review (receipt already used)", "An M-Pesa receipt was used on a second order, so it was NOT marked paid. Check the M-Pesa statement, then open Admin > Daily Money Check.\nPrompt: " + checkoutRequestId);
             return null;
         }
         throw e;
@@ -198,7 +278,7 @@ async function settleFailed(checkoutRequestId, code, desc) {
 
 /* POST /api/payments/mpesa/callback/:secret  (called by Safaricom, not by browsers). Always answers 200 quickly. */
 async function callback(req, res) {
-    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();   /* look like nothing is here */
+    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req)) return res.status(404).end();   /* look like nothing is here */
     /* a dealer's verification payment? It is finished here BEFORE answering (Netlify may stop the function right after it answers) */
     try {
         if (await require("./dealer-verification-controller").handleCallback(req.body)) return res.json({ ResultCode: 0, ResultDesc: "Accepted" });
@@ -221,8 +301,9 @@ async function callback(req, res) {
         const paidAmount = Number(pick("Amount"));
         if (!/^[A-Z0-9]{8,12}$/.test(receipt)) { console.error("M-Pesa callback without a valid receipt:", id); return; }
         if (!(paidAmount >= Number(row.amount))) {          /* wrong amount: never mark paid, flag for review */
-            await pool.query("UPDATE mpesa_stk_requests SET status = 'review', result_desc = 'Amount mismatch' WHERE id = $1 AND status = 'pending'", [row.id]);
+            await pool.query("UPDATE mpesa_stk_requests SET status = 'review', result_desc = $2, mpesa_receipt = COALESCE($3, mpesa_receipt) WHERE id = $1 AND status = 'pending'", [row.id, "Amount mismatch: Safaricom reported KSh " + paidAmount + ", expected KSh " + row.amount, receipt]);
             console.error("M-Pesa amount mismatch, left for review:", id);
+            require("../utils/error-alerts").alertMoney("M-Pesa paid less than the order amount", "A prompt was answered with a smaller amount than the order needs, so the order was NOT marked paid. It is waiting for review.\nPrompt: " + id + "\nExpected: KSh " + row.amount + ", received: KSh " + paidAmount);
             return;
         }
         /* do not trust the callback alone: ask Safaricom directly */
@@ -232,6 +313,7 @@ async function callback(req, res) {
         /* "pending": leave it, the status check below will settle it */
     } catch (e) {
         console.error("M-Pesa callback processing error:", e && e.message);
+        await require("../utils/error-alerts").alertMoney("An M-Pesa payment could not be processed", "Safaricom sent a payment confirmation, but GasHub failed while saving it. The customer may have paid without the order showing paid. The system retries automatically, but please check Admin > Daily Money Check.\nError: " + (e && e.message));
     } finally {
         if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" });
     }
@@ -264,8 +346,15 @@ async function status(req, res) {
         }
         const messages = { cancelled: "The payment was cancelled on your phone.", timeout: "The prompt expired before it was paid.", failed: "The payment didn't go through. You have not been charged.",
             review: "We received your payment and are checking it. It will show on your order shortly." };
-        res.json({ success: true, status: r.status === "review" ? "pending" : r.status, receipt: r.mpesa_receipt || undefined,
-            pointsAwarded: r.points_awarded == null ? undefined : r.points_awarded, message: messages[r.status] });
+        /* a payment held for GasHub to check is shown to the customer as "confirming" (not "pending", which would invite them to pay again);
+           a second payment on an order that is already paid is "duplicate": the order IS paid, only the extra money is being refunded */
+        let shown = r.status, shownMsg = messages[r.status];
+        if (r.status === "review") {
+            if (/^Order already paid/i.test(String(r.result_desc || ""))) { shown = "duplicate"; shownMsg = "This order is already paid. We received a second payment of KSh " + Number(r.amount).toLocaleString("en-KE") + " and GasHub will review it for a refund."; }
+            else { shown = "confirming"; shownMsg = CONFIRMING_MSG; }
+        }
+        res.json({ success: true, status: shown, receipt: r.mpesa_receipt || undefined,
+            pointsAwarded: r.points_awarded == null ? undefined : r.points_awarded, message: shownMsg });
     } catch (e) {
         console.error("STK status error:", e && e.message);
         res.status(500).json({ success: false, message: "Unable to check the payment. Please try again." });
@@ -275,12 +364,12 @@ async function status(req, res) {
 /* ---------- C2B: Safaricom tells us about every payment made to the paybill / till ---------- */
 /* POST /api/payments/mpesa/c2b/validation/:secret : we accept everything, the amount is checked when the customer's code is verified */
 function c2bValidation(req, res) {
-    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
+    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req)) return res.status(404).end();
     res.json({ ResultCode: 0, ResultDesc: "Accepted" });
 }
 /* POST /api/payments/mpesa/c2b/confirmation/:secret : saved so the code can be checked later (also works if the customer pays before typing the code) */
 async function c2bConfirmation(req, res) {
-    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req.ip)) return res.status(404).end();
+    if (!mpesa.secretMatches(req.params.secret) || !mpesa.ipAllowed(req)) return res.status(404).end();
     try {
         await ensureTable();
         const b = req.body || {};
@@ -294,6 +383,12 @@ async function c2bConfirmation(req, res) {
         await pool.query(
             `INSERT INTO mpesa_c2b_payments (trans_id, amount, msisdn, bill_ref, trans_time, raw) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (trans_id) DO NOTHING`,
             [id, amount, clean(b.MSISDN, 40), clean(b.BillRefNumber, 60), clean(b.TransTime, 20), JSON.stringify(b).slice(0, 5000)]);
+        /* a phone-prompt payment also arrives here: if that receipt already paid an order, mark it used, so the same code can never
+           be typed in again to "pay" a second order (and it no longer shows up as unclaimed till money) */
+        await pool.query(
+            `UPDATE mpesa_c2b_payments c SET claimed_order_id = s.order_id, claimed_at = NOW()
+               FROM mpesa_stk_requests s
+              WHERE c.trans_id = $1 AND c.claimed_order_id IS NULL AND s.mpesa_receipt = c.trans_id AND s.status = 'paid'`, [id]);
     } catch (e) { console.error("M-Pesa C2B confirmation error:", e && e.message); }
     finally { if (!res.headersSent) res.json({ ResultCode: 0, ResultDesc: "Accepted" }); }   /* answered AFTER saving: Netlify stops a function once it answers */
 }
@@ -341,10 +436,23 @@ async function verifyCode(req, res) {
             if (!t) { await client.query("ROLLBACK"); return res.json({ success: true, status: "not_found", message: "We could not find a payment with that code yet. Check the code, wait a minute and try again, or pay again." }); }
             if (t.claimed_order_id && t.claimed_order_id !== String(o.id)) { await client.query("ROLLBACK"); return res.json({ success: true, status: "already_used", message: "That code was already used for another order. Check the code or pay again." }); }
             if (Number(t.amount) + 0.001 < due) { await client.query("ROLLBACK"); return res.json({ success: true, status: "short", received: Number(t.amount), due, message: "We found KSh " + Number(t.amount).toLocaleString("en-KE") + " but this order needs KSh " + due.toLocaleString("en-KE") + ". Please pay the rest or contact GasHub." }); }
+            /* the payer must be the customer (see payerIsCustomer); otherwise leave the money unclaimed and let GasHub confirm the code by hand */
+            const mine = (await client.query(
+                `SELECT (SELECT phone FROM users WHERE id::text = $1::text) AS a, (SELECT delivery_phone FROM orders WHERE id = $2) AS b`, [req.user.id, o.id])).rows[0] || {};
+            const stkPhones = stk.map((r) => r.phone);
+            if (!payerIsCustomer(t.msisdn, [mine.a, mine.b, ...stkPhones])) {
+                await client.query("ROLLBACK");
+                return res.json({ success: true, status: "unavailable", message: "We could not match that payment to your phone number automatically, so we will ask GasHub to confirm this code." });
+            }
             const c2bPaid = await markOrderPaid(client, o.id, { amount: Number(t.amount), method: "mpesa", mpesaReceipt: code, phone: t.msisdn || null, notes: "M-Pesa code checked automatically", confirmedBy: "M-Pesa" });
             await client.query("UPDATE mpesa_c2b_payments SET claimed_order_id = $2, claimed_at = NOW() WHERE id = $1", [t.id, String(o.id)]);
             await client.query("COMMIT");
-        if (!c2bPaid.alreadyPaid) await require("../utils/push-service").orderPaid(c2bPaid.order);
+            /* the typed code paid MORE than the order costs (same alert the phone-prompt path sends). Sent after the commit so an alert problem can never undo the payment. */
+            if (!c2bPaid.alreadyPaid && Number(t.amount) - due >= 1) {
+                require("../utils/error-alerts").alertMoney("A typed M-Pesa code paid more than the order costs",
+                    "A customer typed an M-Pesa code worth KSh " + Number(t.amount) + " for an order that cost KSh " + due + ". The order was marked paid. Refund the difference if needed.\nReceipt: " + code + "\nOrder: " + (o.order_number || o.id) + "\nThen open Admin > Daily Money Check.");
+            }
+            if (!c2bPaid.alreadyPaid) await require("../utils/push-service").orderPaid(c2bPaid.order);
             return res.json({ success: true, status: "paid", message: "Payment received. Thank you!" });
         } catch (e) {
             await client.query("ROLLBACK").catch(() => {});
@@ -363,7 +471,7 @@ async function reconcilePending() {
     if (!mpesa.isConfigured()) return 0;
     await ensureTable();
     const rows = (await pool.query(
-        "SELECT checkout_request_id, created_at FROM mpesa_stk_requests WHERE status = 'pending' AND created_at < NOW() - interval '20 seconds' AND created_at > NOW() - interval '2 hours' ORDER BY created_at LIMIT 10")).rows;
+        "SELECT checkout_request_id, created_at FROM mpesa_stk_requests WHERE status = 'pending' AND created_at < NOW() - interval '20 seconds' AND created_at > NOW() - interval '24 hours' ORDER BY created_at LIMIT 10")).rows;
     let done = 0;
     for (const r of rows) {
         try {

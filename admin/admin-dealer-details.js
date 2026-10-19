@@ -466,7 +466,8 @@
             const rows = r.payouts || [];
             $("poBody").innerHTML = rows.length ? rows.map(p => {
                 const open = p.status !== "paid";
-                return `<tr><td><span class="order-number">${escapeHtml(p.reference)}</span>${p.mpesa_receipt ? `<span class="cell-sub">${escapeHtml(p.mpesa_receipt)}</span>` : ""}</td>
+                const risky = (p.status === "failed" && p.uncertain) || (p.status === "sending" && Date.now() - new Date(p.started_at || 0).getTime() >= 60 * 60000);
+                return `<tr${risky ? ' data-risky="1"' : ""}><td><span class="order-number">${escapeHtml(p.reference)}</span>${p.mpesa_receipt ? `<span class="cell-sub">${escapeHtml(p.mpesa_receipt)}</span>` : ""}</td>
                     <td>${escapeHtml(new Date(p.scheduled_for).toLocaleString("en-GB"))}${new Date(p.scheduled_for) <= new Date() && p.status === "scheduled" ? '<span class="cell-sub">Due now</span>' : ""}</td>
                     <td class="money">${currency(p.online_amount)}</td><td class="money commission-money">- ${currency(p.cash_commission)}</td>
                     <td class="money net-money">${currency(p.amount)}</td><td>${escapeHtml(p.destination || "")}</td><td>${statusPill(p.status)}${p.status === "sending" ? '<span class="cell-sub">Waiting for M-Pesa...</span>' : ""}${p.auto && p.status === "scheduled" ? '<span class="cell-sub">Automatic</span>' : ""}${p.error && p.status !== "paid" ? `<span class="cell-sub" style="white-space:normal;max-width:260px;color:#b42318">${escapeHtml(p.error)}</span>` : ""}</td>
@@ -523,6 +524,10 @@
             const code = await GasHubDialog.prompt({ title: "Mark payout as paid", message: "Enter the M-Pesa receipt code of the transfer you sent.", label: "M-Pesa receipt code", placeholder: "e.g. QGH7XK2LMN", confirmText: "Mark as paid", requiredMessage: "Enter the receipt code." });
             if (!code) return;
             body.mpesa_receipt = code;
+        }
+        if (btn.closest("tr")?.dataset.risky === "1" && ["send_now", "release", "cancel"].includes(action)) {
+            if (!(await GasHubDialog.confirm({ title: "Did you check the M-Pesa statement?", message: "M-Pesa never answered for this payout, so the money may already have reached the dealer. Open your M-Pesa statement now.\n\nIf the money IS there, press Cancel and use Mark paid with its receipt code.\nOnly if it is NOT there, confirm below.", confirmText: "I checked: it was not sent", cancelText: "Go back", tone: "danger" }))) return;
+            body.statement_checked = true;
         }
         if (action === "send_now" && !(await GasHubDialog.confirm({ title: "Send this payout to M-Pesa now?", message: "The money is sent to the dealer's M-Pesa number straight away. It turns Paid when Safaricom confirms. Check your M-Pesa statement first if an earlier attempt gave no answer.", confirmText: "Send now", cancelText: "Not yet", tone: "warning" }))) return;
         if (action === "cancel" && !(await GasHubDialog.confirm({ title: "Cancel this payout?", message: "Its orders go back into the next payout.", confirmText: "Cancel payout", cancelText: "Keep it", tone: "warning" }))) return;

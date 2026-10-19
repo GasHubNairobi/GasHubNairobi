@@ -52,7 +52,8 @@ async function ensureTables() {
       ADD COLUMN IF NOT EXISTS origin_id TEXT, ADD COLUMN IF NOT EXISTS conversation_id TEXT, ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ,
       ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS error TEXT,
       ADD COLUMN IF NOT EXISTS auto BOOLEAN NOT NULL DEFAULT FALSE, ADD COLUMN IF NOT EXISTS period_key TEXT,
-      ADD COLUMN IF NOT EXISTS sent_amount NUMERIC(12,2), ADD COLUMN IF NOT EXISTS dest_method TEXT, ADD COLUMN IF NOT EXISTS dest_phone TEXT`);
+      ADD COLUMN IF NOT EXISTS sent_amount NUMERIC(12,2), ADD COLUMN IF NOT EXISTS dest_method TEXT, ADD COLUMN IF NOT EXISTS dest_phone TEXT,
+      ADD COLUMN IF NOT EXISTS uncertain BOOLEAN NOT NULL DEFAULT FALSE`);   /* uncertain = M-Pesa gave no answer: the money may have left */
   await pool.query(`ALTER TABLE dealer_payout_settings ADD COLUMN IF NOT EXISTS last_auto_period TEXT`);
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS dealer_payouts_period_uq ON dealer_payouts (dealer_id, period_key) WHERE period_key IS NOT NULL`);
   await pool.query(`CREATE INDEX IF NOT EXISTS dealer_payouts_origin_idx ON dealer_payouts (origin_id)`);
@@ -83,6 +84,7 @@ async function unsettled(dealerId, holdHours, db = pool) {
             (o.completed_at <= NOW() - make_interval(hours => $2::int)) AS past_hold
        FROM orders o
       WHERE o.dealer_id = $1 AND o.status = 'completed'
+        AND to_jsonb(o)->>'refund_status' IS NULL AND COALESCE(o.payment_status::text, '') <> 'refunded'   /* a refunded order is never paid out */
         AND NOT EXISTS (SELECT 1 FROM dealer_payout_orders p WHERE p.order_id = o.id::text)
       ORDER BY o.completed_at`, [dealerId, Math.max(0, Math.floor(Number(holdHours) || 0))]);
   const eligible = [], onHold = [];
@@ -203,11 +205,12 @@ const adminLabel = (req) => (req.admin && (req.admin.full_name || req.admin.name
 async function updatePayout(req, res) {
   const b = req.body || {};
   const act = String(b.action || "");
+  const checked = b.statement_checked === true;
   if (act === "send_now") {
     await ensureTables().catch(() => {});
-    const r = await require("../utils/dealer-payouts").startSend(req.params.pid, adminLabel(req), { force: true, dealerId: String(req.params.id) });
+    const r = await require("../utils/dealer-payouts").startSend(req.params.pid, adminLabel(req), { force: true, dealerId: String(req.params.id), statementChecked: checked });
     return r.ok ? res.json({ success: true, message: "Sending to M-Pesa. It turns Paid when Safaricom confirms." })
-                : res.status(r.code || 400).json({ success: false, message: r.message });
+                : res.status(r.code || 400).json({ success: false, code: r.needsCheck ? "check_statement" : undefined, message: r.message });
   }
   let client;
   try {
@@ -220,6 +223,12 @@ async function updatePayout(req, res) {
     if (p.status === "sending" && p.started_at && Date.now() - new Date(p.started_at).getTime() < 60 * 60000) {
       await client.query("ROLLBACK");
       return res.status(409).json({ success: false, message: "This payout is being sent to M-Pesa right now. Wait for the result, so it can never be paid twice." });
+    }
+    /* M-Pesa gave no answer (timed out / never confirmed): the money may have left. Releasing it to be sent again, or cancelling it so its
+       orders are paid again in the next payout, could pay the dealer twice, so the admin must say they checked the statement. */
+    if ((p.status === "failed" || p.status === "sending") && (p.uncertain || p.status === "sending") && (act === "release" || act === "cancel") && !checked) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ success: false, code: "check_statement", message: "M-Pesa never answered for this payout. The money may already have left. Open your M-Pesa statement first: if the money is there, press Mark paid with its receipt code; only if it is NOT there, confirm that you checked." });
     }
     if (act === "hold") await client.query("UPDATE dealer_payouts SET status='held', note=$2 WHERE id=$1", [p.id, clean(b.note, 300) || null]);
     else if (act === "release") {

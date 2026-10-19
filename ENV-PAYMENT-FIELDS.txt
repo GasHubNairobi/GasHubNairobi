@@ -25,7 +25,9 @@ MPESA_C2B_ENABLED=false
 # OPTIONAL, default off: true lets ONE number both receive customer payments and send payouts/refunds (MPESA_SHORTCODE = MPESA_B2C_SHORTCODE).
 # Keep that account funded for payouts; payments and payouts then share one balance.
 MPESA_ALLOW_SAME_SHORTCODE=false
-# optional: accept callbacks only from Safaricom's IPs
+# optional: accept callbacks only from Safaricom's IPs.
+#   false = off | log = TEST MODE (nothing rejected; the Netlify log shows the IP of each callback) | true = reject other IPs
+#   Safe order: set log, make one real payment, check the log says "on the allowed list", then set true.
 MPESA_CALLBACK_IP_ALLOWLIST=false
 # MPESA_ALLOWED_IPS=
 

@@ -244,8 +244,8 @@ async function getRefunds(req, res) {
 /* POST /api/admin/payments/refunds/:orderId/send
    "Refund now": sends the money back to the M-Pesa number the customer paid with, automatically (Safaricom B2C). */
 async function sendOrderRefund(req, res) {
-    const out = await startRefundPayout(req.params.orderId, adminName(req));
-    if (!out.ok) return res.status(out.code || 500).json({ success: false, message: out.message });
+    const out = await startRefundPayout(req.params.orderId, adminName(req), { statementChecked: (req.body || {}).statement_checked === true });
+    if (!out.ok) return res.status(out.code || 500).json({ success: false, code: out.needsCheck ? "check_statement" : undefined, message: out.message });
     res.json({ success: true, message: `Refund of KSh ${out.send.toLocaleString("en-KE")} sent to M-Pesa ${out.phone}. It will show as refunded as soon as Safaricom confirms.` });
 }
 

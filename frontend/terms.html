@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4fd8">
+<title>Terms of Use | GasHub</title>
+<meta name="description" content="The rules for using GasHub in Kenya: accounts, ordering, payments, GasHub points, gas safety, and the terms for dealers and messengers.">
+<link rel="icon" type="image/png" href="/Images/favicon.png">
+<script src="/gashub-theme.js"></script>
+<style>
+:root{
+    --blue:#1f4fd8;--blue-dark:#0f2a7a;--blue-soft:#eaf0ff;--yellow:#ffc20e;--red:#e03131;
+    --ink:#10233f;--muted:#53637c;--line:#e3e9f2;--bg:#f4f7fb;--card:#ffffff;--head:#0f2a7a;--table-head:#eef3fc;--note:#fff8e1;--note-line:#ffe08a;
+}
+html[data-theme="dark"]{
+    --blue:#3f6df0;--blue-soft:#1b2750;--ink:#e8eef9;--muted:#a3b3cc;--line:#26354d;--bg:#0c1524;--card:#111d31;--head:#a9c1ff;--table-head:#16243d;--note:#2a2410;--note-line:#5c4a12;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--blue)}
+.topbar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0)}
+.topbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800;font-size:19px}
+.brand img{height:34px;width:auto}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--blue);font-weight:700;text-decoration:none;font-size:15px;padding:8px 12px;border-radius:999px;background:var(--blue-soft)}
+.hero{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;padding:36px 16px 44px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--blue) 0 34%,var(--red) 34% 67%,var(--yellow) 67% 100%)}
+.hero-in{max-width:1080px;margin:0 auto}
+.hero h1{margin:0 0 8px;font-size:clamp(26px,5vw,38px);line-height:1.2}
+.hero p{margin:0;max-width:640px;color:#dbe6ff}
+.updated{display:inline-block;margin-top:14px;background:rgba(255,255,255,.14);padding:5px 12px;border-radius:999px;font-size:13px;color:#fff}
+.layout{max-width:1080px;margin:0 auto;padding:22px 16px 56px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+.toc{position:sticky;top:84px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;max-height:calc(100vh - 110px);overflow:auto}
+.toc h2{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.toc ol{margin:0;padding:0;list-style:none;counter-reset:t}
+.toc li{counter-increment:t}
+.toc a{display:block;padding:6px 8px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.35}
+.toc a::before{content:counter(t) ". ";color:var(--muted)}
+.toc a:hover,.toc a.on{background:var(--blue-soft);color:var(--blue)}
+.toc-toggle{display:none}
+.doc{min-width:0}
+.glance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.glance div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;border-top:4px solid var(--blue)}
+.glance div:nth-child(2){border-top-color:var(--red)}
+.glance div:nth-child(3){border-top-color:var(--yellow)}
+.glance div:nth-child(4){border-top-color:var(--blue-dark)}
+.glance b{display:block;margin-bottom:4px;font-size:15px}
+.glance span{color:var(--muted);font-size:14px;line-height:1.5;display:block}
+section.sec{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 22px;margin-bottom:16px}
+section.sec h2{margin:0 0 10px;font-size:21px;color:var(--head);line-height:1.3}
+section.sec h3{margin:20px 0 6px;font-size:16px}
+section.sec p,section.sec li{color:var(--muted)}
+section.sec ul{padding-left:20px;margin:8px 0}
+section.sec li{margin:4px 0}
+strong{color:var(--ink)}
+.note{background:var(--note);border:1px solid var(--note-line);border-radius:12px;padding:12px 14px;margin:14px 0;color:var(--ink)}
+.note p{margin:0;color:var(--ink)}
+.tbl{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+th{background:var(--table-head);color:var(--ink);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td:first-child{color:var(--ink);font-weight:600}
+.contact-box{display:grid;gap:10px;margin-top:12px}
+.contact-box a.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;background:var(--blue);color:#fff;font-weight:700;text-decoration:none}
+.contact-box a.btn.wa{background:#1e9e55}
+.contact-box a.btn.mail{background:var(--red)}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 16px calc(30px + env(safe-area-inset-bottom,0))}
+@media(max-width:1000px){.glance{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.glance{grid-template-columns:1fr}}
+@media(max-width:860px){
+    .layout{grid-template-columns:1fr;gap:14px}
+    .toc{position:static;max-height:none}
+    .toc-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;background:none;border:0;color:var(--ink);font:700 15px system-ui;padding:2px 2px 6px;cursor:pointer}
+    .toc h2{display:none}
+    .toc ol{display:none}
+    .toc.open ol{display:block}
+    section.sec{padding:20px 16px}
+}
+@media print{.topbar,.toc,.back{display:none}.layout{display:block}.hero{background:none;color:#000;padding:0}.hero p,.updated{color:#000}section.sec{border:0;padding:0}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+    <a class="brand" href="/customer-home.html"><img src="/Images/logo.png" alt="GasHub logo"><span>GasHub</span></a>
+    <a class="back" href="customer-login.html" id="backLink">&larr; Back</a>
+</div></div>
+
+<header class="hero"><div class="hero-in">
+    <h1>Terms of Use</h1>
+    <p>These are the rules for using GasHub. Please read them before you order. They are written in plain language so they are easy to follow.</p>
+    <span class="updated">Last updated: 18 October 2026</span>
+</div></header>
+
+<div class="layout">
+
+<nav class="toc" id="toc" aria-label="Contents">
+    <button type="button" class="toc-toggle" id="tocToggle" aria-expanded="false">Contents <span>&#9662;</span></button>
+    <h2>Contents</h2>
+    <ol><li><a href="#about">About GasHub and these terms</a></li><li><a href="#account">Your account</a></li><li><a href="#role">What GasHub does, and what dealers do</a></li><li><a href="#orders">Placing an order</a></li><li><a href="#payments">Paying safely</a></li><li><a href="#points">GasHub points</a></li><li><a href="#safety">Gas safety</a></li><li><a href="#conduct">Using GasHub properly</a></li><li><a href="#dealers">Terms for dealers and messengers</a></li><li><a href="#suspension">Suspending or closing accounts</a></li><li><a href="#liability">Our responsibility</a></li><li><a href="#changes">Changes to these terms</a></li><li><a href="#law">Governing law and disputes</a></li><li><a href="#contact">Contact us</a></li></ol>
+</nav>
+
+<main class="doc">
+
+<div class="glance"><div><b>For everyone</b><span>Be 18 or older, give true details and keep your password private.</span></div><div><b>Ordering</b><span>Orders are final once the dealer confirms. You pay after confirmation.</span></div><div><b>Paying</b><span>We never ask for your PIN. Only pay through the options inside GasHub.</span></div><div><b>Safety</b><span>Check your gas on arrival. Report leaks or damage immediately.</span></div></div>
+
+<section class="sec" id="about">
+    <h2>1. About GasHub and these terms</h2>
+    <p>GasHub is an online marketplace in Kenya that connects customers with gas (LPG) dealers for the sale and delivery of gas, cylinders and accessories. These Terms of Use are the rules for using the GasHub website and app. By creating an account, signing in or placing an order, you agree to them.</p>
+    <p>If you do not agree, please do not use GasHub. These terms should be read together with our <a href="privacy-policy.html">Privacy Policy</a>, <a href="refund-policy.html">Refund and Cancellation Policy</a> and <a href="delivery-policy.html">Delivery Policy</a>.</p>
+</section>
+
+<section class="sec" id="account">
+    <h2>2. Your account</h2>
+    <ul>
+        <li>You must be <strong>18 years or older</strong> to use GasHub.</li>
+        <li>Give true information (your name, phone number, email and delivery details) and keep it up to date.</li>
+        <li>Keep your password private. You are responsible for what happens on your account, so tell us straight away if you think someone else is using it.</li>
+        <li>One person should keep one customer account. Accounts must not be shared, sold or transferred.</li>
+    </ul>
+</section>
+
+<section class="sec" id="role">
+    <h2>3. What GasHub does, and what dealers do</h2>
+    <p>GasHub provides the platform where customers find dealers, compare prices, order, pay and track their orders. <strong>Dealers are independent businesses.</strong> The dealer sets the product prices, confirms or rejects your order, prepares the gas and arranges delivery through their own messengers.</p>
+    <p>For online payments (M-Pesa and bank), the money is paid to GasHub first and is later paid out to the dealer after GasHub&rsquo;s commission, as explained in the dealer section below.</p>
+</section>
+
+<section class="sec" id="orders">
+    <h2>4. Placing an order</h2>
+    <ul>
+        <li>When you place an order it is sent to the dealer. <strong>It is not final until the dealer confirms it.</strong> A dealer can reject an order, for example when they are closed, out of stock or cannot reach your location.</li>
+        <li>You pay <strong>after</strong> the dealer confirms. You will be told by notification, SMS or email when you can pay.</li>
+        <li>Prices are set by the dealer and shown before you place the order. The delivery fee, if any, is also shown before you place the order.</li>
+        <li>If a dealer is outside their working hours, the app shows them as closed.</li>
+        <li>Check your delivery address, pinned location and phone number before you place an order. Wrong details can delay or cancel your delivery.</li>
+    </ul>
+</section>
+
+<section class="sec" id="payments">
+    <h2>5. Paying safely</h2>
+    <ul>
+        <li>You can pay by <strong>M-Pesa</strong> (a prompt on your phone), by <strong>bank</strong> when it is switched on, or with <strong>cash on delivery</strong> where the dealer allows it.</li>
+        <li>Enter your M-Pesa PIN only on your own phone. <strong>GasHub will never ask you for your PIN, your password or a code sent to you.</strong></li>
+        <li>Only pay through the payment options shown inside GasHub. Do not send money to a personal number because someone asked you to. If you pay by the backup Till shown in the app, enter the M-Pesa code so we can match the payment to your order.</li>
+        <li>If you were charged but your order does not show as paid, contact us with the M-Pesa code. We will check it against our records and fix it or refund it.</li>
+    </ul>
+</section>
+
+<section class="sec" id="points">
+    <h2>6. GasHub points</h2>
+    <ul>
+        <li>You may earn GasHub points for certain activity, such as paid orders, and use points as a discount on <strong>online</strong> payments. Points are not money, cannot be transferred, and have no value outside GasHub, except where GasHub lets you withdraw them.</li>
+        <li>The number of points earned, the discount they give, and any withdrawal limits and charges are set by GasHub and shown in the app. We may change them from time to time.</li>
+        <li>If an order is cancelled, points you spent on it are returned and points earned from it are taken back.</li>
+        <li>Points obtained through cheating, fake orders, repeated accounts or other abuse (sometimes called &ldquo;coin farming&rdquo;) may be removed and the account may be suspended.</li>
+    </ul>
+</section>
+
+<section class="sec" id="safety">
+    <h2>7. Gas safety</h2>
+    <p>Gas is dangerous if handled badly. When your gas arrives, check the cylinder, seal and fittings before you accept and pay. Do not use a cylinder that is damaged or leaking. If you smell gas, open windows, keep flames and switches away, close the valve and move outside, then call the dealer or emergency services.</p>
+    <p>Dealers are responsible for the quality of their gas, their cylinders and for having the licences and approvals the law requires. GasHub asks dealers to confirm this, but we cannot inspect every cylinder.</p>
+</section>
+
+<section class="sec" id="conduct">
+    <h2>8. Using GasHub properly</h2>
+    <p>You agree not to:</p>
+    <ul>
+        <li>place fake, prank or repeated orders, or give false delivery details;</li>
+        <li>pay with money you do not own, or dispute a payment you made without a genuine reason;</li>
+        <li>abuse, threaten or harass dealers, messengers, other customers or GasHub staff;</li>
+        <li>post false, abusive or misleading reviews, messages or complaints;</li>
+        <li>use bots, scrape the service, try to break into it, or interfere with how it works;</li>
+        <li>use GasHub for anything illegal.</li>
+    </ul>
+    <p>We may remove reviews or messages that break these rules.</p>
+</section>
+
+<section class="sec" id="dealers">
+    <h2>9. Terms for dealers and messengers</h2>
+    <ul>
+        <li>Dealers must give true business details, hold the licences needed to sell gas in Kenya, and keep prices, stock and working hours accurate.</li>
+        <li>Dealers must confirm or reject orders promptly, deliver what was ordered, and treat customers fairly.</li>
+        <li><strong>Commission and payouts.</strong> GasHub keeps a commission on each order at the rate set for the dealer. For online orders, GasHub pays the dealer the amount due, minus commission, on the payout schedule shown in the dealer portal, after a short holding period so that problems can be raised. For cash orders, the dealer collects the cash and the commission is carried forward and taken from later payouts.</li>
+        <li>Orders that are cancelled or refunded are not paid out. If a dealer was paid for an order that is later cancelled or refunded, GasHub may take that amount back from future payouts.</li>
+        <li>A <strong>verification badge</strong> may be offered for a fee. It shows that GasHub has checked certain details. It is not a guarantee of the dealer&rsquo;s products.</li>
+        <li>Dealers are responsible for their messengers and for giving GasHub accurate messenger details. Customer details may be used only to complete the delivery.</li>
+    </ul>
+</section>
+
+<section class="sec" id="suspension">
+    <h2>10. Suspending or closing accounts</h2>
+    <p>We may warn, suspend or close an account, hold payouts, or cancel orders if we reasonably believe the rules here have been broken, there is fraud or abuse, or we are required to by law. Where we can, we will tell you why. You may close your own account at any time from your profile. Orders and money already in progress will still be completed or settled.</p>
+</section>
+
+<section class="sec" id="liability">
+    <h2>11. Our responsibility</h2>
+    <p>We work to keep GasHub running and accurate, but we cannot promise it will always be available or free of errors. Because dealers are independent, GasHub is not the seller of the gas. We are responsible for the platform, for the payments we handle, and for the refunds and payouts described in our policies.</p>
+    <p>Nothing in these terms removes any right you have under Kenyan law, including consumer protection law, that cannot legally be limited. Subject to that, GasHub is not responsible for losses we could not reasonably have predicted, or for losses caused by events outside our control such as network or mobile-money outages, or by a dealer&rsquo;s own actions.</p>
+</section>
+
+<section class="sec" id="changes">
+    <h2>12. Changes to these terms</h2>
+    <p>We may update these terms from time to time. The date at the top shows when they were last changed. If a change is important, we will tell you in the app. Using GasHub after a change means you accept the new terms.</p>
+</section>
+
+<section class="sec" id="law">
+    <h2>13. Governing law and disputes</h2>
+    <p>These terms are governed by the laws of Kenya. If you have a problem, please contact us first so we can try to solve it. If we cannot agree, the courts of Kenya can decide the matter.</p>
+</section>
+
+<section class="sec" id="contact">
+    <h2>14. Contact us</h2>
+    <p>Reach us using the details below. Please give your order number (and the phone number or email on your account) so we can help quickly.</p>
+    <div class="contact-box" id="contactBox"><p style="margin:0">Loading contact details&hellip;</p></div>
+    <p style="margin-top:14px">You can also use <strong>Contact us</strong> on your GasHub profile page once you are signed in.</p><p style="margin-top:14px">Related: <a href="terms.html">Terms of Use</a> &middot; <a href="refund-policy.html">Refund and Cancellation Policy</a> &middot; <a href="delivery-policy.html">Delivery Policy</a> &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
+</section>
+
+</main>
+</div>
+
+<footer>&copy; <span id="y"></span> GasHub. All rights reserved.</footer>
+
+<script>
+(function () {
+    "use strict";
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    /* Back button: return to whichever login page sent you here */
+    var qs = new URLSearchParams(location.search), from = (qs.get("from") || "").toLowerCase();
+    var back = document.getElementById("backLink");
+    var loggedIn = false;
+    try { loggedIn = !!(localStorage.getItem("gasHubLoggedIn") || localStorage.getItem("gasHubCustomer") || localStorage.getItem("customerToken")); } catch (e) { }
+    var fallback = from === "dealer" ? "/dealer/dealer-login.html"
+        : from === "admin" ? "/admin/admin-login.html"
+        : (from === "app" || (!from && loggedIn)) ? "/customer-home.html"
+        : "/customer-login.html";
+    back.setAttribute("href", fallback);
+    back.addEventListener("click", function (e) {
+        var ref = document.referrer, sameSite = ref && ref.indexOf(location.origin) === 0;
+        if (sameSite && history.length > 1) { e.preventDefault(); history.back(); }
+    });
+
+    /* Contents: collapsible on phones, highlight the section being read */
+    var toc = document.getElementById("toc"), tg = document.getElementById("tocToggle");
+    tg.addEventListener("click", function () {
+        var open = toc.classList.toggle("open");
+        tg.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    toc.addEventListener("click", function (e) { if (e.target.closest("a")) { toc.classList.remove("open"); tg.setAttribute("aria-expanded", "false"); } });
+    var links = [].slice.call(toc.querySelectorAll("a"));
+    if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                if (en.isIntersecting) {
+                    links.forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === "#" + en.target.id); });
+                }
+            });
+        }, { rootMargin: "-20% 0px -70% 0px" });
+        [].slice.call(document.querySelectorAll("section.sec")).forEach(function (s) { io.observe(s); });
+    }
+
+    /* Contact details come from the numbers set on the admin page */
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function intl(n) { n = String(n || "").replace(/[^\d]/g, ""); if (n.indexOf("0") === 0) n = "254" + n.slice(1); return n; }
+    var box = document.getElementById("contactBox");
+    fetch("/api/settings/contact", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (c) {
+        var h = "";
+        if (c && c.phone) h += '<a class="btn" href="tel:' + esc(c.phone) + '">Call ' + esc(c.phone) + "</a>";
+        if (c && c.whatsapp) h += '<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/' + esc(intl(c.whatsapp)) + '">WhatsApp ' + esc(c.whatsapp) + "</a>";
+        if (c && c.email) h += '<a class="btn mail" href="mailto:' + esc(c.email) + '">Email ' + esc(c.email) + "</a>";
+        if (c && c.hours) h += '<p style="margin:4px 0 0">' + esc(c.hours) + "</p>";
+        box.innerHTML = h || "<p style=\"margin:0\">Contact details will appear here once GasHub adds them. In the meantime, use Contact us on your profile page.</p>";
+    }).catch(function () {
+        box.innerHTML = "<p style=\"margin:0\">Use Contact us on your GasHub profile page, or the phone and WhatsApp numbers shown on the GasHub home page.</p>";
+    });
+})();
+</script>
+</body>
+</html>

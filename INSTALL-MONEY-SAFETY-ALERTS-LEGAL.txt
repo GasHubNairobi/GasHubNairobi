@@ -1,0 +1,35 @@
+GasHub - money safety, error alerts, install prompt, legal pages
+=================================================================
+
+1. DUPLICATE-ORDER PROTECTION (customer-order-controller.js, customer-checkout.js)
+   Every "Place order" tap carries a one-time key. If the same key arrives twice (double tap, retry after a dropped connection),
+   the first order is returned and no second order is made. If the connection fails, checkout retries up to 3 times with the same key.
+   The database column and index are created automatically the first time (see database/migrations/duplicate-order-protection-migration.sql
+   if you prefer to run it yourself).
+   The M-Pesa prompt was already safe against duplicates; checkout now also retries once on a dropped connection and checks the order
+   before showing an error.
+
+2. DAILY MONEY CHECK (admin > Daily Money Check)
+   New page admin-reconciliation.html. Read-only. Shows money received / paid to dealers / withdrawals / refunds for a chosen day and
+   lists anything that does not line up. No database changes needed.
+
+3. ERROR ALERTS (backend/utils/error-alerts.js)
+   Emails you when the server crashes, hits an unexpected error, or when money did not move as expected (failed or timed-out payouts,
+   withdrawals, refunds; M-Pesa payments that need review).
+   ADD TO YOUR ENVIRONMENT:  ALERT_EMAIL=you@example.com     (several addresses can be separated by commas)
+   If ALERT_EMAIL is not set it uses ADMIN_EMAIL, then SMTP_USER. The same problem emails at most once every 15 minutes.
+
+4. INSTALL THE APP (frontend/gashub-install.js)
+   A small "Install GasHub" card on the customer home and orders pages and the dealer dashboard (Android/Chrome install button;
+   iPhone shows the Share > Add to Home Screen steps). Hidden for 14 days if closed.
+
+5. LEGAL PAGES: terms.html, refund-policy.html, delivery-policy.html (linked from sign-up, login, profile and the dealer pages).
+   These are drafts written from how GasHub works. Have a Kenyan lawyer review them before relying on them.
+
+6. DEALER DAILY ACCOUNTS (dealer portal > Daily Accounts)
+   New page dealer-accounts.html with a "Daily Accounts" link in the dealer sidebar. For any day it separates:
+     - cash on delivery (cash the dealer already holds, minus GasHub's commission which is taken from a later payout);
+     - online orders (money GasHub holds and pays out later, with whether each order has been paid out yet);
+   plus payouts received that day, cancelled/refunded orders (not counted), the last 7 days, an optional "cash counted" box that shows
+   short/over, Print / Save PDF, and Download CSV. It uses the same money rules as the Sales and Payouts pages (utils/dealer-money.js).
+   No database changes needed.

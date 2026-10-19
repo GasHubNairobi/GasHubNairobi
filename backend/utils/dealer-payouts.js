@@ -102,10 +102,11 @@ async function refuse(id, originId, message, retry) {
     const why = String(message || "M-Pesa could not send the money.").slice(0, 300);
     if (retry && Number(row.attempts) < MAX_ATTEMPTS) {
         await pool.query(
-            "UPDATE dealer_payouts SET status = 'scheduled', scheduled_for = NOW() + make_interval(mins => $3::int), error = $4 WHERE id = $1 AND origin_id = $2 AND status = 'sending'",
+            "UPDATE dealer_payouts SET status = 'scheduled', uncertain = FALSE, scheduled_for = NOW() + make_interval(mins => $3::int), error = $4 WHERE id = $1 AND origin_id = $2 AND status = 'sending'",
             [id, originId, RETRY_MINUTES * Number(row.attempts), `${why} (try ${row.attempts} of ${MAX_ATTEMPTS}; trying again later)`.slice(0, 300)]);
     } else {
-        await pool.query("UPDATE dealer_payouts SET status = 'failed', error = $3 WHERE id = $1 AND origin_id = $2 AND status = 'sending'", [id, originId, why]);
+        const failed = await pool.query("UPDATE dealer_payouts SET status = 'failed', uncertain = FALSE, error = $3 WHERE id = $1 AND origin_id = $2 AND status = 'sending' RETURNING reference", [id, originId, why]);
+        if (failed.rows.length) require("./error-alerts").alertMoney("A dealer payout failed", "Dealer payout " + failed.rows[0].reference + " failed: " + why + "\nCheck the M-Pesa statement before releasing it to try again.");
     }
 }
 
@@ -129,6 +130,11 @@ async function startSend(id, by, opts = {}) {
         if (cur.status === "paid") { await client.query("ROLLBACK"); return { ok: false, code: 409, message: "This payout is already paid." }; }
         if (cur.status === "held") { await client.query("ROLLBACK"); return { ok: false, code: 409, message: "This payout is on hold. Release it first." }; }
         if (sendingFresh(cur)) { await client.query("ROLLBACK"); return { ok: false, code: 409, message: "This payment is already being sent. Wait for M-Pesa to answer." }; }
+        /* a failed / unanswered attempt where the money may have left: never send again until the admin says they checked the statement */
+        if ((cur.status === "failed" || cur.status === "sending") && (cur.uncertain || cur.status === "sending") && !opts.statementChecked) {
+            await client.query("ROLLBACK");
+            return { ok: false, needsCheck: true, code: 409, message: "M-Pesa never answered for this payout. The money may already have left. Open your M-Pesa statement first: if the money is there, press Mark paid with its receipt code; only if it is NOT there, confirm that you checked." };
+        }
         if (!opts.force && (cur.status !== "scheduled" || new Date(cur.scheduled_for).getTime() > Date.now())) { await client.query("ROLLBACK"); return { ok: false, skip: true, code: 409, message: "Not due yet." }; }
 
         const dest = destinationOf(cur);
@@ -147,7 +153,7 @@ async function startSend(id, by, opts = {}) {
         }
         const originId = crypto.randomUUID();
         await client.query(
-            `UPDATE dealer_payouts SET status = 'sending', origin_id = $2, started_at = NOW(), attempts = attempts + 1, error = NULL, sent_amount = $3, auto = $4 WHERE id = $1`,
+            `UPDATE dealer_payouts SET status = 'sending', origin_id = $2, started_at = NOW(), attempts = attempts + 1, error = NULL, sent_amount = $3, auto = $4, uncertain = FALSE WHERE id = $1`,
             [cur.id, originId, send, !opts.force]);
         await client.query("COMMIT");
         client.release(); client = null;
@@ -158,7 +164,7 @@ async function startSend(id, by, opts = {}) {
         } catch (e) {
             console.error("Dealer payout B2C error:", cur.reference, e && e.message);
             if (e && e.daraja) await refuse(cur.id, originId, e.message, !opts.force);        /* Safaricom refused: the money was not sent */
-            else await pool.query("UPDATE dealer_payouts SET error = $3 WHERE id = $1 AND origin_id = $2", [cur.id, originId, "No answer from M-Pesa. Check your M-Pesa statement before sending again."]);
+            else await pool.query("UPDATE dealer_payouts SET error = $3, uncertain = TRUE WHERE id = $1 AND origin_id = $2", [cur.id, originId, "No answer from M-Pesa. Check your M-Pesa statement before sending again."]);
             return { ok: false, code: 502, message: "M-Pesa did not accept the payment: " + (e && e.daraja ? e.message : "could not reach M-Pesa. Check your M-Pesa statement before sending again.") };
         }
         return { ok: true, send, by };
@@ -244,16 +250,16 @@ async function handleB2cTimeout(r) {
     if (!origin) return false;
     await payouts.ensureTables();
     const res = await pool.query(
-        "UPDATE dealer_payouts SET status = 'failed', error = $2 WHERE origin_id = $1 AND status = 'sending' RETURNING id",
+        "UPDATE dealer_payouts SET status = 'failed', uncertain = TRUE, error = $2 WHERE origin_id = $1 AND status = 'sending' RETURNING id",
         [origin, "M-Pesa did not answer in time. Check your M-Pesa statement: if the money left press Mark paid with the receipt code, otherwise press Release to try again."]);
-    if (res.rowCount) return true;
+    if (res.rowCount) { require("./error-alerts").alertMoney("A dealer payout timed out at M-Pesa", "A dealer payout got no answer from M-Pesa. The money may or may not have left. Check the M-Pesa statement before releasing it again."); return true; }
     return (await pool.query("SELECT 1 FROM dealer_payouts WHERE origin_id = $1 LIMIT 1", [origin])).rows.length > 0;
 }
 
 /* nobody answered for a long time: stop showing "Sending", ask the admin to look at the statement (never re-sent automatically) */
 async function expireStale() {
     await pool.query(
-        `UPDATE dealer_payouts SET status = 'failed',
+        `UPDATE dealer_payouts SET status = 'failed', uncertain = TRUE,
                 error = 'M-Pesa did not confirm this payment. Check your M-Pesa statement: if the money left press Mark paid with the receipt code, otherwise press Release to try again.'
           WHERE status = 'sending' AND started_at < NOW() - make_interval(mins => $1::int)`, [STALE_SENDING_MIN]);
 }

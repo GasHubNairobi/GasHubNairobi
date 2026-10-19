@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4fd8">
+<title>Refund and Cancellation Policy | GasHub</title>
+<meta name="description" content="How cancelling an order works on GasHub, when you get a refund, how points are handled, and what to do if something goes wrong with your order.">
+<link rel="icon" type="image/png" href="/Images/favicon.png">
+<script src="/gashub-theme.js"></script>
+<style>
+:root{
+    --blue:#1f4fd8;--blue-dark:#0f2a7a;--blue-soft:#eaf0ff;--yellow:#ffc20e;--red:#e03131;
+    --ink:#10233f;--muted:#53637c;--line:#e3e9f2;--bg:#f4f7fb;--card:#ffffff;--head:#0f2a7a;--table-head:#eef3fc;--note:#fff8e1;--note-line:#ffe08a;
+}
+html[data-theme="dark"]{
+    --blue:#3f6df0;--blue-soft:#1b2750;--ink:#e8eef9;--muted:#a3b3cc;--line:#26354d;--bg:#0c1524;--card:#111d31;--head:#a9c1ff;--table-head:#16243d;--note:#2a2410;--note-line:#5c4a12;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--blue)}
+.topbar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0)}
+.topbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800;font-size:19px}
+.brand img{height:34px;width:auto}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--blue);font-weight:700;text-decoration:none;font-size:15px;padding:8px 12px;border-radius:999px;background:var(--blue-soft)}
+.hero{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;padding:36px 16px 44px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--blue) 0 34%,var(--red) 34% 67%,var(--yellow) 67% 100%)}
+.hero-in{max-width:1080px;margin:0 auto}
+.hero h1{margin:0 0 8px;font-size:clamp(26px,5vw,38px);line-height:1.2}
+.hero p{margin:0;max-width:640px;color:#dbe6ff}
+.updated{display:inline-block;margin-top:14px;background:rgba(255,255,255,.14);padding:5px 12px;border-radius:999px;font-size:13px;color:#fff}
+.layout{max-width:1080px;margin:0 auto;padding:22px 16px 56px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+.toc{position:sticky;top:84px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;max-height:calc(100vh - 110px);overflow:auto}
+.toc h2{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.toc ol{margin:0;padding:0;list-style:none;counter-reset:t}
+.toc li{counter-increment:t}
+.toc a{display:block;padding:6px 8px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.35}
+.toc a::before{content:counter(t) ". ";color:var(--muted)}
+.toc a:hover,.toc a.on{background:var(--blue-soft);color:var(--blue)}
+.toc-toggle{display:none}
+.doc{min-width:0}
+.glance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.glance div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;border-top:4px solid var(--blue)}
+.glance div:nth-child(2){border-top-color:var(--red)}
+.glance div:nth-child(3){border-top-color:var(--yellow)}
+.glance div:nth-child(4){border-top-color:var(--blue-dark)}
+.glance b{display:block;margin-bottom:4px;font-size:15px}
+.glance span{color:var(--muted);font-size:14px;line-height:1.5;display:block}
+section.sec{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 22px;margin-bottom:16px}
+section.sec h2{margin:0 0 10px;font-size:21px;color:var(--head);line-height:1.3}
+section.sec h3{margin:20px 0 6px;font-size:16px}
+section.sec p,section.sec li{color:var(--muted)}
+section.sec ul{padding-left:20px;margin:8px 0}
+section.sec li{margin:4px 0}
+strong{color:var(--ink)}
+.note{background:var(--note);border:1px solid var(--note-line);border-radius:12px;padding:12px 14px;margin:14px 0;color:var(--ink)}
+.note p{margin:0;color:var(--ink)}
+.tbl{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+th{background:var(--table-head);color:var(--ink);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td:first-child{color:var(--ink);font-weight:600}
+.contact-box{display:grid;gap:10px;margin-top:12px}
+.contact-box a.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;background:var(--blue);color:#fff;font-weight:700;text-decoration:none}
+.contact-box a.btn.wa{background:#1e9e55}
+.contact-box a.btn.mail{background:var(--red)}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 16px calc(30px + env(safe-area-inset-bottom,0))}
+@media(max-width:1000px){.glance{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.glance{grid-template-columns:1fr}}
+@media(max-width:860px){
+    .layout{grid-template-columns:1fr;gap:14px}
+    .toc{position:static;max-height:none}
+    .toc-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;background:none;border:0;color:var(--ink);font:700 15px system-ui;padding:2px 2px 6px;cursor:pointer}
+    .toc h2{display:none}
+    .toc ol{display:none}
+    .toc.open ol{display:block}
+    section.sec{padding:20px 16px}
+}
+@media print{.topbar,.toc,.back{display:none}.layout{display:block}.hero{background:none;color:#000;padding:0}.hero p,.updated{color:#000}section.sec{border:0;padding:0}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+    <a class="brand" href="/customer-home.html"><img src="/Images/logo.png" alt="GasHub logo"><span>GasHub</span></a>
+    <a class="back" href="customer-login.html" id="backLink">&larr; Back</a>
+</div></div>
+
+<header class="hero"><div class="hero-in">
+    <h1>Refund and Cancellation Policy</h1>
+    <p>Plain rules for cancelling an order and getting your money back, so you know what to expect.</p>
+    <span class="updated">Last updated: 18 October 2026</span>
+</div></header>
+
+<div class="layout">
+
+<nav class="toc" id="toc" aria-label="Contents">
+    <button type="button" class="toc-toggle" id="tocToggle" aria-expanded="false">Contents <span>&#9662;</span></button>
+    <h2>Contents</h2>
+    <ol><li><a href="#glance">Summary</a></li><li><a href="#cancel">When you can cancel</a></li><li><a href="#how">How to cancel</a></li><li><a href="#online">Refunds for online payments (M-Pesa and bank)</a></li><li><a href="#points">GasHub points on a cancelled order</a></li><li><a href="#cash">Cash orders</a></li><li><a href="#problems">Problems with a delivered order</a></li><li><a href="#wrong">Paid twice, or paid but the order is not marked paid</a></li><li><a href="#time">How long a refund takes</a></li><li><a href="#limits">When a refund may be refused</a></li><li><a href="#contact">Contact us</a></li></ol>
+</nav>
+
+<main class="doc">
+
+<div class="glance"><div><b>Cancel</b><span>Free until the order is out for delivery.</span></div><div><b>Online refunds</b><span>Sent back to the M-Pesa number on your order.</span></div><div><b>Points</b><span>Points you spent come back to your account.</span></div><div><b>Cash orders</b><span>Settled with the dealer. Tell us if there is a problem.</span></div></div>
+
+<section class="sec" id="glance">
+    <h2>1. Summary</h2>
+    <p>You can cancel an order in the app until it is out for delivery. If you paid online, GasHub sends your money back to your M-Pesa number and returns any points you used. Cash orders are settled with the dealer. Details are below.</p>
+</section>
+
+<section class="sec" id="cancel">
+    <h2>2. When you can cancel</h2>
+    <ul>
+        <li>You can cancel while your order is <strong>pending</strong> (waiting for the dealer) or <strong>confirmed</strong> (accepted but not yet sent out).</li>
+        <li>Once the order is <strong>out for delivery</strong> or delivered, it can no longer be cancelled in the app. Please contact us or the dealer if there is a problem.</li>
+        <li>If you paid cash and the cash was already received, the order cannot be cancelled in the app.</li>
+        <li>A dealer may also reject or cancel an order, for example when they are out of stock or cannot deliver to you. If that happens before you pay, you owe nothing. If you already paid online, you get a full refund.</li>
+    </ul>
+</section>
+
+<section class="sec" id="how">
+    <h2>3. How to cancel</h2>
+    <ol style="padding-left:20px;color:var(--muted)">
+        <li>Open <strong>My Orders</strong> and choose the order.</li>
+        <li>Tap <strong>Cancel order</strong> and give a short reason if asked.</li>
+        <li>You will see a confirmation. If a refund is due, the order shows the refund amount and its progress.</li>
+    </ol>
+</section>
+
+<section class="sec" id="online">
+    <h2>4. Refunds for online payments (M-Pesa and bank)</h2>
+    <p>Online payments are paid to GasHub, so <strong>GasHub</strong> (not the dealer) returns your money when a paid order is cancelled.</p>
+    <ul>
+        <li>You are refunded the <strong>amount you actually paid</strong> for the cancelled order.</li>
+        <li>The refund is sent to the M-Pesa number shown on your order. Check that number carefully when you cancel.</li>
+        <li>Your order page shows the refund as <strong>pending</strong> while we process it and as <strong>refunded</strong> with the M-Pesa receipt when it has been sent. You will also be notified.</li>
+        <li>M-Pesa and bank charges taken by the payment provider are outside GasHub&rsquo;s control and are not refunded by us, unless the provider returns them.</li>
+    </ul>
+</section>
+
+<section class="sec" id="points">
+    <h2>5. GasHub points on a cancelled order</h2>
+    <p>Points you spent as a discount on the order are put back in your account. Points you earned from that order are taken back, because the sale did not complete. The discount is never paid out as cash.</p>
+</section>
+
+<section class="sec" id="cash">
+    <h2>6. Cash orders</h2>
+    <p>For cash orders the dealer holds your money, so there is no GasHub refund. If you paid cash and are owed money back (for example for a missing item), the dealer must return it. If the dealer does not, tell us through a complaint and we will follow up with the dealer.</p>
+</section>
+
+<section class="sec" id="problems">
+    <h2>7. Problems with a delivered order</h2>
+    <p>Tell us as soon as you can, ideally on the day of delivery, if your order is:</p>
+    <ul>
+        <li>not what you ordered, or short or damaged;</li>
+        <li>leaking, with a broken seal or a faulty fitting;</li>
+        <li>very late, or marked delivered when it was not.</li>
+    </ul>
+    <p>Open the order and use the complaint option, or contact us. Photos help. We will look into it with the dealer. Depending on what we find, the fix may be a replacement, a correction, or a full or partial refund. To protect both sides, GasHub holds the dealer&rsquo;s payout for a short time after delivery so that problems can be raised before the money is released.</p>
+</section>
+
+<section class="sec" id="wrong">
+    <h2>8. Paid twice, or paid but the order is not marked paid</h2>
+    <p>If you were charged twice, or you paid but the order does not show as paid, contact us with your order number and the M-Pesa code. We will check it. If it is a genuine double or wrong payment, we will mark the order paid or refund the extra amount to the paying M-Pesa number. Please do not pay a third time while we check.</p>
+</section>
+
+<section class="sec" id="time">
+    <h2>9. How long a refund takes</h2>
+    <p>We send refunds as soon as they have been processed. If your refund has not reached you, contact us with your order number and we will check its status straight away. Your mobile-money provider may also need a short time to show the money.</p>
+</section>
+
+<section class="sec" id="limits">
+    <h2>10. When a refund may be refused</h2>
+    <ul>
+        <li>The order was already delivered correctly, or the problem was reported much too late to check.</li>
+        <li>There is evidence of fraud, fake orders or abuse of points or offers.</li>
+        <li>The order was paid in cash and is a matter between you and the dealer.</li>
+    </ul>
+    <p>If we refuse, we will tell you why. This does not affect any right you have under Kenyan law.</p>
+</section>
+
+<section class="sec" id="contact">
+    <h2>11. Contact us</h2>
+    <p>Reach us using the details below. Please give your order number (and the phone number or email on your account) so we can help quickly.</p>
+    <div class="contact-box" id="contactBox"><p style="margin:0">Loading contact details&hellip;</p></div>
+    <p style="margin-top:14px">You can also use <strong>Contact us</strong> on your GasHub profile page once you are signed in.</p><p style="margin-top:14px">Related: <a href="terms.html">Terms of Use</a> &middot; <a href="refund-policy.html">Refund and Cancellation Policy</a> &middot; <a href="delivery-policy.html">Delivery Policy</a> &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
+</section>
+
+</main>
+</div>
+
+<footer>&copy; <span id="y"></span> GasHub. All rights reserved.</footer>
+
+<script>
+(function () {
+    "use strict";
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    /* Back button: return to whichever login page sent you here */
+    var qs = new URLSearchParams(location.search), from = (qs.get("from") || "").toLowerCase();
+    var back = document.getElementById("backLink");
+    var loggedIn = false;
+    try { loggedIn = !!(localStorage.getItem("gasHubLoggedIn") || localStorage.getItem("gasHubCustomer") || localStorage.getItem("customerToken")); } catch (e) { }
+    var fallback = from === "dealer" ? "/dealer/dealer-login.html"
+        : from === "admin" ? "/admin/admin-login.html"
+        : (from === "app" || (!from && loggedIn)) ? "/customer-home.html"
+        : "/customer-login.html";
+    back.setAttribute("href", fallback);
+    back.addEventListener("click", function (e) {
+        var ref = document.referrer, sameSite = ref && ref.indexOf(location.origin) === 0;
+        if (sameSite && history.length > 1) { e.preventDefault(); history.back(); }
+    });
+
+    /* Contents: collapsible on phones, highlight the section being read */
+    var toc = document.getElementById("toc"), tg = document.getElementById("tocToggle");
+    tg.addEventListener("click", function () {
+        var open = toc.classList.toggle("open");
+        tg.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    toc.addEventListener("click", function (e) { if (e.target.closest("a")) { toc.classList.remove("open"); tg.setAttribute("aria-expanded", "false"); } });
+    var links = [].slice.call(toc.querySelectorAll("a"));
+    if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                if (en.isIntersecting) {
+                    links.forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === "#" + en.target.id); });
+                }
+            });
+        }, { rootMargin: "-20% 0px -70% 0px" });
+        [].slice.call(document.querySelectorAll("section.sec")).forEach(function (s) { io.observe(s); });
+    }
+
+    /* Contact details come from the numbers set on the admin page */
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function intl(n) { n = String(n || "").replace(/[^\d]/g, ""); if (n.indexOf("0") === 0) n = "254" + n.slice(1); return n; }
+    var box = document.getElementById("contactBox");
+    fetch("/api/settings/contact", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (c) {
+        var h = "";
+        if (c && c.phone) h += '<a class="btn" href="tel:' + esc(c.phone) + '">Call ' + esc(c.phone) + "</a>";
+        if (c && c.whatsapp) h += '<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/' + esc(intl(c.whatsapp)) + '">WhatsApp ' + esc(c.whatsapp) + "</a>";
+        if (c && c.email) h += '<a class="btn mail" href="mailto:' + esc(c.email) + '">Email ' + esc(c.email) + "</a>";
+        if (c && c.hours) h += '<p style="margin:4px 0 0">' + esc(c.hours) + "</p>";
+        box.innerHTML = h || "<p style=\"margin:0\">Contact details will appear here once GasHub adds them. In the meantime, use Contact us on your profile page.</p>";
+    }).catch(function () {
+        box.innerHTML = "<p style=\"margin:0\">Use Contact us on your GasHub profile page, or the phone and WhatsApp numbers shown on the GasHub home page.</p>";
+    });
+})();
+</script>
+</body>
+</html>
