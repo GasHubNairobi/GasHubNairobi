@@ -411,7 +411,7 @@ async function loadDealers() {
 
         return `
             <a class="dcard"
-               href="customer-dealer-details.html?id=${encodeURIComponent(d.id ?? d.dealer_id ?? "")}">
+               href="customer-dealer.html?id=${encodeURIComponent(d.id ?? d.dealer_id ?? "")}">
                 <div class="dlogo">
                     ${logo
                         ? `<img src="${esc(logo)}" alt="">`

@@ -147,7 +147,7 @@ const toDealer = (dealerId, payload, opts) => sendTo("dealer", dealerId, payload
 const ksh = (n) => "KSh " + Number(n || 0).toLocaleString("en-KE", { maximumFractionDigits: 0 });
 const safe = (fn) => async (...a) => { try { return await fn(...a); } catch (e) { console.error("Push event error:", e && e.message); return 0; } };
 const custOrderUrl = (o) => "/customer-order-details.html?orderId=" + encodeURIComponent(o.order_number || o.id);
-const dealerOrderUrl = (o) => "/dealer/dealer-order-details.html?orderId=" + encodeURIComponent(o.order_number || o.id);
+const dealerOrderUrl = (o) => "/dealer/dealer-orders.html?orderId=" + encodeURIComponent(o.order_number || o.id);
 
 /* a customer placed an order -> the dealer */
 const orderPlaced = safe((o) => toDealer(o.dealer_id, {

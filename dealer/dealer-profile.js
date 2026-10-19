@@ -553,6 +553,15 @@ const DealerProfileApp = (function () {
             });
         }
 
+        // "Click Map to Move Pin": the map is already clickable, so this button tells the dealer how and makes sure the map is ready
+        const chooseBtn = document.getElementById("btnChooseOnMap");
+        if (chooseBtn) {
+            chooseBtn.addEventListener("click", function () {
+                if (leafletMap) leafletMap.invalidateSize();
+                GasHubCore.showToast("Tap anywhere on the map, or drag the pin, to set your depot location.", "info");
+            });
+        }
+
         // GPS Current Location Button
         if (gpsBtn) {
             gpsBtn.addEventListener("click", function () {

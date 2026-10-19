@@ -544,7 +544,7 @@ function initializePasswordSettings() {
 }
 
 
-function handlePasswordChange() {
+async function handlePasswordChange() {
     const currentPassword =
         getInputValue(
             "currentPassword"
@@ -587,11 +587,11 @@ function handlePasswordChange() {
 
         valid = false;
     } else if (
-        newPassword.length < 6
+        newPassword.length < 8
     ) {
         markFieldError(
             "newPassword",
-            "Password must be at least 6 characters."
+            "Password must be at least 8 characters."
         );
 
         valid = false;
@@ -641,22 +641,64 @@ function handlePasswordChange() {
     }
 
 
-    /*
-     * Important:
-     * We intentionally do NOT pretend that the password
-     * has been changed.
-     *
-     * The actual password update requires the real
-     * dealer authentication backend.
-     */
+    const saveButton = document.getElementById("savePasswordButton");
+    const token = (function () {
+        try { return localStorage.getItem("gashub_dealer_token") || sessionStorage.getItem("gashub_dealer_token") || ""; } catch (e) { return ""; }
+    })();
 
-    showSettingsMessage(
-        "Password validation completed. The password update will be connected when the dealer authentication backend is ready.",
-        "info"
-    );
+    if (!token) {
+        showSettingsMessage("Your session has expired. Please sign in again.", "error");
+        window.setTimeout(function () { window.location.replace("/dealer/dealer-login.html"); }, 1500);
+        return;
+    }
 
+    if (saveButton) saveButton.disabled = true;
 
-    resetPasswordForm();
+    try {
+        const response = await fetch("/api/dealers/change-password", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: "Bearer " + token
+            },
+            cache: "no-store",
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            })
+        });
+
+        let data = {};
+        try { data = await response.json(); } catch (e) { data = {}; }
+
+        if (response.status === 401) {
+            showSettingsMessage("Your session has expired. Please sign in again.", "error");
+            window.setTimeout(function () { window.location.replace("/dealer/dealer-login.html"); }, 1500);
+            return;
+        }
+
+        if (!response.ok || !data.success) {
+            if (data.field) {
+                markFieldError(data.field, data.message || "Please check this field.");
+            }
+            showSettingsMessage(data.message || "The password could not be changed. Please try again.", "error");
+            return;
+        }
+
+        resetPasswordForm();
+        showSettingsMessage(data.message || "Your password has been changed. Please sign in again.", "success");
+
+        // The server ended every session of this dealer, so clear this phone too and go to the login page.
+        window.setTimeout(function () {
+            try { removeFrontendSession(); } catch (e) { /* ignore */ }
+            window.location.replace("/dealer/dealer-login.html");
+        }, 2000);
+    } catch (error) {
+        showSettingsMessage("Could not reach GasHub. Check your connection and try again.", "error");
+    } finally {
+        if (saveButton) saveButton.disabled = false;
+    }
 }
 
 

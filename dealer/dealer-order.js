@@ -307,6 +307,18 @@
             if (error.unauthorized) setTimeout(() => { window.location.href = "dealer-login.html"; }, 1800);
         }
         applyOrderFilters();
+        openOrderFromLink();
+    }
+
+    /* A push notification (or an old link) opens dealer-orders.html?orderId=GH-... : show that order straight away */
+    function openOrderFromLink() {
+        let wanted = "";
+        try { wanted = new URLSearchParams(window.location.search).get("orderId") || ""; } catch (e) { wanted = ""; }
+        if (!wanted) return;
+        try { window.history.replaceState(null, "", window.location.pathname); } catch (e) { /* ignore */ }
+        const order = (ordersState.orders || []).find(o => String(o.id) === wanted || String(o.serverId) === wanted);
+        if (order) openOrderDetailsModal(order);
+        else showFeedbackBanner("We could not find that order. It may belong to a different account.", "error");
     }
 
     function applyOrderFilters() {

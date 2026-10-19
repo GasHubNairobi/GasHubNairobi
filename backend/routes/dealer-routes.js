@@ -36,6 +36,8 @@ router.post("/logout", async (req, res) => {
     res.json({ success: true });
 });
 router.post("/complete-setup", requireDealer, dealerOnboardingController.completeSetup);
+// Dealer changes their own password from Settings (current password required; every session is signed out afterwards).
+router.post("/change-password", require("../utils/rate-limit").rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), requireDealer, require("../controllers/dealer-password-controller").changeMyPassword);
 router.get("/products/mine", requireDealer, dealerProductController.listMyProducts);
 router.post("/products/sync", requireDealer, dealerProductController.syncMyProducts);
 router.put("/logo/mine", requireDealer, controller.updateMyLogo);

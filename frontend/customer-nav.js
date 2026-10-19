@@ -41,6 +41,7 @@
         withdraw: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14.5h2"/><path d="M7 6l8-3 2 3"/>',
         profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
         about: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+        ai: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/>',
         heart: '<path d="M12 21s-7-4.5-9.3-9A5.2 5.2 0 0 1 12 6.6 5.2 5.2 0 0 1 21.3 12C19 16.5 12 21 12 21z"/>',
         privacy: '<path d="M12 3l8 3v6c0 4.5-3.2 8.2-8 9-4.8-.8-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
         help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17v.01"/>',
@@ -69,6 +70,7 @@
             '<div class="gh-d-user"><div class="gh-d-avatar" id="avatar">C</div><div><strong id="menuCustomerName">Welcome</strong><small>GasHub Customer</small></div></div>' +
             '<nav class="gh-d-nav" aria-label="Main menu">' +
             MAIN.map(function (m) { return '<a href="' + m[2] + '"' + cls(m[0]) + ">" + svg(m[0]) + m[1] + "</a>"; }).join("") +
+            '<a href="customer-ai.html"' + cls("ai") + ">" + svg("ai") + "Customer AI</a>" +
             '<a href="customer-about.html"' + cls("about") + ">" + svg("about") + "About GasHub</a>" +
             '<div class="gh-d-sep"></div>' +
             '<a href="customer-profile.html#favSection">' + svg("heart") + "Favourite products</a>" +
