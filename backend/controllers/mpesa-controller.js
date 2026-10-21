@@ -136,7 +136,7 @@ async function stkPush(req, res) {
             try { if (!locked) throw new Error("no lock"); await locked.query(sql, vals); await locked.query("COMMIT"); }
             catch (x) { if (locked) await locked.query("ROLLBACK").catch(() => {}); await pool.query(sql, vals).catch(() => {}); }
         }
-        res.status(e && e.daraja ? 502 : 500).json({ success: false, message: "We couldn't send the prompt to that number. Check it and try again." });
+        res.status(e && e.daraja ? 502 : 500).json({ success: false, message: mpesa.sendFailureMessage(e) });
     } finally {
         if (locked) { await locked.query("ROLLBACK").catch(() => {}); locked.release(); }   /* no-op after a COMMIT; frees the lock on any other exit */
     }
@@ -344,7 +344,8 @@ async function status(req, res) {
                 r = (await pool.query("SELECT * FROM mpesa_stk_requests WHERE id = $1", [r.id])).rows[0];
             }
         }
-        const messages = { cancelled: "The payment was cancelled on your phone.", timeout: "The prompt expired before it was paid.", failed: "The payment didn't go through. You have not been charged.",
+        const failMsg = ["failed", "cancelled", "timeout"].includes(r.status) ? mpesa.failureMessage(r.result_code, r.status) : undefined;
+        const messages = { cancelled: failMsg, timeout: failMsg, failed: failMsg,
             review: "We received your payment and are checking it. It will show on your order shortly." };
         /* a payment held for GasHub to check is shown to the customer as "confirming" (not "pending", which would invite them to pay again);
            a second payment on an order that is already paid is "duplicate": the order IS paid, only the extra money is being refunded */

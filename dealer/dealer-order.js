@@ -1149,13 +1149,22 @@
             `;
         }).join("");
 
+        /* the report opens in a blank window, so the images need full addresses */
+        const logoUrl = new URL("images/logo.png", window.location.href).href;
+        const watermarkUrl = new URL("images/watermark.png", window.location.href).href;
+
         const html = `
             <!DOCTYPE html>
             <html>
             <head>
                 <title>GasHub Orders Report - ${timeline.toUpperCase()}</title>
                 <style>
-                    body { font-family: Inter, Arial, sans-serif; padding: 30px; color: #1e293b; }
+                    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    body { font-family: Inter, Arial, sans-serif; padding: 30px; color: #1e293b; position: relative; }
+                    .wm { position: fixed; top: 50%; left: 50%; width: 460px; transform: translate(-50%, -50%); opacity: 0.07; z-index: 0; pointer-events: none; }
+                    .report-logo { width: 64px; height: 64px; object-fit: contain; margin-right: 14px; flex: none; }
+                    .brand { display: flex; align-items: center; }
+                    .header, .summary, table, .footer { position: relative; z-index: 1; }
                     .header { display: flex; justify-content: space-between; border-bottom: 2px solid #d97706; padding-bottom: 15px; margin-bottom: 20px; }
                     .header h1 { margin: 0; font-size: 20px; color: #0f172a; }
                     .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
@@ -1168,11 +1177,15 @@
                 </style>
             </head>
             <body>
+                <img class="wm" src="${watermarkUrl}" alt="" onerror="this.style.display='none'">
                 <div class="header">
-                    <div>
-                        <h1>GASHUB DEALER DISPATCH & SETTLEMENT REPORT</h1>
-                        <p style="margin: 3px 0; font-size: 13px;">Dealer: ${escapeHtml(dealer.businessName || "Authorized Dealer")}</p>
-                        <small style="color: #64748b;">Timeline: ${timeline.toUpperCase()} &bull; Generated: ${new Date().toLocaleString()}</small>
+                    <div class="brand">
+                        <img class="report-logo" src="${logoUrl}" alt="GasHub" onerror="this.style.display='none'">
+                        <div>
+                            <h1>GASHUB DEALER DISPATCH & SETTLEMENT REPORT</h1>
+                            <p style="margin: 3px 0; font-size: 13px;">Dealer: ${escapeHtml(dealer.businessName || "Authorized Dealer")}</p>
+                            <small style="color: #64748b;">Timeline: ${timeline.toUpperCase()} &bull; Generated: ${new Date().toLocaleString()}</small>
+                        </div>
                     </div>
                 </div>
 

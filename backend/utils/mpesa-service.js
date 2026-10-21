@@ -151,6 +151,10 @@ function b2cConfigured() {
 }
 const b2cUrl = (kind) => env("MPESA_CALLBACK_BASE_URL").replace(/\/+$/, "") + "/api/payments/mpesa/b2c/" + kind + "/" + encodeURIComponent(env("MPESA_CALLBACK_SECRET"));
 
+/* The Daraja sandbox only pays out to its test MSISDN, so any other number gives \"Receiver party is invalid\".
+   In sandbox we send MPESA_B2C_PARTYB (default 254708374149); in production the real phone is used. */
+const b2cReceiver = (phone) => env("MPESA_ENV").toLowerCase() === "production" ? phone : (env("MPESA_B2C_PARTYB") || "254708374149");
+
 /* Sends `amount` (whole shillings) to `phone` (2547XXXXXXXX). `originId` is our own unique id, used to match Safaricom's reply. */
 async function b2cPay({ phone, amount, originId, remarks, occasion }) {
     if (!b2cConfigured()) { const e = new Error("Automatic payout is not set up: MPESA_B2C_SHORTCODE must be your Paybill and different from the Till."); e.daraja = true; throw e; }
@@ -165,11 +169,49 @@ async function b2cPay({ phone, amount, originId, remarks, occasion }) {
             CommandID: env("MPESA_B2C_COMMAND") === "SalaryPayment" ? "SalaryPayment" : "BusinessPayment",
             Amount: Math.round(Number(amount)),
             PartyA: b2cShortcode(),
-            PartyB: phone,
+            PartyB: b2cReceiver(phone),
             Remarks: String(remarks || "GasHub withdrawal").slice(0, 100),
             QueueTimeOutURL: b2cUrl("timeout"),
             ResultURL: b2cUrl("result"),
             Occasion: String(occasion || "GasHub Coins").slice(0, 100)
+        }
+    });
+    if (!r.ok || String(r.json.ResponseCode) !== "0") {
+        const e = new Error(r.json.errorMessage || r.json.ResponseDescription || "Safaricom did not accept the payment.");
+        e.daraja = true;
+        throw e;
+    }
+    return { conversationId: r.json.ConversationID || "", originId: r.json.OriginatorConversationID || originId };
+}
+
+/* ---- B2B: automatic payment to a dealer's PAYBILL (with account number) or TILL ----
+   Same Paybill, initiator and callback addresses as B2C, so nothing new to register. It is OFF until MPESA_B2B_ENABLED=true, because Safaricom
+   must have switched B2B on for your shortcode/initiator first (until then a Paybill/Till payout stays "Scheduled" and is paid by hand).
+   Optional MPESA_B2B_INITIATOR_NAME / MPESA_B2B_SECURITY_CREDENTIAL when the B2B initiator is a different one from the B2C initiator. */
+const b2bEnabled = () => b2cConfigured() && env("MPESA_B2B_ENABLED").toLowerCase() === "true";
+
+/* Pays `amount` (whole shillings) from our Paybill to a dealer's Paybill ({ kind: "paybill", receiver, account }) or Till ({ kind: "till", receiver }).
+   Safaricom makes up its own OriginatorConversationID for B2B, so the one it returns is what the reply is matched on. */
+async function b2bPay({ kind, receiver, account, amount, originId, remarks }) {
+    if (!b2bEnabled()) { const e = new Error("Automatic Paybill/Till payout is not switched on: set MPESA_B2B_ENABLED=true (and have B2B enabled by Safaricom)."); e.daraja = true; throw e; }
+    const token = await getToken();
+    const till = kind === "till";
+    const r = await call("/mpesa/b2b/v1/paymentrequest", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        body: {
+            Initiator: env("MPESA_B2B_INITIATOR_NAME") || env("MPESA_B2C_INITIATOR_NAME"),
+            SecurityCredential: env("MPESA_B2B_SECURITY_CREDENTIAL") || env("MPESA_B2C_SECURITY_CREDENTIAL"),
+            CommandID: till ? "BusinessBuyGoods" : "BusinessPayBill",
+            SenderIdentifierType: "4",
+            RecieverIdentifierType: env("MPESA_B2B_RECEIVER_TYPE_" + (till ? "TILL" : "PAYBILL")) || "4",   /* (Safaricom spells it "Reciever") */
+            Amount: Math.round(Number(amount)),
+            PartyA: b2cShortcode(),
+            PartyB: String(receiver),
+            AccountReference: String(till ? "GasHub" : (account || "GasHub")).slice(0, 20),
+            Remarks: String(remarks || "GasHub payout").slice(0, 100),
+            QueueTimeOutURL: b2cUrl("timeout"),
+            ResultURL: b2cUrl("result")
         }
     });
     if (!r.ok || String(r.json.ResponseCode) !== "0") {
@@ -207,4 +249,29 @@ function ipAllowed(reqOrIp) {
     return ok;
 }
 
-module.exports = { allowSameShortcode, routeProblems, depositNumbers, b2cShortcode, b2cConfigured, b2cPay, c2bEnabled, registerC2bUrls, isConfigured, stkPush, stkQuery, toMsisdn, secretMatches, ipAllowed, callbackUrl };
+
+/* What to tell the customer once Safaricom has CONFIRMED that a prompt did not end in a payment. It says why (cancelled, no PIN,
+   wrong PIN, low balance) instead of a blanket "didn't go through", and it is only used after the result is known. */
+function failureMessage(code, status) {
+    const c = String(code == null ? "" : code);
+    if (c === "1032" || status === "cancelled") return "You cancelled the payment on your phone. No money was taken.";
+    if (c === "1037" || c === "1019" || status === "timeout") return "The prompt was not answered in time, so no PIN was entered. No money was taken.";
+    if (c === "2001") return "The M-Pesa PIN entered was wrong. No money was taken. Please try again and enter the correct PIN.";
+    if (c === "1") return "Your M-Pesa balance is too low for this payment. No money was taken. Top up and try again.";
+    if (c === "1001") return "M-Pesa is still finishing another transaction on your phone. No money was taken. Wait a minute and try again.";
+    if (c === "SEND" || c === "1025" || c === "1026" || c === "9999") return "We could not deliver the prompt to your phone. No money was taken. Please try again.";
+    return "M-Pesa did not complete this payment. If any money was taken it will show on your order within a few minutes, otherwise you can try again.";
+}
+
+/* What to tell the user when Safaricom REFUSES to send a prompt at all (before any PIN). The real reason is in the server log ("STK push error:").
+   Without this every refusal looked like a bad phone number, even when the real problem was GasHub's M-Pesa setup. */
+function sendFailureMessage(e) {
+    const m = String((e && e.message) || "");
+    if (e && e.daraja) {
+        if (/phone|msisdn|subscriber|party ?a/i.test(m)) return "That number can't receive an M-Pesa prompt. Use a Safaricom line that has M-Pesa (it can start with 07 or 01) and try again.";
+        if (/transaction ?type|shortcode|short code|party ?b|merchant|credential|access token|passkey|password|invalid request|authori[sz]/i.test(m)) return "M-Pesa payments are not set up correctly on GasHub's side yet. Please contact GasHub support.";
+    }
+    return "We couldn't send the prompt to that number. Check it and try again.";
+}
+
+module.exports = { sendFailureMessage, failureMessage, allowSameShortcode, routeProblems, depositNumbers, b2cShortcode, b2cConfigured, b2cPay, b2bEnabled, b2bPay, c2bEnabled, registerC2bUrls, isConfigured, stkPush, stkQuery, toMsisdn, secretMatches, ipAllowed, callbackUrl };

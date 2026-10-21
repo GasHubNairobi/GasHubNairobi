@@ -1194,6 +1194,11 @@ button, input, select {
     color: var(--color-warning);
 }
 
+.status-pill.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
 .row-action-btn {
     display: inline-flex;
     align-items: center;

@@ -3,7 +3,7 @@
    - POST /api/dealers/verification/pay       { phone, outlet_name, epra_license }  sends the PIN prompt for the ADMIN'S fee
    - GET  /api/dealers/verification/status    ?checkout_request_id=...  the dealer's page polls this
    SECURITY RULES (do not remove):
-   - The amount is ALWAYS the verification_fee the admin saved for this dealer. Anything the browser sends as an amount is ignored.
+   - The amount is ALWAYS the verification_fee the admin saved for this dealer, or the admin's default fee when none is set for them. Anything the browser sends as an amount is ignored.
    - The dealer is only verified after Safaricom confirms the money (the callback is re-checked with a direct STK Query,
      and the status call asks Safaricom itself when the callback is late - which matters on Netlify, where a function can
      stop right after it answers).
@@ -71,9 +71,10 @@ async function getMine(req, res) {
         const live = (await pool.query(
             "SELECT checkout_request_id FROM dealer_verification_payments WHERE dealer_id = $1 AND status = 'pending' AND created_at > NOW() - interval '3 minutes' ORDER BY created_at DESC LIMIT 1",
             [String(d.id)])).rows[0];
-        /* the admin's default fee is shown only while no fee has been set for this dealer; it is never what gets charged */
-        const defaultFee = Number(d.verification_fee) > 0 ? null : await getDefaultVerificationFee().catch(() => null);
-        res.json({ success: true, ...stateOf(d), default_fee: defaultFee, mpesa_enabled: mpesa.isConfigured(), pending_checkout_request_id: live ? live.checkout_request_id : null });
+        /* the fee set for this dealer, otherwise the admin's default fee: every dealer can pay without the admin setting a fee one by one */
+        const state = stateOf(d);
+        if (!state.fee) state.fee = await getDefaultVerificationFee().catch(() => null);
+        res.json({ success: true, ...state, default_fee: null, mpesa_enabled: mpesa.isConfigured(), pending_checkout_request_id: live ? live.checkout_request_id : null });
     } catch (e) {
         console.error("Verification state error:", e && e.message);
         res.status(500).json({ success: false, message: "Unable to load your verification status." });
@@ -92,7 +93,9 @@ async function pay(req, res) {
         const d = await loadDealer(req.dealer.dealer_id);
         if (!d) return res.status(404).json({ success: false, message: "Dealer not found." });
         if (d.active) return res.status(400).json({ success: false, code: "already_verified", message: "Your outlet is already verified.", ...stateOf(d) });
-        const fee = Number(d.verification_fee);
+        /* the fee the admin set for this dealer, otherwise the admin's default fee (never an amount sent by the browser) */
+        let fee = Number(d.verification_fee);
+        if (!(fee >= 1)) fee = Number(await getDefaultVerificationFee().catch(() => null));
         if (!(fee >= 1)) return res.status(400).json({ success: false, code: "no_fee", message: "GasHub Admin has not set a verification fee for your outlet yet. Please contact GasHub support." });
         const amount = Math.ceil(fee);
 
@@ -113,7 +116,7 @@ async function pay(req, res) {
         res.json({ success: true, checkoutRequestId: sent.checkoutRequestId, amount, message: "Check your phone and enter your M-Pesa PIN." });
     } catch (e) {
         console.error("Verification STK push error:", e && e.message);   /* never log keys or the full Safaricom reply */
-        res.status(e && e.daraja ? 502 : 500).json({ success: false, message: "We couldn't send the prompt to that number. Check it and try again." });
+        res.status(e && e.daraja ? 502 : 500).json({ success: false, message: mpesa.sendFailureMessage(e) });
     }
 }
 
@@ -205,7 +208,8 @@ async function status(req, res) {
                 r = (await pool.query("SELECT * FROM dealer_verification_payments WHERE id = $1", [r.id])).rows[0];
             }
         }
-        const messages = { cancelled: "The payment was cancelled on your phone.", timeout: "The prompt expired before it was paid.", failed: "The payment didn't go through. You have not been charged.",
+        const failMsg = ["failed", "cancelled", "timeout"].includes(r.status) ? mpesa.failureMessage(r.result_code, r.status) : undefined;
+        const messages = { cancelled: failMsg, timeout: failMsg, failed: failMsg,
             review: "We received your payment and are checking it. Your badge will show shortly." };
         const out = { success: true, status: r.status === "review" ? "pending" : r.status, receipt: r.mpesa_receipt || undefined, message: messages[r.status] };
         if (r.status === "paid") { const d = await loadDealer(req.dealer.dealer_id); if (d) Object.assign(out, stateOf(d)); }

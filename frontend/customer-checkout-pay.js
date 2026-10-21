@@ -274,7 +274,6 @@
             (o.rejected ? '<p class="pv-msg err">GasHub could not find that payment. Check the code and send it again, or pay again.</p>' : "") +
             '<form class="pv-form" id="payCodeForm" autocomplete="off"><input id="payCodeInput" type="text" maxlength="' + (isBank ? 30 : 12) + '" placeholder="' + (isBank ? "Bank reference / transaction code" : "M-Pesa code, e.g. QGH7XK2LMN") + '"><button type="submit" class="pv-btn" id="payCodeBtn">Check payment</button></form>' +
             '<div id="codeResult"></div></div>';
-        if (!showCode) html += '<p class="pv-change"><a href="#" id="showCode">Already paid? Enter your M-Pesa code</a></p>';
         if (!pend) html += '<p class="pv-change"><a href="#" id="changeMethod">Change payment method</a></p>';
         box.innerHTML = html;
         if (!pend) bindCoins(o);
@@ -381,7 +380,8 @@
                     await reload(); return;
                 }
                 if (sj.status === "confirming") { setMsg("stkMsg", sj.message || ""); lockPay(); return; }
-                if (sj.status && sj.status !== "pending") { setMsg("stkMsg", (sj.message || "The payment did not go through.") + " You can pay again, or enter your M-Pesa code if you already paid.", true); btn.disabled = false; btn.textContent = "Pay again"; revealCode(); refreshManual(); return; }
+                /* no "did not complete" message in the first minute: the money may still arrive (only an on-phone cancel is shown at once) */
+                if (sj.status && sj.status !== "pending" && (Date.now() - started >= 60000 || /cancel/i.test(String(sj.status)))) { setMsg("stkMsg", (sj.message || "M-Pesa did not complete this payment. If any money was taken it will show on your order within a few minutes, otherwise you can try again.") + " You can pay again, or enter your M-Pesa code if you already paid.", true); btn.disabled = false; btn.textContent = "Pay again"; revealCode(); refreshManual(); return; }
             }
             setMsg("stkMsg", "No confirmation yet. If you already entered your PIN we will keep checking and confirm it here. Do not pay again until this prompt has expired, or enter your M-Pesa code below.", true);
             btn.disabled = false; btn.textContent = "Pay again"; revealCode(); refreshManual();

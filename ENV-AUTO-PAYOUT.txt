@@ -44,3 +44,14 @@ AUTOMATIC REFUNDS (Admin > Payments > "Refunds to send")
 - Orders paid by bank transfer cannot be refunded to M-Pesa automatically: send it through the bank and press "Mark as refunded".
 - If M-Pesa fails, the row shows the reason and the button becomes "Refund again". If there was no answer at all, check your M-Pesa
   statement before pressing it again.
+
+
+AUTOMATIC PAYOUT TO A DEALER'S PAYBILL OR TILL (B2B)
+- Dealer payouts to a PHONE use B2C (above). Dealer payouts to a PAYBILL (+ account number) or a TILL use Safaricom B2B (Business PayBill /
+  Business BuyGoods). It uses the same Paybill (MPESA_B2C_SHORTCODE), initiator, and result/timeout addresses as B2C, so there is nothing new to register.
+- It stays OFF until you add:   MPESA_B2B_ENABLED=true
+  Do this only after Safaricom has enabled B2B for your shortcode and initiator (in the sandbox it works with the test shortcode).
+- Optional, only if the B2B initiator is not the B2C one:  MPESA_B2B_INITIATOR_NAME=  and  MPESA_B2B_SECURITY_CREDENTIAL=
+- Optional: MPESA_B2B_RECEIVER_TYPE_PAYBILL / MPESA_B2B_RECEIVER_TYPE_TILL (default 4 = shortcode). Change only if Safaricom tells you to.
+- With it OFF, Paybill/Till payouts stay "Scheduled": pay by hand, then press Mark paid (as before).
+- Safaricom gives B2B payments its own reference, so the reply is matched on that (the app stores it right after the request is accepted).

@@ -318,7 +318,7 @@
         var shown = !masked && /^\d{10}$/.test(phone) ? phone.slice(0, 4) + " " + phone.slice(4, 7) + " " + phone.slice(7) : phone;
         if (masked) {
             return '<div class="ir" style="margin-top:8px"><span>' + esc(label) + '</span><b>' + esc(shown) + '</b></div>' +
-                '<p class="rf-note" style="margin-top:4px">For your safety the number is hidden 2 days after an order ends. Use Chat to reach them.</p>';
+                '<p class="rf-note" style="margin-top:4px">For your safety the number is hidden ' + (label === "Phone" ? "48 hours after delivery" : "2 days after an order ends") + '. Use Chat to reach them.</p>';
         }
         return '<div class="ir" style="margin-top:8px"><span>' + esc(label) + '</span><b><a href="tel:' + esc(phone.replace(/[^\d+]/g, "")) + '" style="color:var(--blue);text-decoration:underline">' + esc(shown) + '</a></b></div>';
     }
@@ -549,7 +549,7 @@
         var bk = isBank ? await bankConfig() : null;
         var stk = !isBank && await stkEnabled();
         var man = !isBank ? await manualInfo() : null;
-        var key = ["pay", o.method, bk ? [bk.bank_name, bk.account_number, bk.account_name, bk.branch, bk.paybill, bk.instructions].join("~") : "", stk, man ? "m" : "", pend ? pend.code : "", rej, o.total, o.pointsUsed, pend ? "" : coins.balance].join("|");
+        var key = ["pay", o.method, bk ? [bk.bank_name, bk.account_number, bk.account_name, bk.branch, bk.paybill, bk.instructions].join("~") : "", stk, man ? "m" : "", promptTried ? "t" : "", pend ? pend.code : "", rej, o.total, o.pointsUsed, pend ? "" : coins.balance].join("|");
         if (key === payKey) return;                 /* nothing changed: keep what the customer is typing */
         payKey = key;
 
@@ -572,11 +572,14 @@
         }
         if (pend) html += '<div style="margin-top:10px;padding:8px 10px;border-radius:9px;background:#e8f0ff;color:#1f4fd8;font-size:12px;font-weight:600">We received your code <b>' + esc(pend.code) + '</b>. GasHub is confirming your payment.</div>';
         if (rej) html += '<div class="banner" style="margin-top:10px">GasHub could not find that payment. Check the ' + (isBank ? "bank reference" : "M-Pesa code") + ' and send it again.</div>';
-        html += '<p class="rf-note" style="margin-top:10px"><b>' + (isBank ? "Paid by bank?" : "Already paid?") + '</b> Type your ' + (isBank ? "bank reference" : "M-Pesa code") + ' below. Your order shows as paid once GasHub confirms the money.</p>' +
+        /* The "Already paid?" code box is not shown before the M-Pesa prompt has been sent. It appears after a prompt was tried,
+           or when a code is already being checked, or when no prompt is possible. Bank payments have no prompt, so they show it. */
+        var showCodeBox = isBank || !!pend || !!rej || !stk || !!man || promptTried;
+        html += '<div id="codeSection"' + (showCodeBox ? "" : " hidden") + '>' + '<p class="rf-note" style="margin-top:10px"><b>' + (isBank ? "Paid by bank?" : "Already paid?") + '</b> Type your ' + (isBank ? "bank reference" : "M-Pesa code") + ' below. Your order shows as paid once GasHub confirms the money.</p>' +
             '<form id="payCodeForm" autocomplete="off" style="display:flex;gap:8px;margin-top:10px">' +
             '<input id="payCodeInput" type="text" maxlength="' + (isBank ? 30 : 12) + '" placeholder="' + (isBank ? "Bank reference / transaction code" : "M-Pesa code, e.g. QGH7XK2LMN") + '" value="' + esc(pend ? pend.code : "") + '" style="flex:1;min-width:0;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:13px;text-transform:uppercase">' +
             '<button type="submit" class="btn y" id="payCodeBtn" style="grid-column:auto">' + (pend ? "Update code" : "I have paid") + '</button></form>' +
-            '<p class="msg" id="payMsg" role="status"></p>';
+            '<p class="msg" id="payMsg" role="status"></p>' + '</div>';
         html += changeLink;
         box.innerHTML = checkoutSummary(o) + (pend ? "" : coinsHTML(o)) + html;
         bindChange();
@@ -587,6 +590,9 @@
 
     /* ---- M-Pesa phone prompt (only when the server has Daraja set up) ---- */
     var stkOn;
+    var promptTried = false;
+    /* after a prompt was sent (and failed, or is slow) the customer may need to key in the M-Pesa code */
+    function revealCodeSection() { promptTried = true; var c = $("codeSection"); if (c) c.hidden = false; }
     async function stkEnabled() {
         if (stkOn !== undefined) return stkOn;
         try { var r = await fetch("/api/payments/mpesa/config", { cache: "no-store", credentials: "same-origin" }); var j = await r.json(); stkOn = !!(j && j.enabled); }
@@ -629,11 +635,12 @@
             var tok = await R.csrf(), hdrs = R.authHeaders(true); if (tok) hdrs["X-CSRF-Token"] = tok;
             var r = await fetch("/api/payments/mpesa/stk-push", { method: "POST", headers: hdrs, credentials: "same-origin", body: JSON.stringify({ order_id: order.id, phone: phone }) });
             var j = {}; try { j = await r.json(); } catch (x) { }
-            if (!r.ok || !j.checkoutRequestId) { msg.className = "msg err"; msg.textContent = j.message || "We could not send the prompt. Please try again."; btn.disabled = false; refreshManual(); return; }
+            if (!r.ok || !j.checkoutRequestId) { msg.className = "msg err"; msg.textContent = j.message || "We could not send the prompt. Please try again."; btn.disabled = false; revealCodeSection(); refreshManual(); return; }
             msg.textContent = "Check your phone and enter your M-Pesa PIN...";
-            var started = Date.now();
+            var started = Date.now(), slowShown = false;
             while (Date.now() - started < 130000) {
                 await new Promise(function (res) { setTimeout(res, 3000); });
+                if (!slowShown && Date.now() - started > 25000) { slowShown = true; revealCodeSection(); }
                 var s = await fetch("/api/payments/mpesa/status?order_id=" + encodeURIComponent(order.id) + "&checkout_request_id=" + encodeURIComponent(j.checkoutRequestId), { credentials: "same-origin", cache: "no-store" });
                 var sj = s.ok ? await s.json().catch(function () { return null; }) : null;
                 if (!sj) continue;
@@ -643,10 +650,11 @@
                     flash(sj.message || "Payment received. Thank you!");     /* e.g. "Payment received. KSh 1,500 was paid for order GH-1007. M-Pesa code: ..." */
                     return;
                 }
-                if (sj.status && sj.status !== "pending") { msg.className = "msg err"; msg.textContent = sj.message || "The payment did not go through."; btn.disabled = false; refreshManual(); return; }
+                /* no "did not complete" message in the first minute: the money may still arrive (only an on-phone cancel is shown at once) */
+                if (sj.status && sj.status !== "pending" && (Date.now() - started >= 60000 || /cancel/i.test(String(sj.status)))) { msg.className = "msg err"; msg.textContent = sj.message || "M-Pesa did not complete this payment. If any money was taken it will show on your order within a few minutes, otherwise you can try again."; btn.disabled = false; revealCodeSection(); refreshManual(); return; }
             }
             msg.className = "msg err"; msg.textContent = "No confirmation yet. If you already entered your PIN we will keep checking and confirm it here. Do not pay again until this prompt has expired.";
-            btn.disabled = false; refreshManual();
+            btn.disabled = false; revealCodeSection(); refreshManual();
             watchLate(j.checkoutRequestId);
         } catch (e) { msg.className = "msg err"; msg.textContent = "No connection. Please try again."; btn.disabled = false; }
     }

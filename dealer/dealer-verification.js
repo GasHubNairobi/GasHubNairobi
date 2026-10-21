@@ -138,7 +138,7 @@
             '<div class="ghv-fee" id="ghvFee"><span>Admin Verification Fee:</span><strong id="ghvFeeAmount">—</strong></div>' +
             '<label for="ghvOutlet">Depot / Outlet Name</label><input type="text" id="ghvOutlet" maxlength="120" autocomplete="organization">' +
             '<label for="ghvLicense">EPRA License Number</label><input type="text" id="ghvLicense" maxlength="80" placeholder="e.g. EPRA/LPG/2026/8942">' +
-            '<label for="ghvPhone">M-Pesa Phone Number (for the PIN prompt)</label><input type="tel" id="ghvPhone" inputmode="tel" placeholder="07XX XXX XXX" autocomplete="tel">' +
+            '<label for="ghvPhone">M-Pesa Phone Number (for the PIN prompt)</label><input type="tel" id="ghvPhone" inputmode="tel" placeholder="07XX XXX XXX or 01XX XXX XXX" autocomplete="tel">' +
             '<div class="ghv-status" id="ghvStatus" role="status" aria-live="polite"></div></div>' +
             '<div class="ghv-foot"><button type="button" class="ghv-btn" id="ghvCancel">Cancel</button>' +
             '<button type="submit" class="ghv-btn primary" id="ghvPay"><i class="fa-solid fa-mobile-screen-button fa-sm"></i> <span id="ghvPayText">Pay via M-Pesa</span></button></div>' +
@@ -188,9 +188,8 @@
                 fee.classList.add("missing");
                 if (j.default_fee) {
                     /* just shown: the dealer still cannot pay until GasHub Admin sets the fee for this outlet */
-                    $("ghvFeeAmount").textContent = ksh(j.default_fee) + " (standard fee)";
+                    $("ghvFeeAmount").textContent = ksh(j.default_fee);
                     $("ghvPayText").textContent = "Pay via M-Pesa";
-                    say("This is GasHub's standard verification fee. Your exact fee is confirmed by GasHub Admin before you can pay. Please contact GasHub support.", "err");
                 } else {
                     $("ghvFeeAmount").textContent = "Not set yet";
                     $("ghvPayText").textContent = "Pay via M-Pesa";
@@ -208,7 +207,7 @@
         if (state.busy) return;
         var outlet = $("ghvOutlet").value.trim(), license = $("ghvLicense").value.trim(), phone = $("ghvPhone").value.trim();
         if (!outlet || !license) { say("Enter your outlet name and EPRA license number.", "err"); return; }
-        if (!/^(?:\+?254|0)?[17]\d{8}$/.test(phone.replace(/[\s\-()]/g, ""))) { say("Enter a valid Safaricom number, e.g. 0712 345 678.", "err"); return; }
+        if (!/^(?:\+?254|0)?[17]\d{8}$/.test(phone.replace(/[\s\-()]/g, ""))) { say("Enter a valid Safaricom number, e.g. 0712 345 678 or 0110 123 456.", "err"); return; }
 
         state.busy = true;
         $("ghvPay").disabled = true;

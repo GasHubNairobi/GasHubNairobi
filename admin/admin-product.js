@@ -1,8 +1,10 @@
 /* the public product/dealer lists are hidden from customers when dealers are switched off, so send the admin token */
-function adminFetch(url) {
+function adminFetch(url, options) {
+    options = options || {};
     let token = "";
     try { token = localStorage.getItem("gashub_admin_token") || sessionStorage.getItem("gashub_admin_token") || ""; } catch (e) { }
-    return fetch(url, { credentials: "include", headers: token ? { Authorization: "Bearer " + token } : {} });
+    /* every admin request (including save and delete) must carry the admin token, otherwise the server answers "administrator authentication required" */
+    return fetch(url, { ...options, credentials: "include", headers: { ...(options.headers || {}), ...(token ? { Authorization: "Bearer " + token } : {}) } });
 }
 
 /* =========================================================
@@ -683,7 +685,7 @@ async function handleProductSubmit(event) {
             ? "PUT"
             : "POST";
 
-        const response = await fetch(url, {
+        const response = await adminFetch(url, {
             method,
             headers: {
                 "Content-Type": "application/json"
@@ -761,7 +763,7 @@ async function deleteProduct(id) {
     }
 
     try {
-        const response = await fetch(
+        const response = await adminFetch(
             `/api/admin/products/${encodeURIComponent(id)}`,
             {
                 method: "DELETE"

@@ -70,7 +70,6 @@
             '<div class="gh-d-user"><div class="gh-d-avatar" id="avatar">C</div><div><strong id="menuCustomerName">Welcome</strong><small>GasHub Customer</small></div></div>' +
             '<nav class="gh-d-nav" aria-label="Main menu">' +
             MAIN.map(function (m) { return '<a href="' + m[2] + '"' + cls(m[0]) + ">" + svg(m[0]) + m[1] + "</a>"; }).join("") +
-            '<a href="customer-ai.html"' + cls("ai") + ">" + svg("ai") + "Customer AI</a>" +
             '<a href="customer-about.html"' + cls("about") + ">" + svg("about") + "About GasHub</a>" +
             '<div class="gh-d-sep"></div>' +
             '<a href="customer-profile.html#favSection">' + svg("heart") + "Favourite products</a>" +

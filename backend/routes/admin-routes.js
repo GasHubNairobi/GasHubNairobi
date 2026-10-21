@@ -79,6 +79,7 @@ router.get("/dealers/:id/payouts", requireAdmin, adminPayoutController.getPayout
 router.put("/dealers/:id/payout-settings", requireAdmin, adminPayoutController.savePayoutSettings);
 router.post("/dealers/:id/payouts", requireAdmin, adminPayoutController.schedulePayout);
 router.patch("/dealers/:id/payouts/:pid", requireAdmin, adminPayoutController.updatePayout);
+router.patch("/dealers/:id/payout-orders/:orderId", requireAdmin, adminPayoutController.setOrderHold);
 router.delete("/dealers/:id", requireAdmin, adminDealerController.deleteDealer);
 
 router.get("/settings/lock", requireAdmin, settingsController.lockStatus);

@@ -614,10 +614,23 @@ async function loadRecentOrdersLive() {
             const amount = Number(o.total_amount || o.amount || 0);
             const payment = escapeHtml(o.payment_method || o.paymentMethod || "M-Pesa");
             const status = String(o.status || o.order_status || "pending").toLowerCase();
-            const done = status === "delivered" || status === "completed";
-            const moving = status === "in_transit" || status === "out_for_delivery";
-            const statusClass = done ? "delivered" : moving ? "in-transit" : "pending";
-            const statusText = done ? "Delivered" : moving ? "In Transit" : (status === "confirmed" || status === "processing") ? "Approved" : (status === "cancelled" || status === "rejected") ? "Closed" : "Pending";
+            /* one clear label per real status: Delivered and Completed are shown as they are, and a cancelled or rejected
+               order says so (in red) instead of a vague "Closed" that looked like a glitch */
+            const STATUS_VIEW = {
+                pending: ["Pending", "pending"],
+                confirmed: ["Approved", "pending"],
+                processing: ["Approved", "pending"],
+                in_transit: ["In Transit", "in-transit"],
+                out_for_delivery: ["In Transit", "in-transit"],
+                delivered: ["Delivered", "delivered"],
+                completed: ["Completed", "delivered"],
+                cancelled: ["Cancelled", "cancelled"],
+                canceled: ["Cancelled", "cancelled"],
+                rejected: ["Rejected", "cancelled"]
+            };
+            const view = STATUS_VIEW[status] || [status ? escapeHtml(status.replace(/_/g, " ").replace(/^./, c => c.toUpperCase())) : "Pending", "pending"];
+            const statusText = view[0];
+            const statusClass = view[1];
 
             return `
                 <tr>

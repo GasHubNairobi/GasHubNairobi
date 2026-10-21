@@ -1486,6 +1486,7 @@ const payModal = $id("payModal");
 const paySheet = payModal.querySelector(".pay-sheet");
 const PAY_TIMEOUT_SECONDS = 120;
 const PAY_POLL_MS = 3000;
+const PAY_FAIL_GRACE_MS = 60 * 1000;   /* a failure message waits at least this long after the prompt was sent */
 
 let payRun = 0;          /* bumps every attempt so old polls stop */
 let payClock = null;
@@ -1630,6 +1631,7 @@ async function startPayment() {
     clearInterval(payClock);
     payClock = setInterval(tick, 1000);
 
+    let failSeen = 0;
     while (myRun === payRun && Date.now() - started < PAY_TIMEOUT_SECONDS * 1000) {
         await new Promise(function (res) { setTimeout(res, PAY_POLL_MS); });
         if (myRun !== payRun) return;
@@ -1645,12 +1647,21 @@ async function startPayment() {
         if (paidStatus(j.status)) { paymentSucceeded(j); return; }
         if (failedStatus(j.status)) {
             const st = String(j.status).toLowerCase();
-            finishWithError(j.message ||
-                (/cancel/.test(st) ? "The payment was cancelled on your phone." :
-                    /time|expir/.test(st) ? "The prompt expired before it was paid." :
-                        "The payment didn't go through. You have not been charged."));
-            return;
-        }
+            /* never show a "did not complete" message in the first minute: the money may still arrive, and an early message
+               worries the person who is paying. Only a customer who cancelled on their own phone is told straight away. */
+            if (Date.now() - started < PAY_FAIL_GRACE_MS && !/cancel/.test(st)) continue;
+            /* a plain "cancelled" or "timed out" is a clear answer. Anything else must be reported twice in a row before we
+               say it failed, so a passing reading while the prompt is still on the phone never shows a worrying message. */
+            const clear = /cancel|time|expir/.test(st);
+            failSeen = clear ? 2 : failSeen + 1;
+            if (failSeen >= 2) {
+                finishWithError(j.message ||
+                    (/cancel/.test(st) ? "You cancelled the payment on your phone. No money was taken." :
+                        /time|expir/.test(st) ? "The prompt was not answered in time, so no PIN was entered. No money was taken." :
+                            "M-Pesa did not complete this payment. If any money was taken it will show on your order within a few minutes, otherwise you can try again."));
+                return;
+            }
+        } else { failSeen = 0; }
     }
     if (myRun === payRun) {
         finishWithError("We didn't get a confirmation. If M-Pesa already took the money, it will show on your order within a few minutes. Otherwise try again.", "No confirmation yet");

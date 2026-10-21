@@ -1,6 +1,6 @@
 /* GasHub dealer payouts (admin).
    Rules:
-   - Only COMPLETED orders count, and only after the hold period (default 24h) so complaints/cancellations can be sorted out.
+   - Only COMPLETED orders count, and only after the hold period (default 2h) so complaints/cancellations can be sorted out.
    - Online order (M-Pesa/bank): dealer is owed  product price - commission.  Customer points discounts are paid by GasHub, never the dealer.
    - Cash order: the dealer already holds the cash, so GasHub's commission is taken off the dealer's next payout.
    - Orders are "settled" once they are in a payout. If the balance is not above zero (lots of cash orders) nothing is paid and the
@@ -10,6 +10,7 @@ const { pool } = require("../config/database-config");
 
 const { commissionPct, dealerSale, money } = require("../utils/dealer-money");
 let ready = false;
+const DEFAULT_HOLD_HOURS = 2;      /* completed orders are paid out after this many hours unless the admin set another hold for that dealer */
 
 async function ensureTables() {
   if (ready) return;
@@ -23,7 +24,7 @@ async function ensureTables() {
       frequency TEXT NOT NULL DEFAULT 'weekly',
       pay_day INTEGER NOT NULL DEFAULT 5,
       pay_time TEXT NOT NULL DEFAULT '10:00',
-      hold_hours INTEGER NOT NULL DEFAULT 24,
+      hold_hours INTEGER,                  /* NULL = the admin never set one: the default hold applies */
       min_payout NUMERIC(12,2) NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
   await pool.query(`CREATE TABLE IF NOT EXISTS dealer_payouts (
@@ -47,6 +48,20 @@ async function ensureTables() {
       product_total NUMERIC(12,2) NOT NULL,
       commission NUMERIC(12,2) NOT NULL,
       net NUMERIC(12,2) NOT NULL)`);
+  /* hold_hours is only stored when the admin CHANGED it for a dealer (then it applies to all that dealer's orders, now and later).
+     Empty = follow the default (DEFAULT_HOLD_HOURS), so changing the default changes every dealer who was never customised. */
+  await pool.query(`ALTER TABLE dealer_payout_settings ALTER COLUMN hold_hours DROP NOT NULL, ALTER COLUMN hold_hours DROP DEFAULT`);
+  try {   /* one time: the old form saved its default (24, or 2) for everybody; treat those as "never set" */
+    const m = await pool.query(`INSERT INTO gashub_settings (setting_key, setting_value, updated_at) VALUES ('dealer_hold_default_migrated', '{}'::jsonb, NOW()) ON CONFLICT (setting_key) DO NOTHING RETURNING 1`);
+    if (m.rowCount) await pool.query(`UPDATE dealer_payout_settings SET hold_hours = NULL WHERE hold_hours IN (24, 2)`);
+  } catch (e) { console.error("Hold default migration skipped:", e && e.message); }
+  /* single orders the admin has suspended: they are left out of every payout until resumed */
+  await pool.query(`CREATE TABLE IF NOT EXISTS dealer_order_holds (
+      order_id TEXT PRIMARY KEY,
+      dealer_id TEXT NOT NULL,
+      reason TEXT,
+      held_by TEXT,
+      held_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
   /* automatic payouts (see utils/dealer-payouts.js) */
   await pool.query(`ALTER TABLE dealer_payouts
       ADD COLUMN IF NOT EXISTS origin_id TEXT, ADD COLUMN IF NOT EXISTS conversation_id TEXT, ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ,
@@ -65,8 +80,9 @@ const clean = (v, max = 120) => String(v == null ? "" : v).trim().slice(0, max);
 
 async function getSettings(dealerId, db = pool) {
   const r = await db.query("SELECT * FROM dealer_payout_settings WHERE dealer_id = $1", [String(dealerId)]);
-  return r.rows[0] || { dealer_id: String(dealerId), method: "phone", phone: "", paybill: "", account: "", till: "",
-                        frequency: "weekly", pay_day: 5, pay_time: "10:00", hold_hours: 24, min_payout: 0 };
+  if (r.rows[0]) { const row = r.rows[0]; return { ...row, hold_custom: row.hold_hours != null, hold_hours: row.hold_hours != null ? Number(row.hold_hours) : DEFAULT_HOLD_HOURS }; }
+  return { dealer_id: String(dealerId), method: "phone", phone: "", paybill: "", account: "", till: "",
+                        frequency: "weekly", pay_day: 5, pay_time: "10:00", hold_hours: DEFAULT_HOLD_HOURS, hold_custom: false, min_payout: 0 };
 }
 
 function destinationText(s) {
@@ -77,17 +93,20 @@ function destinationText(s) {
 
 /* Everything the dealer is owed / owes that is not in a payout yet. */
 async function unsettled(dealerId, holdHours, db = pool) {
+  if (holdHours == null || holdHours === "") holdHours = DEFAULT_HOLD_HOURS;   /* never customised for this dealer */
   const rate = await db.query("SELECT commission_rate FROM dealers WHERE id = $1", [dealerId]);
   const pct = commissionPct(rate.rows[0] ? rate.rows[0].commission_rate : null);
   const r = await db.query(
     `SELECT o.id, o.order_number, o.payment_method, o.subtotal, o.delivery_fee, o.discount_amount, o.points_used, o.completed_at,
-            (o.completed_at <= NOW() - make_interval(hours => $2::int)) AS past_hold
+            (o.completed_at <= NOW() - make_interval(hours => $2::int)) AS past_hold,
+            h.reason AS hold_reason, (h.order_id IS NOT NULL) AS suspended
        FROM orders o
+       LEFT JOIN dealer_order_holds h ON h.order_id = o.id::text
       WHERE o.dealer_id = $1 AND o.status = 'completed'
         AND to_jsonb(o)->>'refund_status' IS NULL AND COALESCE(o.payment_status::text, '') <> 'refunded'   /* a refunded order is never paid out */
         AND NOT EXISTS (SELECT 1 FROM dealer_payout_orders p WHERE p.order_id = o.id::text)
       ORDER BY o.completed_at`, [dealerId, Math.max(0, Math.floor(Number(holdHours) || 0))]);
-  const eligible = [], onHold = [];
+  const eligible = [], onHold = [], suspended = [];
   for (const o of r.rows) {
     /* see utils/dealer-money.js: commission is on the goods the dealer sold (after the dealer's own discount), never on the delivery fee.
        online: GasHub holds the money, so the dealer is owed goods - commission + the delivery fee they charged.
@@ -95,12 +114,25 @@ async function unsettled(dealerId, holdHours, db = pool) {
     const s = dealerSale(o, pct);
     const row = { order_id: String(o.id), order_number: o.order_number, kind: s.cash ? "cash" : "online", product_total: s.goods, delivery_fee: s.delivery,
                   commission: s.commission, net: s.net };
+    if (o.suspended) { row.reason = o.hold_reason || ""; suspended.push(row); continue; }   /* suspended by the admin: in no payout until resumed */
     (o.past_hold ? eligible : onHold).push(row);
   }
   const online = money(eligible.filter((e) => e.kind === "online").reduce((s, e) => s + e.net, 0));
   const cashCommission = money(eligible.filter((e) => e.kind === "cash").reduce((s, e) => s + -e.net, 0));
-  return { rate: pct, eligible, onHold, online, cashCommission, net: money(online - cashCommission),
+  return { rate: pct, eligible, onHold, suspended, online, cashCommission, net: money(online - cashCommission),
            onHoldAmount: money(onHold.reduce((s, e) => s + e.net, 0)) };
+}
+
+/* adds the orders inside each payout, so every order can be managed on its own */
+async function withOrders(rows) {
+  if (!rows.length) return rows;
+  const items = (await pool.query(
+    `SELECT i.payout_id, i.order_id, i.kind, i.net, o.order_number
+       FROM dealer_payout_orders i LEFT JOIN orders o ON o.id::text = i.order_id
+      WHERE i.payout_id = ANY($1::bigint[]) ORDER BY o.order_number`, [rows.map((p) => p.id)])).rows;
+  const by = {};
+  for (const it of items) (by[it.payout_id] = by[it.payout_id] || []).push({ order_id: it.order_id, order_number: it.order_number, kind: it.kind, net: Number(it.net) });
+  return rows.map((p) => ({ ...p, orders: by[p.id] || [] }));
 }
 
 /* GET /api/admin/dealers/:id/payouts */
@@ -114,9 +146,11 @@ async function getPayouts(req, res) {
     res.json({ success: true, settings, destination: destinationText(settings),
       balance: { commission_rate: u.rate, online_amount: u.online, cash_commission: u.cashCommission, net: u.net,
                  orders: u.eligible.length, on_hold_orders: u.onHold.length, on_hold_amount: u.onHoldAmount },
-      automation: { configured: require("./../utils/mpesa-service").b2cConfigured(), automatic: (await require("./payout-planner-controller").summary("dealers")).mode !== "off" },
+      /* orders that are earned but not in a payout row yet: the Payout Planner counts these, so this page must show them too */
+      pending_orders: { ready: u.eligible, on_hold: u.onHold, suspended: u.suspended },
+      automation: { configured: require("./../utils/mpesa-service").b2cConfigured(), b2b: require("./../utils/mpesa-service").b2bEnabled(), automatic: (await require("./payout-planner-controller").summary("dealers")).mode !== "off" },
       schedule: await require("./payout-planner-controller").summary("dealers"),
-      payouts: list.rows });
+      payouts: await withOrders(list.rows) });
   } catch (e) {
     console.error("Get payouts error:", e);
     res.status(500).json({ success: false, message: "Unable to load payouts. Check the backend logs." });
@@ -130,7 +164,9 @@ async function savePayoutSettings(req, res) {
   const frequency = "manual";        /* when payouts are created and sent is decided only by the Payout Planner */
   const payDay = Math.min(6, Math.max(0, parseInt(b.pay_day, 10) || 0));
   const payTime = /^\d{2}:\d{2}$/.test(String(b.pay_time || "")) ? b.pay_time : "10:00";
-  const hold = Math.min(720, Math.max(0, parseInt(b.hold_hours, 10) || 0));
+  /* only a changed hold is stored (it then covers all of this dealer's orders, including future ones); the default or a blank box = follow the default */
+  const heldRaw = parseInt(b.hold_hours, 10);
+  const hold = Number.isFinite(heldRaw) && heldRaw !== DEFAULT_HOLD_HOURS ? Math.min(720, Math.max(0, heldRaw)) : null;
   const min = Math.max(0, Number(b.min_payout) || 0);
   const phone = clean(b.phone, 20).replace(/[^\d+]/g, ""), paybill = clean(b.paybill, 12).replace(/\D/g, ""),
         account = clean(b.account, 40), till = clean(b.till, 12).replace(/\D/g, "");
@@ -143,34 +179,66 @@ async function savePayoutSettings(req, res) {
        ON CONFLICT (dealer_id) DO UPDATE SET method=$2, phone=$3, paybill=$4, account=$5, till=$6, frequency=$7, pay_day=$8, pay_time=$9,
          hold_hours=$10, min_payout=$11, updated_at=NOW()`,
       [String(req.params.id), method, phone, paybill, account, till, frequency, payDay, payTime, hold, min]);
-    res.json({ success: true, message: "Payout settings saved.", settings: await getSettings(req.params.id) });
+    /* payouts made earlier that are not sent yet follow the new number / Paybill / Till (a payout is created with a copy of the destination,
+       so without this an unsent payout would still go to the old number). Paid payouts, ones being sent, and ones M-Pesa never answered for are left alone. */
+    const fresh = await getSettings(req.params.id);
+    const dest = destinationText(fresh);
+    let moved = 0;
+    if (dest) {
+      moved = (await pool.query(
+        `UPDATE dealer_payouts SET destination = $2, dest_method = $3, dest_phone = $4
+          WHERE dealer_id = $1 AND status IN ('scheduled','held','failed') AND uncertain = FALSE
+            AND (destination IS DISTINCT FROM $2 OR dest_method IS DISTINCT FROM $3 OR dest_phone IS DISTINCT FROM $4)`,
+        [String(req.params.id), dest, fresh.method, fresh.method === "phone" ? fresh.phone : null])).rowCount;
+    }
+    res.json({ success: true, message: "Payout settings saved." + (moved ? ` ${moved} unsent payout${moved === 1 ? " was" : "s were"} updated to the new destination.` : ""), settings: fresh });
   } catch (e) {
     console.error("Save payout settings error:", e);
     res.status(500).json({ success: false, message: "Unable to save payout settings. Check the backend logs." });
   }
 }
 
-/* Creates one payout of everything that is eligible now, inside the caller's transaction (the caller has locked the dealer row).
-   Returns { ok: true, payout } or { ok: false, status, message }. Used by the admin button and by the automatic scheduler. */
+/* Creates ONE PAYOUT PER ORDER (every online order is independent: it can be sent, held, paid, cancelled or suspended on its own),
+   inside the caller's transaction (the caller has locked the dealer row). opts.orderId limits it to a single order.
+   A cash order cannot be paid (the dealer already holds the cash), so its commission is taken off the first online payout(s) that can
+   cover it; whatever cannot be covered yet rolls forward. Returns { ok: true, payouts, payout } or { ok: false, status, message }.
+   Used by the admin buttons and by the automatic scheduler. */
 async function createPayoutTx(client, dealerId, when, opts = {}) {
   const settings = await getSettings(dealerId, client);
   const destination = destinationText(settings);
   if (!destination) return { ok: false, status: 400, message: "Save the dealer's payout destination first." };
   const u = await unsettled(dealerId, settings.hold_hours, client);
   if (!u.eligible.length) return { ok: false, status: 400, message: "No completed orders are ready for payout yet." };
-  if (u.net <= 0) return { ok: false, status: 400, message: `Nothing to pay: the cash commission owed (KSh ${u.cashCommission.toLocaleString("en-KE")}) is at least the online earnings. It carries forward to the next payout.` };
-  if (u.net < Number(settings.min_payout)) return { ok: false, status: 400, message: `Balance KSh ${u.net.toLocaleString("en-KE")} is below the minimum payout of KSh ${Number(settings.min_payout).toLocaleString("en-KE")}. It rolls over.` };
-  const ref = "PO-" + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 1296).toString(36).toUpperCase();
-  const p = (await client.query(
-    `INSERT INTO dealer_payouts (reference, dealer_id, scheduled_for, online_amount, cash_commission, amount, status, destination, auto, period_key, dest_method, dest_phone)
-     VALUES ($1,$2,$3,$4,$5,$6,'scheduled',$7,$8,$9,$10,$11) RETURNING *`,
-    [ref, String(dealerId), when.toISOString(), u.online, u.cashCommission, u.net, destination, false, opts.periodKey || null,
-     settings.method, settings.method === "phone" ? settings.phone : null])).rows[0];
-  for (const e of u.eligible) {
-    await client.query("INSERT INTO dealer_payout_orders (order_id, payout_id, kind, product_total, commission, net) VALUES ($1,$2,$3,$4,$5,$6)",
-      [e.order_id, p.id, e.kind, e.product_total, e.commission, e.net]);
+  let targets = u.eligible.filter((e) => e.kind === "online");
+  if (opts.orderId != null) {
+    targets = targets.filter((e) => e.order_id === String(opts.orderId));
+    if (!targets.length) return { ok: false, status: 400, message: "That order is not ready for payout (it is not an online order, still in the hold period, suspended, or already in a payout)." };
   }
-  return { ok: true, payout: p };
+  if (!targets.length) return { ok: false, status: 400, message: `Nothing to pay: only cash orders are waiting. Their commission (KSh ${u.cashCommission.toLocaleString("en-KE")}) is taken off the next online payout.` };
+  let cashPool = u.eligible.filter((e) => e.kind === "cash");
+  const made = [];
+  let idx = 0;
+  for (const t of targets) {
+    let net = t.net;
+    const attach = [], rest = [];
+    for (const c of cashPool) { const owe = -c.net; if (net - owe > 0) { net = money(net - owe); attach.push(c); } else rest.push(c); }
+    if (net <= 0 || net < Number(settings.min_payout)) continue;     /* too small: it stays unpaid and is picked up later (its cash commission is not used up) */
+    cashPool = rest;
+    const owed = money(attach.reduce((s, c) => s + -c.net, 0));
+    const ref = "PO-" + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 1296).toString(36).toUpperCase() + (idx++).toString(36).toUpperCase();
+    const p = (await client.query(
+      `INSERT INTO dealer_payouts (reference, dealer_id, scheduled_for, online_amount, cash_commission, amount, status, destination, auto, period_key, dest_method, dest_phone)
+       VALUES ($1,$2,$3,$4,$5,$6,'scheduled',$7,$8,$9,$10,$11) RETURNING *`,
+      [ref, String(dealerId), when.toISOString(), t.net, owed, net, destination, false, opts.periodKey ? `${opts.periodKey}:${t.order_id}` : null,
+       settings.method, settings.method === "phone" ? settings.phone : null])).rows[0];
+    for (const e of [t, ...attach]) {
+      await client.query("INSERT INTO dealer_payout_orders (order_id, payout_id, kind, product_total, commission, net) VALUES ($1,$2,$3,$4,$5,$6)",
+        [e.order_id, p.id, e.kind, e.product_total, e.commission, e.net]);
+    }
+    made.push(p);
+  }
+  if (!made.length) return { ok: false, status: 400, message: "Nothing to pay yet: the order's earnings are not above the cash commission owed or the minimum payout. It carries forward." };
+  return { ok: true, payouts: made, payout: made[0] };
 }
 
 /* POST /api/admin/dealers/:id/payouts : make a payout of everything eligible now for THIS dealer.
@@ -187,10 +255,12 @@ async function schedulePayout(req, res) {
     client = await pool.connect();
     await client.query("BEGIN");
     await client.query("SELECT id FROM dealers WHERE id = $1 FOR UPDATE", [dealerId]);   /* one payout at a time per dealer: no double payment */
-    const r = await createPayoutTx(client, dealerId, when);
+    const r = await createPayoutTx(client, dealerId, when, { orderId: (req.body || {}).order_id });
     if (!r.ok) { await client.query("ROLLBACK"); return res.status(r.status).json({ success: false, message: r.message }); }
     await client.query("COMMIT");
-    res.json({ success: true, message: sum.next ? `Payout created. It is sent at the next dealer payout run: ${sum.next_text}.` : "Payout created. The dealer schedule is Off, so press Send now when you are ready.", payout: r.payout });
+    for (const p of r.payouts) require("../utils/push-service").payoutScheduled(dealerId, p.amount, p.reference);
+    const n = r.payouts.length, what = n === 1 ? "Payout created" : `${n} payouts created (one per order)`;
+    res.json({ success: true, message: sum.next ? `${what}. Sent at the next dealer payout run: ${sum.next_text}.` : `${what}. The dealer schedule is Off, so press Send now on each when you are ready.`, payout: r.payout, payouts: r.payouts });
   } catch (e) {
     if (client) await client.query("ROLLBACK").catch(() => {});
     console.error("Schedule payout error:", e);
@@ -256,6 +326,64 @@ async function updatePayout(req, res) {
   } finally { if (client) client.release(); }
 }
 
+/* PATCH /api/admin/dealers/:id/payout-orders/:orderId  { action: "suspend" | "resume", reason }
+   suspend: the order is taken out of its payout (if it is in one that has not been sent) and left out of every later payout until resumed.
+   The payout's totals are worked out again from the orders that are left, so the total always matches its orders. */
+async function setOrderHold(req, res) {
+  const dealerId = String(req.params.id), orderId = String(req.params.orderId), act = String((req.body || {}).action || "");
+  if (act !== "suspend" && act !== "resume") return res.status(400).json({ success: false, message: "Unknown action." });
+  let client;
+  try {
+    await ensureTables();
+    client = await pool.connect();
+    await client.query("BEGIN");
+    await client.query("SELECT id FROM dealers WHERE id::text = $1 FOR UPDATE", [dealerId]);
+    const o = (await client.query("SELECT id FROM orders WHERE id::text = $1 AND dealer_id::text = $2", [orderId, dealerId])).rows[0];
+    if (!o) { await client.query("ROLLBACK"); return res.status(404).json({ success: false, message: "Order not found for this dealer." }); }
+    if (act === "resume") {
+      await client.query("DELETE FROM dealer_order_holds WHERE order_id = $1", [orderId]);
+      await client.query("COMMIT");
+      return res.json({ success: true, message: "Order resumed. It is included in the next payout." });
+    }
+    const link = (await client.query("SELECT payout_id FROM dealer_payout_orders WHERE order_id = $1", [orderId])).rows[0];
+    let note = "Order suspended. It is left out of payouts until you resume it.";
+    if (link) {
+      const p = (await client.query("SELECT * FROM dealer_payouts WHERE id = $1 FOR UPDATE", [link.payout_id])).rows[0];
+      if (!p || p.dealer_id !== dealerId) { await client.query("ROLLBACK"); return res.status(404).json({ success: false, message: "Payout not found." }); }
+      if (p.status === "paid") { await client.query("ROLLBACK"); return res.status(400).json({ success: false, message: "This order is in a payout that is already paid, so it cannot be suspended." }); }
+      if (p.status === "sending" || (p.status === "failed" && p.uncertain)) {
+        await client.query("ROLLBACK");
+        return res.status(409).json({ success: false, message: "This order's payout is being sent (or M-Pesa never answered). Wait for the result or check the M-Pesa statement first." });
+      }
+      await client.query("DELETE FROM dealer_payout_orders WHERE order_id = $1", [orderId]);
+      const t = (await client.query(
+        `SELECT COUNT(*)::int AS n,
+                COALESCE(SUM(CASE WHEN kind = 'online' THEN net ELSE 0 END), 0) AS online,
+                COALESCE(SUM(CASE WHEN kind = 'cash' THEN -net ELSE 0 END), 0) AS cash
+           FROM dealer_payout_orders WHERE payout_id = $1`, [p.id])).rows[0];
+      const online = money(t.online), cash = money(t.cash), net = money(online - cash);
+      if (!t.n || net <= 0) {   /* nothing payable is left in it: remove it, the remaining orders go back to be paid in the next payout */
+        await client.query("DELETE FROM dealer_payout_orders WHERE payout_id = $1", [p.id]);
+        await client.query("DELETE FROM dealer_payouts WHERE id = $1", [p.id]);
+        note = "Order suspended. The payout had nothing payable left, so it was removed; its other orders return to the next payout.";
+      } else {
+        await client.query("UPDATE dealer_payouts SET online_amount = $2, cash_commission = $3, amount = $4 WHERE id = $1", [p.id, online, cash, net]);
+        note = `Order suspended and taken out of payout ${p.reference}. The payout is now KSh ${net.toLocaleString("en-KE")}.`;
+      }
+    }
+    await client.query(
+      `INSERT INTO dealer_order_holds (order_id, dealer_id, reason, held_by) VALUES ($1,$2,$3,$4)
+       ON CONFLICT (order_id) DO UPDATE SET reason = $3, held_by = $4, held_at = NOW()`,
+      [orderId, dealerId, clean((req.body || {}).reason, 300) || null, adminLabel(req)]);
+    await client.query("COMMIT");
+    res.json({ success: true, message: note });
+  } catch (e) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
+    console.error("Order hold error:", e);
+    res.status(500).json({ success: false, message: "Unable to update the order. Check the backend logs." });
+  } finally { if (client) client.release(); }
+}
+
 /* GET /api/dealers/payouts/mine : the signed-in dealer's own payouts. READ ONLY. Admin notes are never exposed. */
 async function getMyPayouts(req, res) {
   try {
@@ -289,4 +417,4 @@ async function getMyPayouts(req, res) {
   }
 }
 
-module.exports = { getPayouts, savePayoutSettings, schedulePayout, updatePayout, getMyPayouts, ensureTables, createPayoutTx, getSettings, destinationText, unsettled };
+module.exports = { DEFAULT_HOLD_HOURS, setOrderHold, getPayouts, savePayoutSettings, schedulePayout, updatePayout, getMyPayouts, ensureTables, createPayoutTx, getSettings, destinationText, unsettled };

@@ -424,6 +424,7 @@ async function riderDelivered(req, res) {
         if (!upd.rows.length) { await client.query("ROLLBACK"); return gone(res, o); }
         const done = await completeIfDone(client, o.id);
         await client.query("COMMIT");
+        if (done) require("../utils/push-service").orderCompleted(done);   /* phone push to the dealer (best effort) */
         const paid = String(o.payment_status) === "paid";
         res.json({
             success: true, completed: !!done, paid,

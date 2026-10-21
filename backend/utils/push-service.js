@@ -147,11 +147,13 @@ const toDealer = (dealerId, payload, opts) => sendTo("dealer", dealerId, payload
 const ksh = (n) => "KSh " + Number(n || 0).toLocaleString("en-KE", { maximumFractionDigits: 0 });
 const safe = (fn) => async (...a) => { try { return await fn(...a); } catch (e) { console.error("Push event error:", e && e.message); return 0; } };
 const custOrderUrl = (o) => "/customer-order-details.html?orderId=" + encodeURIComponent(o.order_number || o.id);
+/* the dealer is told the listed price + delivery fee, never an amount lowered by a GasHub Coins discount */
+const dealerAmount = (o) => Number(o.points_used) > 0 && o.subtotal != null ? Number(o.subtotal) + (Number(o.delivery_fee) || 0) : o.total_amount;
 const dealerOrderUrl = (o) => "/dealer/dealer-orders.html?orderId=" + encodeURIComponent(o.order_number || o.id);
 
 /* a customer placed an order -> the dealer */
 const orderPlaced = safe((o) => toDealer(o.dealer_id, {
-    title: "New order " + (o.order_number || ""), body: "A customer ordered gas worth " + ksh(o.total_amount) + ". Open it to confirm.",
+    title: "New order " + (o.order_number || ""), body: "A customer ordered gas worth " + ksh(dealerAmount(o)) + ". Open it to confirm.",
     url: dealerOrderUrl(o), tag: "order-" + (o.order_number || o.id)
 }));
 
@@ -180,9 +182,24 @@ const orderStatus = safe((o, status) => {
 const orderPaid = safe(async (o) => {
     await Promise.all([
         toCustomer(o.customer_id, { title: "Payment received", body: "We received " + ksh(o.total_amount) + " for order " + o.order_number + ". Thank you!", url: custOrderUrl(o), tag: "pay-" + o.order_number }),
-        toDealer(o.dealer_id, { title: "Payment received", body: "Order " + o.order_number + " (" + ksh(o.total_amount) + ") is paid.", url: dealerOrderUrl(o), tag: "pay-" + o.order_number })
+        String(o.status) === "completed"
+            ? orderCompletedToDealer(o)
+            : toDealer(o.dealer_id, { title: "Payment received", body: "Order " + o.order_number + " (" + ksh(dealerAmount(o)) + ") is paid.", url: dealerOrderUrl(o), tag: "pay-" + o.order_number })
     ]);
 });
+
+/* an order is finished (delivered and paid) -> the dealer: it now counts towards the next payout once the hold period has passed */
+const orderCompletedToDealer = (o) => toDealer(o.dealer_id, {
+    title: "Order completed", body: "Order " + o.order_number + " (" + ksh(dealerAmount(o)) + ") is delivered and paid. It will be included in your next payout.",
+    url: "/dealer/dealer-payouts.html", tag: "done-" + (o.order_number || o.id)
+});
+const orderCompleted = safe((o) => orderCompletedToDealer(o));
+
+/* a payout was created for the dealer (it is sent at the next payout run) */
+const payoutScheduled = safe((dealerId, amount, reference) => toDealer(dealerId, {
+    title: "Payout scheduled", body: "A payout of " + ksh(amount) + " (" + (reference || "") + ") is on its way to your M-Pesa.",
+    url: "/dealer/dealer-payouts.html", tag: "payout-" + (reference || "new")
+}));
 
 /* the customer cancelled -> dealer */
 const orderCancelledByCustomer = safe((o) => toDealer(o.dealer_id, {
@@ -209,6 +226,6 @@ const withdrawal = safe((userId, kind, w) => {
 
 module.exports = {
     configured, publicKey, save, remove, sendTo, toCustomer, toDealer, validSubscription, buildPayload,
-    orderPlaced, orderConfirmed, orderStatus, orderPaid, orderCancelledByCustomer, chatToDealer, chatToCustomer, payoutPaid, withdrawal,
+    orderPlaced, orderConfirmed, orderStatus, orderPaid, orderCompleted, payoutScheduled, orderCancelledByCustomer, chatToDealer, chatToCustomer, payoutPaid, withdrawal,
     _reset() { ready = false; webpush = null; }
 };

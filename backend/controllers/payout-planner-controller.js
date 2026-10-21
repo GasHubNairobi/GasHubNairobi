@@ -118,29 +118,38 @@ async function calculate(cfg) {
     const dealers = [];
     /* (a) payouts that already exist and are not paid yet */
     const open = (await pool.query(`SELECT * FROM dealer_payouts WHERE status IN ('scheduled','sending','failed','held') ORDER BY scheduled_for`)).rows;
+    /* every order has its own payout (see View Dealer), but the planner shows ONE combined line per dealer and state */
+    const groups = {};
     for (const p of open) {
-        const d = DP.destinationOf(p), send = whole(p.amount);
-        dealers.push({ kind: "payout", id: p.id, reference: p.reference, dealer_id: p.dealer_id, name: names[p.dealer_id] || ("Dealer " + p.dealer_id), destination: p.destination || "",
-                       auto: d.method === "phone" && send <= maxPerTx() && p.status !== "held", state: p.status, send, due: p.scheduled_for, error: p.error || "" });
+        const d = DP.destinationOf(p), send = whole(p.amount), k = p.dealer_id + "|" + p.status;
+        const g = groups[k] = groups[k] || { kind: "payout", id: p.id, reference: p.reference, dealer_id: p.dealer_id, name: names[p.dealer_id] || ("Dealer " + p.dealer_id), destination: p.destination || "",
+                       auto: true, state: p.status, send: 0, due: p.scheduled_for, error: p.error || "", count: 0 };
+        g.send += send; g.count++;
+        if (!(DP.autoMethod(d.method) && send <= maxPerTx() && p.status !== "held")) g.auto = false;
+        if (g.count > 1) g.reference = g.count + " order payouts";
+        if (p.error && !g.error) g.error = p.error;
+        if (new Date(p.scheduled_for) < new Date(g.due)) g.due = p.scheduled_for;
     }
+    dealers.push(...Object.values(groups));
     /* (b) money dealers have earned (past the hold period) that is not in a payout yet: the next run turns it into payouts */
     const settings = (await pool.query("SELECT * FROM dealer_payout_settings")).rows;
     for (const s of settings) {
-        const u = await payouts.unsettled(s.dealer_id, s.hold_hours);
+        const u = await payouts.unsettled(s.dealer_id, s.hold_hours);   /* null = default hold, handled inside unsettled */
         const dest = payouts.destinationText(s);
         const send = whole(u.net);
         if (!u.eligible.length || u.net <= 0) continue;
         if (!dest) { dealers.push({ kind: "earned", dealer_id: s.dealer_id, name: names[s.dealer_id] || ("Dealer " + s.dealer_id), destination: "", auto: false, state: "no_destination", send, orders: u.eligible.length }); continue; }
         if (u.net < Number(s.min_payout)) { dealers.push({ kind: "earned", dealer_id: s.dealer_id, name: names[s.dealer_id] || ("Dealer " + s.dealer_id), destination: dest, auto: false, state: "below_minimum", send, orders: u.eligible.length, min: Number(s.min_payout) }); continue; }
         dealers.push({ kind: "earned", dealer_id: s.dealer_id, name: names[s.dealer_id] || ("Dealer " + s.dealer_id), destination: dest,
-                       auto: s.method === "phone" && send <= maxPerTx(), state: "earned", send, orders: u.eligible.length });
+                       auto: DP.autoMethod(s.method) && send <= maxPerTx(), state: "earned", send, orders: u.eligible.length, count: Math.max(1, u.eligible.filter((e) => e.kind === "online").length) });
     }
 
     /* totals */
     const cCounted = customers.filter((c) => c.counted && !c.over_limit);
     const dCounted = dealers.filter((d) => d.auto && d.state !== "no_destination" && d.state !== "below_minimum" && d.state !== "held");
     const sum = (a) => a.reduce((t, x) => t + x.send, 0);
-    const payments = cCounted.length + dCounted.length;
+    const dealerPayments = (d) => Math.max(1, Math.ceil(d.send / maxPerTx()));   /* a dealer's due orders go out as ONE M-Pesa payment (split only above the per-payment limit) */
+    const payments = cCounted.length + dCounted.reduce((t, d) => t + dealerPayments(d), 0);
     const sendTotal = sum(cCounted) + sum(dCounted);
     const fees = money(payments * cfg.fee_per_payment);
     const buffer = money((sendTotal + fees) * cfg.buffer_pct / 100);
@@ -151,7 +160,7 @@ async function calculate(cfg) {
     if (cfg.float.balance !== null && cfg.float.at) {
         const t = new Date(cfg.float.at).toISOString();
         const a = await pool.query(`SELECT COUNT(*)::int AS n, COALESCE(SUM(payout_amount),0)::numeric AS s FROM points_withdrawals WHERE payout_state = 'paid' AND processed_at > $1`, [t]);
-        const b = await pool.query(`SELECT COUNT(*)::int AS n, COALESCE(SUM(COALESCE(sent_amount, amount)),0)::numeric AS s FROM dealer_payouts WHERE status = 'paid' AND mpesa_receipt IS NOT NULL AND dest_method = 'phone' AND paid_at > $1`, [t]);
+        const b = await pool.query(`SELECT COUNT(DISTINCT mpesa_receipt)::int AS n, COALESCE(SUM(COALESCE(sent_amount, amount)),0)::numeric AS s FROM dealer_payouts WHERE status = 'paid' AND mpesa_receipt IS NOT NULL AND (dest_method = 'phone' OR conversation_id IS NOT NULL) AND paid_at > $1`, [t]);
         const n = a.rows[0].n + b.rows[0].n;
         sentSince = money(Number(a.rows[0].s) + Number(b.rows[0].s) + n * cfg.fee_per_payment);
         estimated = money(cfg.float.balance - sentSince);
@@ -164,7 +173,7 @@ async function calculate(cfg) {
             customers_confirmed: sum(customers.filter((c) => c.confirmed && !c.over_limit)),
             customers_waiting: sum(customers.filter((c) => !c.confirmed && !c.over_limit)),
             customers_counted: sum(cCounted), customers_count: cCounted.length,
-            dealers_counted: sum(dCounted), dealers_count: dCounted.length,
+            dealers_counted: sum(dCounted), dealers_count: dCounted.reduce((t, d) => t + dealerPayments(d), 0),
             dealers_manual: sum(dealers.filter((d) => !d.auto && d.state !== "no_destination" && d.state !== "below_minimum" && d.state !== "held")),
             customers_manual: sum(customers.filter((c) => c.over_limit)),
             payments, send_total: sendTotal, fees, buffer, needed,
@@ -280,8 +289,8 @@ async function runDealers(slotKey) {
             await client.query("BEGIN");
             await client.query("SELECT id FROM dealers WHERE id::text = $1 FOR UPDATE", [String(d.dealer_id)]);
             const r = await payouts.createPayoutTx(client, d.dealer_id, new Date(), { periodKey: "P" + slotKey });   /* one per dealer per run, enforced by the database */
-            if (r.ok) created++;
             await client.query("COMMIT");
+            if (r.ok) { created += r.payouts.length; for (const po of r.payouts) require("../utils/push-service").payoutScheduled(d.dealer_id, po.amount, po.reference); }
         } catch (e) {
             if (client) await client.query("ROLLBACK").catch(() => {});
             if (!(e && e.code === "23505")) console.error("Planner: dealer payout not created:", d.dealer_id, e && e.message);
@@ -290,7 +299,7 @@ async function runDealers(slotKey) {
     const startedAt = new Date(Date.now() - 1000).toISOString();
     await DP.sendDue();
     const sentNow = (await pool.query("SELECT COUNT(*)::int AS n FROM dealer_payouts WHERE started_at >= $1", [startedAt])).rows[0].n;
-    const left = (await pool.query("SELECT COUNT(*)::int AS n FROM dealer_payouts WHERE status = 'scheduled' AND (dest_method IS DISTINCT FROM 'phone')")).rows[0].n;
+    const left = (await pool.query("SELECT COUNT(*)::int AS n FROM dealer_payouts WHERE status = 'scheduled' AND (dest_method IS DISTINCT FROM 'phone') AND NOT $1::boolean", [mpesa.b2bEnabled()])).rows[0].n;
     return `${created} dealer payout${created === 1 ? "" : "s"} created, ${sentNow} sent to M-Pesa` + (left ? `; ${left} go to a Paybill/Till and must be paid by hand, then marked Paid.` : ".");
 }
 

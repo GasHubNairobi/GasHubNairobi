@@ -134,7 +134,7 @@
     }
 
     function askCard() {
-        var what = ROLE === "dealer" ? "new orders, payments and customer messages" : "order updates, payments and dealer replies";
+        var what = ROLE === "dealer" ? "new orders, payments, customer messages and payouts" : "order updates, payments and dealer replies";
         card("Turn on notifications", "Get " + what + " on your phone, even when GasHub is closed.", "Turn on", function (el, btn) {
             btn.disabled = true; btn.textContent = "...";
             enable().then(function (r) {

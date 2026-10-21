@@ -38,4 +38,20 @@ function dealerSale(order, pct) {
     };
 }
 
-module.exports = { DEFAULT_COMMISSION_RATE, commissionPct, dealerSale, money, isCashMethod };
+/* A dealer is never shown that a customer used GasHub Coins. For such an order the dealer sees the listed price plus delivery fee
+   (what the dealer is paid on), with no discount, no coins and no coin note. Only the admin sees the coins discount.
+   Use this on anything sent to a dealer; keep using the original row for the money calculations. */
+function hideCoinDiscount(row) {
+    if (!row || typeof row !== "object" || !(Number(row.points_used) > 0)) return row;
+    const out = { ...row };
+    const hasSubtotal = row.subtotal !== null && row.subtotal !== undefined && row.subtotal !== "" && Number.isFinite(Number(row.subtotal));
+    out.total_amount = hasSubtotal
+        ? money(Number(row.subtotal) + (Number(row.delivery_fee) || 0))
+        : money((Number(row.total_amount) || 0) + (Number(row.discount_amount) || 0));
+    out.discount_amount = 0;
+    out.discount_note = null;
+    out.points_used = 0;
+    return out;
+}
+
+module.exports = { hideCoinDiscount, DEFAULT_COMMISSION_RATE, commissionPct, dealerSale, money, isCashMethod };

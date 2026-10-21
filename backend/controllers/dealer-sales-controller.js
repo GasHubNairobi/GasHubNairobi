@@ -4,7 +4,7 @@
    Days are Nairobi days.   GET /api/dealers/sales/mine?period=7days|30days|90days|year */
 const { pool } = require("../config/database-config");
 const { ensureRefundColumns } = require("../utils/refunds");
-const { commissionPct, dealerSale, money } = require("../utils/dealer-money");
+const { commissionPct, dealerSale, money, hideCoinDiscount } = require("../utils/dealer-money");
 
 const TZ = "Africa/Nairobi";
 const DAY = 86400000;
@@ -99,7 +99,7 @@ async function getMySales(req, res) {
             const items = Array.isArray(o.items) ? o.items : [];
             const units = { refill: 0, new: 0, empty: 0, accessory: 0, commercial: 0 };
             items.forEach((i) => { units[kindOf(i.category, `${i.name || ""} ${i.size || ""}`)] += Number(i.qty) || 0; });
-            return { ...o, sale: s, units, qty: items.reduce((t, i) => t + (Number(i.qty) || 0), 0) };
+            return { ...hideCoinDiscount(o), sale: s, units, qty: items.reduce((t, i) => t + (Number(i.qty) || 0), 0) };
         });
 
         const inRange = (o, from, to) => o.day >= from && o.day <= to;

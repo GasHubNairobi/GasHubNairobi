@@ -5,6 +5,7 @@ const { pool } = require("../config/database-config");
 const { markOrderPaid, isCash } = require("../utils/order-fulfilment");
 const { autoEmailMessenger, baseUrl, ensureTrackingColumns } = require("./tracking-controller");
 const { ensureRefundColumns, settleCancelledOrder } = require("../utils/refunds");
+const { hideCoinDiscount } = require("../utils/dealer-money");
 
 const clean = (v, max = 200) => String(v == null ? "" : v).trim().slice(0, max);
 const normPhone = (v) => { const d = String(v || "").replace(/[^\d+]/g, ""); return /^\+?254\d{9}$/.test(d) ? "0" + d.replace(/^\+?254/, "") : d; };
@@ -204,7 +205,7 @@ async function listOrders(req, res) {
              LEFT JOIN order_items oi ON oi.order_id = o.id
              WHERE o.dealer_id = $1
              GROUP BY o.id, u.id ORDER BY o.created_at DESC LIMIT 200`, [req.dealer.dealer_id]);
-        res.json({ success: true, orders: r.rows.map(hideCustomerContact) });
+        res.json({ success: true, orders: r.rows.map((row) => hideCoinDiscount(hideCustomerContact(row))) });
     } catch (error) {
         console.error("Dealer orders error:", error);
         res.status(500).json({ success: false, message: "Unable to load your orders." });
@@ -391,7 +392,7 @@ async function updateOrder(req, res) {
             /* phone push to the customer: on the way / ready / delivered / cancelled (best effort, never blocks the answer) */
             await require("../utils/push-service").orderStatus(upd, b.status);
         }
-        res.json({ success: true, order: hideCustomerContact(upd), messengerEmail });
+        res.json({ success: true, order: hideCoinDiscount(hideCustomerContact(upd)), messengerEmail });
     } catch (error) {
         try { await client.query("ROLLBACK"); } catch (e) { /* ignore */ }
         console.error("Dealer update order error:", error);
@@ -434,7 +435,7 @@ async function recordPayment(req, res) {
         await client.query("COMMIT");
         if (!out.alreadyPaid) await require("../utils/push-service").orderPaid(out.order);
         const done = out.completed ? " The delivery was already confirmed, so the order is now completed." : "";
-        res.json({ success: true, message: (out.pointsAwarded ? `Cash payment confirmed. The customer earned ${out.pointsAwarded} GasHub points.` : "Cash payment confirmed.") + done, order: out.order, pointsAwarded: out.pointsAwarded, completed: out.completed });
+        res.json({ success: true, message: (out.pointsAwarded ? `Cash payment confirmed. The customer earned ${out.pointsAwarded} GasHub points.` : "Cash payment confirmed.") + done, order: hideCoinDiscount(out.order), pointsAwarded: out.pointsAwarded, completed: out.completed });
     } catch (error) {
         try { await client.query("ROLLBACK"); } catch (e) { /* ignore */ }
         if (error.status) return res.status(error.status).json({ success: false, message: error.message });

@@ -54,9 +54,22 @@ function contactWindow(o) {
     return { expired: Date.now() >= expiresAt.getTime(), expiresAt };
 }
 
+/* The messenger's phone number is hidden 48 hours after the delivery. The clock starts when the order is delivered
+   (or completed, cancelled or rejected), so it no longer waits for the dealer to press "Complete". */
+const RIDER_CONTACT_WINDOW_MS = 48 * 60 * 60 * 1000;
+function riderContactWindow(o) {
+    const st = String(o.status);
+    let endedAt = null;
+    if (st === "delivered" || st === "completed") endedAt = o.completed_at || o.delivered_at || o.updated_at;
+    else if (st === "cancelled" || st === "rejected") endedAt = o.cancelled_at || o.updated_at;
+    if (!endedAt) return { expired: false };
+    return { expired: Date.now() >= new Date(endedAt).getTime() + RIDER_CONTACT_WINDOW_MS };
+}
+
 function shapeOrder(o, items = [], payments = []) {
     const hasRider = !!(o.rider_name || o.rider_phone);
     const contact = contactWindow(o);
+    const riderContact = riderContactWindow(o);
     const dealerPhone = o.dealer_phone ? (contact.expired ? maskPhone(o.dealer_phone) : String(o.dealer_phone)) : "";
     return {
         id: o.id,
@@ -108,7 +121,7 @@ function shapeOrder(o, items = [], payments = []) {
 
         /* who delivered it */
         rider: hasRider ? {
-            name: o.rider_name, phone: o.rider_phone ? (contact.expired ? maskPhone(o.rider_phone) : o.rider_phone) : "", idNumber: maskId(o.rider_id_number),
+            name: o.rider_name, phone: o.rider_phone ? (riderContact.expired ? maskPhone(o.rider_phone) : o.rider_phone) : "", idNumber: maskId(o.rider_id_number),
             vehicle: o.rider_vehicle_reg || "", assignedAt: o.rider_assigned_at
         } : null,
 

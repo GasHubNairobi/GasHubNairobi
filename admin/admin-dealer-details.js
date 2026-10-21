@@ -430,7 +430,7 @@
         if (method === "paybill") html += f("poPaybill", "Paybill number", s.paybill, "e.g. 247247") + f("poAccount", "Account number", s.account, "Account");
         else if (method === "till") html += f("poTill", "Till number", s.till, "e.g. 5123456");
         else html += f("poPhone", "M-Pesa phone number", s.phone, "0712345678", "tel");
-        html += f("poHold", "Hold completed orders for (hours)", s.hold_hours ?? 24, "24", "number");
+        html += f("poHold", "Hold completed orders for (hours). Leave at 2 for the default; a changed value covers ALL this dealer's orders, now and later", s.hold_hours ?? 2, "2", "number");
         html += f("poMin", "Minimum payout (KSh)", s.min_payout ?? 0, "0", "number");
         $("payoutFields").innerHTML = html;
     }
@@ -445,7 +445,8 @@
     /* "Send now" is offered for M-Pesa phone payouts once the B2C setup exists on the server */
     function canSend(p, r) {
         const phone = p.dest_method ? p.dest_method === "phone" : /^M-Pesa\s/i.test(String(p.destination || ""));
-        return Boolean(r && r.automation && r.automation.configured && phone && p.status !== "held" && p.status !== "paid");
+        const biz = ["paybill", "till"].includes(p.dest_method) || /^(Paybill|Till)\s/i.test(String(p.destination || ""));   /* B2B: only when switched on on the server */
+        return Boolean(r && r.automation && r.automation.configured && (phone || (biz && r.automation.b2b)) && p.status !== "held" && p.status !== "paid");
     }
     async function loadPayouts() {
         if (!dealerId) return;
@@ -467,12 +468,39 @@
             $("poBody").innerHTML = rows.length ? rows.map(p => {
                 const open = p.status !== "paid";
                 const risky = (p.status === "failed" && p.uncertain) || (p.status === "sending" && Date.now() - new Date(p.started_at || 0).getTime() >= 60 * 60000);
-                return `<tr${risky ? ' data-risky="1"' : ""}><td><span class="order-number">${escapeHtml(p.reference)}</span>${p.mpesa_receipt ? `<span class="cell-sub">${escapeHtml(p.mpesa_receipt)}</span>` : ""}</td>
+                const mainRow = `<tr${risky ? ' data-risky="1"' : ""}><td><span class="order-number">${escapeHtml(p.reference)}</span>${p.mpesa_receipt ? `<span class="cell-sub">${escapeHtml(p.mpesa_receipt)}</span>` : ""}</td>
                     <td>${escapeHtml(new Date(p.scheduled_for).toLocaleString("en-GB"))}${new Date(p.scheduled_for) <= new Date() && p.status === "scheduled" ? '<span class="cell-sub">Due now</span>' : ""}</td>
                     <td class="money">${currency(p.online_amount)}</td><td class="money commission-money">- ${currency(p.cash_commission)}</td>
                     <td class="money net-money">${currency(p.amount)}</td><td>${escapeHtml(p.destination || "")}</td><td>${statusPill(p.status)}${p.status === "sending" ? '<span class="cell-sub">Waiting for M-Pesa...</span>' : ""}${p.auto && p.status === "scheduled" ? '<span class="cell-sub">Automatic</span>' : ""}${p.error && p.status !== "paid" ? `<span class="cell-sub" style="white-space:normal;max-width:260px;color:#b42318">${escapeHtml(p.error)}</span>` : ""}</td>
                     <td>${open && p.status === "sending" && Date.now() - new Date(p.started_at || 0).getTime() < 60 * 60000 ? '<span class="cell-sub">Locked while M-Pesa answers</span>' : open ? `${canSend(p, r) ? `<button class="row-action" data-po="send_now" data-id="${p.id}">${p.status === "failed" ? "Send again" : "Send now"}</button> ` : ""}${p.status === "failed" ? `<button class="row-action" data-po="release" data-id="${p.id}">Release</button> ` : ""}<button class="row-action" data-po="paid" data-id="${p.id}">Mark paid</button> ${p.status === "held" ? `<button class="row-action" data-po="release" data-id="${p.id}">Release</button>` : `<button class="row-action" data-po="hold" data-id="${p.id}">Hold</button>`} <button class="row-action" data-po="cancel" data-id="${p.id}">Cancel</button>` : ""}</td></tr>`;
-            }).join("") : '<tr><td colspan="8" class="empty-row">No payouts yet.</td></tr>';
+                const canEdit = ["scheduled", "held", "failed"].includes(p.status) && !(p.status === "failed" && p.uncertain);
+                const onl = (p.orders || []).find(o => o.kind === "online") || (p.orders || [])[0];
+                const cashN = (p.orders || []).filter(o => o.kind === "cash");
+                const orderNote = onl ? `<span class="cell-sub">Order ${escapeHtml(onl.order_number || onl.order_id)}${cashN.length ? ` &middot; cash commission of ${cashN.map(c => escapeHtml(c.order_number || c.order_id)).join(", ")} deducted` : ""}</span>` : "";
+                const suspendBtn = canEdit && onl ? ` <button class="row-action" data-po="suspend" data-order="${escapeHtml(onl.order_id)}">Suspend order</button>` : "";
+                return mainRow.replace('</tr>', '').replace(/<\/td>\s*$/, suspendBtn + '</td>') + '</tr>';
+            }).join("") : "";
+            /* earned orders not yet in a payout (the Payout Planner shows these as "Earned: next run makes the payout") */
+            const pend = r.pending_orders || { ready: [], on_hold: [] };
+            const pendActions = (o, held) => {
+                const sus = `<button class="row-action" data-po="suspend" data-order="${escapeHtml(o.order_id)}">Suspend</button>`;
+                if (held) return `<span class="cell-sub">Waiting for hold period</span>${sus}`;
+                if (o.kind !== "online") return `<span class="cell-sub">Commission is deducted from an online payout</span>${sus}`;
+                return `<button class="row-action" data-po="create" data-order="${escapeHtml(o.order_id)}" title="Creates a payout for this order only">Create payout</button> ${sus}`;
+            };
+            const pendRow = (o, held) => `<tr><td><span class="order-number">${escapeHtml(o.order_number || o.order_id)}</span><span class="cell-sub">${o.kind === "cash" ? "Cash order" : "Online order"}</span></td>
+                    <td>${held ? "After hold period" : escapeHtml(r.schedule && r.schedule.next_text ? r.schedule.next_text : "Next payout run")}</td>
+                    <td class="money">${o.kind === "online" ? currency(o.net) : currency(0)}</td><td class="money commission-money">${o.kind === "cash" ? "- " + currency(-o.net) : "- " + currency(0)}</td>
+                    <td class="money net-money">${currency(o.net)}</td><td>${escapeHtml(r.destination || "No payout number saved")}</td>
+                    <td><span class="pill pill-pending">${held ? "on hold" : "earned"}</span><span class="cell-sub">${held ? "Counted once the hold ends" : "Next run makes the payout"}</span></td><td>${pendActions(o, held)}</td></tr>`;
+            const suspRow = o => `<tr style="background:#fff7ed"><td><span class="order-number">${escapeHtml(o.order_number || o.order_id)}</span><span class="cell-sub">${o.kind === "cash" ? "Cash order" : "Online order"}</span></td>
+                    <td>Not paid</td><td class="money">${o.kind === "online" ? currency(o.net) : currency(0)}</td><td class="money commission-money">${o.kind === "cash" ? "- " + currency(-o.net) : "- " + currency(0)}</td>
+                    <td class="money net-money">${currency(o.net)}</td><td></td>
+                    <td><span class="pill pill-failed">suspended</span>${o.reason ? `<span class="cell-sub" style="white-space:normal;max-width:240px">${escapeHtml(o.reason)}</span>` : ""}</td>
+                    <td><button class="row-action" data-po="resume" data-order="${escapeHtml(o.order_id)}">Resume</button></td></tr>`;
+            const pendHtml = (pend.ready || []).map(o => pendRow(o, false)).join("") + (pend.on_hold || []).map(o => pendRow(o, true)).join("") + (pend.suspended || []).map(suspRow).join("");
+            $("poBody").innerHTML = (rows.length ? $("poBody").innerHTML : "") + pendHtml;
+            if (!rows.length && !pendHtml) $("poBody").innerHTML = '<tr><td colspan="8" class="empty-row">No payouts yet.</td></tr>';
         } catch (error) {
             console.error("Unable to load payouts:", error);
             notify(`Payouts: ${error.message}`, "error");
@@ -519,6 +547,27 @@
         const btn = event.target.closest("[data-po]");
         if (!btn) return;
         const action = btn.dataset.po;
+        if (action === "suspend" || action === "resume") {
+            let reason = "";
+            if (action === "suspend") {
+                reason = await GasHubDialog.prompt({ title: "Suspend this order?", message: "It is taken out of its payout (if it is in one that is not sent yet) and left out of every payout until you resume it. The other orders are not affected.", label: "Reason (only you see this)", placeholder: "e.g. customer complaint", confirmText: "Suspend order", requiredMessage: "Enter a reason." });
+                if (!reason) return;
+            }
+            try {
+                const r = await apiRequest(`${base()}/payout-orders/${encodeURIComponent(btn.dataset.order)}`, { method: "PATCH", body: JSON.stringify({ action, reason }) });
+                notify(r.message || "Done.", "success");
+                loadPayouts();
+            } catch (error) { notify(error.message, "error"); }
+            return;
+        }
+        if (action === "create") {   /* one earned order -> its own payout */
+            try {
+                const made = await apiRequest(`${base()}/payouts`, { method: "POST", body: JSON.stringify({ order_id: btn.dataset.order }) });
+                notify(made.message || "Payout created.", "success");
+                loadPayouts();
+            } catch (error) { notify(error.message, "error"); }
+            return;
+        }
         const body = { action };
         if (action === "paid") {
             const code = await GasHubDialog.prompt({ title: "Mark payout as paid", message: "Enter the M-Pesa receipt code of the transfer you sent.", label: "M-Pesa receipt code", placeholder: "e.g. QGH7XK2LMN", confirmText: "Mark as paid", requiredMessage: "Enter the receipt code." });

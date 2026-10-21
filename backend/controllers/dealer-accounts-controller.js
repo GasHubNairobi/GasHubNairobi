@@ -11,7 +11,7 @@
    so this page can never disagree with them. A SALE is a COMPLETED order that was not refunded, counted on the day it was completed. */
 const { pool } = require("../config/database-config");
 const { ensureRefundColumns } = require("../utils/refunds");
-const { commissionPct, dealerSale, money } = require("../utils/dealer-money");
+const { commissionPct, dealerSale, money, hideCoinDiscount } = require("../utils/dealer-money");
 
 const TZ = "Africa/Nairobi";
 const DAY = 86400000;
@@ -54,7 +54,8 @@ async function getDailyAccounts(req, res) {
             const o = o0;      /* an old order with no saved subtotal is handled inside dealerSale (utils/dealer-money.js), so every page agrees */
             const s = dealerSale(o, pct);
             /* what the customer handed over: the order total (a coin discount is already taken off it) */
-            const paid = money(o.total_amount != null ? o.total_amount : s.goods + s.delivery);
+            const shownTotal = hideCoinDiscount(o).total_amount;   /* a coin discount is never shown to the dealer: GasHub pays it */
+            const paid = money(shownTotal != null ? shownTotal : s.goods + s.delivery);
             return { ...o, sale: s, customerPaid: paid };
         });
 
@@ -86,12 +87,13 @@ async function getDailyAccounts(req, res) {
 
         /* cancelled / rejected / refunded that day: shown for the dealer's records, never counted as a sale */
         const lost = await safeRows(
-            `SELECT order_number, total_amount, payment_method, status::text AS status, refund_status
+            `SELECT order_number, total_amount, subtotal, delivery_fee, discount_amount, points_used, payment_method, status::text AS status, refund_status
                FROM orders
               WHERE dealer_id = $1
                 AND (status::text IN ('cancelled', 'rejected') OR refund_status IS NOT NULL)
                 AND to_char(COALESCE(cancelled_at, updated_at) AT TIME ZONE '${TZ}', 'YYYY-MM-DD') = $2
               ORDER BY COALESCE(cancelled_at, updated_at) DESC LIMIT 100`, [dealerId, date]);
+        const lostShown = lost.map((o) => { const v = hideCoinDiscount(o); return { order_number: o.order_number, total_amount: v.total_amount, payment_method: o.payment_method, status: o.status, refund_status: o.refund_status }; });   /* never shows a coin discount to the dealer */
 
         /* payouts GasHub sent this dealer on the chosen day */
         const payouts = await safeRows(
@@ -138,7 +140,7 @@ async function getDailyAccounts(req, res) {
                 online_owed_by_gashub: day.online.owed,        /* GasHub pays this out later */
                 online_not_yet_paid_out: outstanding
             },
-            orders, cancelled: lost.map((c) => ({ order_number: c.order_number, amount: money(c.total_amount), method: String(c.payment_method || "").toLowerCase(), status: c.status, refund_status: c.refund_status })),
+            orders, cancelled: lostShown.map((c) => ({ order_number: c.order_number, amount: money(c.total_amount), method: String(c.payment_method || "").toLowerCase(), status: c.status, refund_status: c.refund_status })),
             payouts_today: payouts.map((p) => ({ reference: p.reference, amount: money(p.sent_amount != null ? p.sent_amount : p.amount), receipt: p.mpesa_receipt, paid_at: p.paid_at, destination: p.destination })),
             payouts_today_total: paidOutToday,
             week
