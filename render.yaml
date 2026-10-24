@@ -1,0 +1,80 @@
+# Put this file in the project root (next to netlify.toml). It is ONLY used by Render; Netlify ignores it.
+# Render runs the same backend/server.js you run locally, so pages + API are served from one address
+# and the frontend's relative "/api" calls keep working with no code change.
+services:
+  - type: web
+    name: gashub-test
+    runtime: node
+    plan: free
+    region: frankfurt            # pick the region closest to your Supabase project
+    buildCommand: npm install
+    startCommand: npm start      # = node backend/server.js
+    healthCheckPath: /api/cron/health
+    autoDeploy: true             # set false if you want to deploy by hand
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      # --- addresses: set these to your Render address, e.g. https://gashub-test.onrender.com ---
+      - key: PUBLIC_URL
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: MPESA_CALLBACK_BASE_URL
+        sync: false
+      # --- Supabase (use the POOLER details, not db.<ref>.supabase.co) ---
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: postgres
+      # --- secrets (copy the same values you use in .env / Netlify) ---
+      - key: SESSION_SECRET
+        sync: false
+      - key: CRON_SECRET          # 24+ characters; used by the pinger that keeps Render awake
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
+      - key: MPESA_ENV
+        value: sandbox            # keep sandbox while testing
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_SHORTCODE
+        sync: false
+      - key: MPESA_PASSKEY
+        sync: false
+      - key: MPESA_PARTYB
+        sync: false
+      - key: MPESA_TRANSACTION_TYPE
+        sync: false
+      - key: MPESA_CALLBACK_SECRET
+        sync: false
+      # add GOOGLE_*, FACEBOOK_*, X_*, SUPER_ADMIN_LOCK_PASSWORD etc. the same way if you use them
